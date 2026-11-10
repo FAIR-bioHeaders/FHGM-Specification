@@ -62,7 +62,8 @@ def validate_snapshot(data, base, overlay):
         if model_id in models:
             raise ValueError(f"Duplicate model ID {model_id!r}")
         feature_id = model["featureId"]
-        if targets.get(feature_id.encode()) != [b"gene"]:
+        target_types = targets.get(feature_id.encode(), [])
+        if len(target_types) != 1 or target_types[0] not in (b"gene", b"SO:0000704"):
             raise ValueError(f"Model {model_id!r} must target one local gene row: {feature_id!r}")
         models[model_id] = model
     return header, models
