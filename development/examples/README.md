@@ -6,6 +6,9 @@ The initial candidate in
 [issue #204](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/204)
 is not yet an approved fixture. No FHGM examples have been created or validated.
 
+See [the pilot source review](PILOT.md) for the initial archive findings and
+publication context.
+
 For each candidate, copy [SOURCE-TEMPLATE.md](SOURCE-TEMPLATE.md) to a descriptive
 case directory as `SOURCE.md`. Complete the source review before adding payloads.
 Cover a new model, a revision, multiple isoforms and a noncoding case where available.

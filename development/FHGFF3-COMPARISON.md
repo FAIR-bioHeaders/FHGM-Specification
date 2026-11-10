@@ -44,3 +44,19 @@ Report header/schema validity, GFF3 feature validity, checksum integrity,
 reference matching and biological evidence assessment separately. A passing result
 in one category does not establish the others. Do not design new feature syntax
 merely to represent file-level provenance.
+
+## Pilot comparison against FHGFF3 1.1
+
+Use the published [v0.5.0 FHGFF3 schema](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/v0.5.0/fhgff3.json)
+at commit `170e677fbb6726a3f765373dbe1f214820000be7` as the comparison target
+for this pass. The inherited mirror has its own pin.
+
+| Concept | Pilot finding |
+| --- | --- |
+| Assembly identity | The S6k paper supplies an assembly accession. The deposit review did not establish a SeqCol digest or FHR checksum. The FHGFF3 identity requirement needs reference verification before either example can meet it. |
+| Article and deposit | FHGFF3 offers `scholarlyArticle` and `identifier`. Keep the publication and model-deposit DOIs separate. Review how to identify individual companion files. |
+| Scope and contribution | GFF3 feature relationships can carry locus and isoform structure after conversion. Curator credit, evidence and supersession need a separate semantics review with the journal. |
+| Compatibility | The base schema permits `x-` keys and restricts the `schema` URI to FHGFF3. A profile with FHGFF3 identity could validate against this base if the locus-level annotation preserves the base meanings. A dedicated FHGM URI or ordinary new root fields would require separate dispatch or a contract change. |
+
+See the [source review](examples/PILOT.md). Test the profile route with one
+converted model and verify its reference linkage before deciding on type identity.
