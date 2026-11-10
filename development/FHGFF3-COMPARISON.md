@@ -60,3 +60,9 @@ for this pass. The inherited mirror has its own pin.
 
 See the [source review](examples/PILOT.md). Test the profile route with one
 converted model and verify its reference linkage before deciding on type identity.
+
+The [revision pilot](examples/revision/README.md) tests supersession separately.
+FHGFF3 1.1 accepts the experimental extension whether the predecessor resolves
+or is stale, and rejects `supersedes` in the standard derivation vocabulary.
+A profile could carry the pointer with FHGFF3 identity, while resolution and
+curatorial acceptance would require checks beyond the base schema.
