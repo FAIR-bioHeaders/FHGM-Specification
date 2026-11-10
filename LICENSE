@@ -8,7 +8,7 @@ the import commit records repository history, not proof of rights.
 
 MPL-2.0-covered FAIR BioHeaders contributions:
 - New FHGM setup text in README.md, CONTRIBUTING.md and MAINTAINERS.md;
-  development/**/*.md; the Python scripts
+  development/**/*.md and development/examples/contract/*.gff3; the Python scripts
   development/examples/s6k/convert.py and
   development/examples/s6k/verify_reference.py (not the separately licensed
   source payload alongside them); development/examples/revision/check_revision.py;
