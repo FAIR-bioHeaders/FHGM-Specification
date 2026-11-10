@@ -38,3 +38,6 @@ that reconstructs gene and transcript features and `ID`/`Parent` relationships,
 documents stop codon handling, and checks coordinates, strand and CDS phase
 against the source and companion files. The original archives remain the
 provenance records. A model revision and a noncoding example are still needed.
+
+The [S6k fixture](s6k/README.md) reproduces the converted GFF3 feature payload, verifies it against the NCBI
+assembly and tests a FHGFF3 1.1 header with an experimental contribution field.
