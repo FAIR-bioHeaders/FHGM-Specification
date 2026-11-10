@@ -26,3 +26,9 @@ transcript-only scope, same-assembly assumptions and predecessor resolution.
 Record the curator authority for supersession separately from whether a
 pointer resolves. Any proposed standard field, requiredness or constraint
 needs its own schema review and an explicit disposition for affected INSDC rows.
+
+The [draft overlay](model/README.md) implements local gene-target checks
+for AN.a, AN.b.iii and AN.b.vii and same-assembly pointer checks relevant to
+AN-xref. These checks leave the existing coverage ratings in place. The
+feature validator still owns coordinate and hierarchy checks, and the
+reference check compares supplied identifiers across snapshots.

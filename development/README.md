@@ -1,8 +1,8 @@
 # FHGM development plan
 
-Status: requirements gathering, 2026-11-05. Refs
+Status: draft validation, 2026-11-10. Refs
 [family issue #204](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/204).
-This directory contains planning material, not an adopted contract.
+This directory contains the proposal and its review implementation.
 
 ## Setup provenance
 
@@ -32,6 +32,6 @@ metadata. No decision is implied by checking a repository-setup task complete.
 ## Working paths
 
 Use [examples/](examples/README.md) for source-selection and provenance records.
-Keep actual retrieved payloads out until reuse terms are inspected. Future draft
-models belong under this development area, separate from the immutable reference
-baseline. Do not create a placeholder schema that appears to validate FHGM.
+Keep actual retrieved payloads out until reuse terms are inspected. The
+[draft model and validator](model/README.md) live separately from the
+immutable reference baseline.

@@ -12,6 +12,7 @@ MPL-2.0-covered FAIR BioHeaders contributions:
   development/examples/s6k/convert.py and
   development/examples/s6k/verify_reference.py (not the separately licensed
   source payload alongside them); development/examples/revision/check_revision.py;
+  development/model/*.py and development/model/*.json;
   the FHGM-local section of AGENTS.md; the FHGM CI
   introduction in ci/README.md; and the documentation-scope additions in
   .markdownlint-cli2.jsonc, introduced by the FHGM development setup change.
