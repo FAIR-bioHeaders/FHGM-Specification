@@ -69,3 +69,7 @@ The base schema accepts experimental extension content without checking FHGM
 semantics. Schema and checksum checks were run separately from the available
 GFF3 core checks, which did not run Sequence Ontology or genome-aware checks.
 See the [INSDC supplement](INSDC-COVERAGE.md) for the submission boundary.
+
+The [draft validator](model/README.md) implements the proposed overlay for
+review. It checks the released file contract, gene targets and immediate
+revision pointers with the synthetic fixtures.

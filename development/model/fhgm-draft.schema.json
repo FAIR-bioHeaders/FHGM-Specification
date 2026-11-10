@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Draft FHGM model metadata overlay",
+  "type": "object",
+  "required": ["schema", "schemaVersion", "x-fhgm-models"],
+  "properties": {
+    "schema": {"const": "https://w3id.org/fair-bioheaders/fhgff3/v0.5.0"},
+    "schemaVersion": {"const": "1.1"},
+    "x-fhgm-models": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/model"}
+    }
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "identity": {
+      "properties": {
+        "modelId": {"$ref": "#/$defs/text"},
+        "modelVersion": {"$ref": "#/$defs/text"}
+      },
+      "required": ["modelId", "modelVersion"]
+    },
+    "predecessor": {
+      "type": "object",
+      "$ref": "#/$defs/identity",
+      "properties": {
+        "modelId": true,
+        "modelVersion": true,
+        "annotationChecksum": {"type": "string", "pattern": "^[A-Za-z0-9+/]{43}=$", "maxLength": 44}
+      },
+      "required": ["annotationChecksum"],
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "object",
+      "$ref": "#/$defs/identity",
+      "properties": {
+        "modelId": true,
+        "modelVersion": true,
+        "featureId": {"$ref": "#/$defs/text"},
+        "predecessor": {"$ref": "#/$defs/predecessor"},
+        "contributors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {"$ref": "#/$defs/text"},
+              "role": {"$ref": "#/$defs/text"}
+            },
+            "required": ["name", "role"],
+            "additionalProperties": false
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": {"$ref": "#/$defs/text"}
+            },
+            "required": ["description"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["featureId"],
+      "additionalProperties": false
+    }
+  }
+}
