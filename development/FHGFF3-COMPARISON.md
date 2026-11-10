@@ -70,3 +70,5 @@ Model-level resolution and curator acceptance require separate checks.
 
 See the [INSDC coverage supplement](INSDC-COVERAGE.md) for the boundary between
 annotation validation and embedded model checks.
+
+See the [contract review and examples](CONTRACT-REVIEW.md) for the proposed decisions and compatibility results.
