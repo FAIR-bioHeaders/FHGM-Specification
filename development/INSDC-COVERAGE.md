@@ -2,10 +2,11 @@
 
 This supplement uses the [shared INSDC assessment](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/insdc-coverage.md)
 and its [Annotation Minimum Specification v1.0 pin](https://github.com/insdc/minimum-specifcations/tree/41f0dc424748c9f7e50a8b6bda9b888218c4b65e/Annotations).
-The shared assessment evaluated FHGFF3 1.0. The FHGM pilots use
-[FHGFF3 1.1 from v0.5.0](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/v0.5.0/fhgff3.json)
-for its extension fields. The pilot does not revise any of the assessment's
-coverage ratings.
+Assessment v2 and the FHGM pilots use
+[FHGFF3 1.1 from v0.5.0](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/v0.5.0/fhgff3.json).
+The matrix applies the same ratings to FHGFF3 1.0 and 1.1 and counts only
+standard fields. The experimental FHGM records add no coverage. Follow-up
+checks are tracked in [FHGM #5](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/5).
 
 | Assessment rows | Where the requirement belongs | FHGM finding |
 | --- | --- | --- |
