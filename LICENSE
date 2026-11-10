@@ -8,7 +8,10 @@ the import commit records repository history, not proof of rights.
 
 MPL-2.0-covered FAIR BioHeaders contributions:
 - New FHGM setup text in README.md, CONTRIBUTING.md and MAINTAINERS.md;
-  development/**/*.md; the FHGM-local section of AGENTS.md; the FHGM CI
+  development/**/*.md; the Python scripts
+  development/examples/s6k/convert.py and
+  development/examples/s6k/verify_reference.py (not the separately licensed
+  source payload alongside them); the FHGM-local section of AGENTS.md; the FHGM CI
   introduction in ci/README.md; and the documentation-scope additions in
   .markdownlint-cli2.jsonc, introduced by the FHGM development setup change.
   These replace or supplement inherited guidance without granting rights in
