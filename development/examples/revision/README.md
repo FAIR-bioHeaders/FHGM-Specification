@@ -1,9 +1,8 @@
 # FHGM revision pilot
 
-The [S6k pilot](../s6k/README.md) showed that a single-locus contribution fits
-FHGFF3 1.1 with an extension field. This follow-up tests whether a revision can
-point to the exact file it proposes to replace and where the base contract
-stops checking that claim.
+The [S6k pilot](../s6k/README.md) showed that contribution metadata fits in
+an FHGFF3 extension. This follow-up treats FHGFF3 as the annotation file and
+FHGM as a repeatable record describing one model within that file.
 
 ## Published use case
 
@@ -18,11 +17,18 @@ link establishes that a curator adopted a replacement for a specific model.
 - [Dataset](https://doi.org/10.22002/hv4eg-wg213)
 - [DataCite record](https://api.datacite.org/dois/10.22002/hv4eg-wg213)
 
-The cases below are synthetic and contain no files, identifiers or sequences
-from that study. The original and revision describe one toy noncoding locus
-on the same toy assembly. The revision extends its exon and keeps the
-feature IDs stable. The assembly SeqCol digest is computed from the synthetic
-one-record collection defined in the script.
+The synthetic fixture uses no source payload from that study. One FHGFF3
+header carries two model records under the experimental `x-fhgm-models` key.
+Each record has a stable `modelId`, a `modelVersion`, and a file-local
+`featureId` pointing to its GFF3 gene feature. Native GFF3 `Parent`
+relationships describe the gene's transcripts and exons.
+
+The second annotation snapshot extends model A's exon and increments its
+model version. Model B retains the same record and feature rows. The model A
+predecessor pointer names the prior annotation checksum, model ID, and model
+version. The annotation checksum covers both embedded records and the feature
+payload. The assembly SeqCol digest is computed from the script's synthetic
+one-record collection.
 
 ## Reproduce the comparison
 
@@ -43,25 +49,26 @@ done
 
 | Case | FHGFF3 1.1 schema | File checksum | Predecessor check |
 | --- | --- | --- | --- |
-| Original | Pass | Pass | No predecessor claim |
-| Revised with experimental extension | Pass | Pass | Matches supplied original checksum, version and assembly |
-| Revised with stale predecessor checksum | Pass | Pass | Fails against the supplied original |
-| Revised using `derivedFrom.relationship: supersedes` | Rejected at the relationship field | Generated in memory | Outside the base vocabulary |
+| Original annotation with A and B | Pass | Pass | No predecessor claim |
+| A revised, pointing to prior A | Pass | Pass | Resolves to prior A in the supplied annotation |
+| A revised, pointing to B in the correct prior annotation | Pass | Pass | Fails the same-model check even though B exists with the requested version |
+| A revised, pointing to A with a stale annotation checksum | Pass | Pass | Fails the annotation checksum check |
+| File-level `derivedFrom.relationship: supersedes` | Rejected at the relationship field | Generated in memory | Outside the base vocabulary |
 
-All three emitted files passed the feature check with zero errors and warnings
+All four emitted files passed feature checks with zero errors and warnings
 using gff3-validator 0.1.0 at `c753f45`, with header checks disabled. OpenSSL
 independently reproduced each file checksum.
 
 ## Design questions for curator review
 
-The experimental field can carry a precise predecessor pointer while keeping
-FHGFF3 schema identity. The stale case shows that schema and checksum validity
-cannot establish whether that pointer resolves. Even a resolved pointer does
-not establish that a curator accepted the revision.
+The pilot assumes stable model IDs across revisions within the same assembly.
+The experimental records keep FHGFF3 identity, while a separate check resolves
+the predecessor at model scope. A resolved pointer identifies the prior
+record. A curator decision is needed to establish accepted supersession.
 
-Before standardizing a field, decide who can declare supersession, what source
-records that decision, and whether the target is an entire contribution file
-or a particular model within a larger annotation. Ask whether a correction
-on a different assembly is a replacement, a new contribution or an assembly
-mapping. Keep the publication, deposit version, exact predecessor file and
-curation decision separately identifiable.
+Before standardizing the extension, decide who assigns stable model IDs, who
+can declare supersession, and what source records that decision. Ask whether
+isoform-only submissions need transcript-level scope and how to represent a
+split, merge, or correction on a different assembly. Keep the publication,
+deposit version, exact annotation snapshot, model identity and curator
+decision separately identifiable.
