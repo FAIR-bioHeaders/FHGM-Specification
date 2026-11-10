@@ -67,3 +67,6 @@ model preserves the other model's identity. The predecessor pointer combines
 the prior annotation checksum with a model ID and version. FHGFF3 1.1 accepts
 the extension even when the pointer is stale or names the wrong model.
 Model-level resolution and curator acceptance require separate checks.
+
+See the [INSDC coverage supplement](INSDC-COVERAGE.md) for the boundary between
+annotation validation and embedded model checks.
