@@ -60,3 +60,10 @@ for this pass. The inherited mirror has its own pin.
 
 See the [source review](examples/PILOT.md). Test the profile route with one
 converted model and verify its reference linkage before deciding on type identity.
+
+The [revision pilot](examples/revision/README.md) embeds two model records in
+one FHGFF3 header. Each record points to its own GFF3 gene feature. Revising one
+model preserves the other model's identity. The predecessor pointer combines
+the prior annotation checksum with a model ID and version. FHGFF3 1.1 accepts
+the extension even when the pointer is stale or names the wrong model.
+Model-level resolution and curator acceptance require separate checks.
