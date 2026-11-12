@@ -1,6 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Draft FHGM model metadata overlay",
+  "title": "FHGM draft transport overlay for FHGFF3 1.1 headers (proposal)",
+  "description": "Transport-only overlay for native FHGM draft contract v0.1. It pins the released FHGFF3 1.1 file identity (docs/FORMAT.md R15 permits x- keys only from schemaVersion 1.1) and requires the repeatable x-fhgm-models record array. It intentionally does not describe record contents: each record validates against fhgm-model.schema.json in the separate model-level checker (validate_fhgm.py). The base FHGFF3 schema validates transport only; model-level meaning is never established by the base schema, and the file checksum covers every embedded record byte like any other header byte.",
   "type": "object",
   "required": ["schema", "schemaVersion", "x-fhgm-models"],
   "properties": {
@@ -16,65 +17,7 @@
     "x-fhgm-models": {
       "type": "array",
       "minItems": 1,
-      "items": {"$ref": "#/$defs/model"}
-    }
-  },
-  "$defs": {
-    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
-    "identity": {
-      "properties": {
-        "modelId": {"$ref": "#/$defs/text"},
-        "modelVersion": {"$ref": "#/$defs/text"}
-      },
-      "required": ["modelId", "modelVersion"]
-    },
-    "predecessor": {
-      "type": "object",
-      "$ref": "#/$defs/identity",
-      "properties": {
-        "modelId": true,
-        "modelVersion": true,
-        "annotationChecksum": {"type": "string", "pattern": "^[A-Za-z0-9+/]{43}=$", "maxLength": 44}
-      },
-      "required": ["annotationChecksum"],
-      "additionalProperties": false
-    },
-    "model": {
-      "type": "object",
-      "$ref": "#/$defs/identity",
-      "properties": {
-        "modelId": true,
-        "modelVersion": true,
-        "featureId": {"$ref": "#/$defs/text"},
-        "predecessor": {"$ref": "#/$defs/predecessor"},
-        "contributors": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": {"$ref": "#/$defs/text"},
-              "role": {"$ref": "#/$defs/text"}
-            },
-            "required": ["name", "role"],
-            "additionalProperties": false
-          }
-        },
-        "evidence": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "properties": {
-              "description": {"$ref": "#/$defs/text"}
-            },
-            "required": ["description"],
-            "additionalProperties": false
-          }
-        }
-      },
-      "required": ["featureId"],
-      "additionalProperties": false
+      "items": {"type": "object"}
     }
   }
 }

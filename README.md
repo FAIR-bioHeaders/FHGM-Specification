@@ -1,8 +1,11 @@
 # FHGM — FAIR Header Gene Model
 
 FHGM is the development repository for file-bound metadata describing gene-model
-contributions, serialized in GFF3. **Requirements gathering; no FHGM contract,
-schema version, release or toolkit support is claimed.**
+contributions, serialized in GFF3. **Native draft contract v0.1 (proposal)
+under shared
+[#204](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/204)
+review; no publication, no support claims.** Requirements gathering continues;
+no FHGM contract, schema version, release or toolkit support is claimed.
 
 Start with [the development plan](development/README.md), the
 [FHGFF3 comparison](development/FHGFF3-COMPARISON.md), and the
@@ -47,7 +50,9 @@ as FHGM examples. Finished adopted contracts publish through
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md) and the
 [CI guide](ci/README.md). Current CI verifies documentation and the inherited
-FHGFF3 baseline, **not FHGM validity**. No FHGM generator or validator exists yet.
+FHGFF3 baseline, **not FHGM validity**. The proposal-stage model-level checker
+under [development/model/](development/model/README.md) is review tooling for
+shared #204, is not wired into CI, and makes no support claim.
 Feature checks belong in
 [gff3-validator](https://github.com/FAIR-bioHeaders/gff3-validator); family header
 processing belongs in

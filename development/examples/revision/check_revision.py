@@ -98,8 +98,10 @@ def run(schema_path, output):
         "dateCreated": "2026-11-10",
         "genomeReference": synthetic_reference(),
     }
-    first = {"modelId": "model-a", "modelVersion": "1", "featureId": "toy-a"}
-    neighbor = {"modelId": "model-b", "modelVersion": "1", "featureId": "toy-b"}
+    first = {"modelId": "model-a", "modelVersion": "1", "featureId": "toy-a",
+             "reference": {"genomeReference": synthetic_reference()}}
+    neighbor = {"modelId": "model-b", "modelVersion": "1", "featureId": "toy-b",
+                "reference": {"genomeReference": synthetic_reference()}}
     original_bytes = render(dict(common, version="1", **{MODELS: [first, neighbor]}), feature_payload(30))
     original = validate_file(original_bytes, validator)
     target = {
