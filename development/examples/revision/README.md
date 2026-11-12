@@ -19,9 +19,10 @@ link establishes that a curator adopted a replacement for a specific model.
 
 The synthetic fixture uses no source payload from that study. One FHGFF3
 header carries two model records under the experimental `x-fhgm-models` key.
-Each record has a stable `modelId`, a `modelVersion`, and a file-local
-`featureId` pointing to its GFF3 gene feature. Native GFF3 `Parent`
-relationships describe the gene's transcripts and exons.
+Each record has a stable `modelId`, a `modelVersion`, a file-local
+`featureId` pointing to its GFF3 gene feature and, since the draft contract
+v0.1 update of 2026-11-12, its own `reference` assembly binding. Native GFF3
+`Parent` relationships describe the gene's transcripts and exons.
 
 The second annotation snapshot extends model A's exon and increments its
 model version. Model B retains the same record and feature rows. The model A

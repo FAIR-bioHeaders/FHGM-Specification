@@ -12,6 +12,10 @@ MPL-2.0-covered FAIR BioHeaders contributions:
   development/examples/s6k/convert.py and
   development/examples/s6k/verify_reference.py (not the separately licensed
   source payload alongside them); development/examples/revision/check_revision.py;
+  development/examples/model/make_fixtures.py and the synthetic
+  development/examples/model/*.gff3 fixtures it generates;
+  development/examples/s6k/embed_models.py (not the separately attributed
+  CaltechDATA-derived payload or header identifiers it reuses);
   development/model/*.py and development/model/*.json;
   the FHGM-local section of AGENTS.md; the FHGM CI
   introduction in ci/README.md; and the documentation-scope additions in

@@ -1,5 +1,19 @@
 # FHGM changelog
 
+## Unreleased — native draft contract v0.1 proposal (2026-11-12)
+
+- Per the recorded Option C hybrid decision in shared #204, advance the draft
+  to a native FHGM model contract (development/model/fhgm-model.schema.json)
+  carried by FHGFF3 1.1 x- transport; the overlay becomes transport-only.
+- Extend the model-level checker with resolvable/unresolvable/ambiguous
+  pointer verdicts and record-versus-file reference agreement.
+- Add the committed fixture set under development/examples/model/, update the
+  contract fixtures and the revision pilot to the v0.1 record shape with
+  recomputed checksums, and derive an S6k record fixture with attributed
+  provenance.
+- Draft proposal only: no FHGM contract, schema version, release or toolkit
+  support is introduced.
+
 ## Unreleased — development setup (2026-11-05)
 
 - Establish FHGM identity, contribution guidance and a requirements workspace.

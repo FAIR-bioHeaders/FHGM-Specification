@@ -66,3 +66,32 @@ and source deposit DOI have separate roles. The extension demonstrates that a
 single-locus contribution can fit the base schema. A revised-model fixture and
 curator review are needed to test how to represent evidence, contributor roles,
 and supersession before deciding on FHGM type identity.
+
+## Draft contract v0.1 record fixture
+
+[embed_models.py](embed_models.py) derives
+[DanaCAF1_S6k.fhgm-models.fhgff3.gff3](DanaCAF1_S6k.fhgm-models.fhgff3.gff3)
+from the profile fixture above: it replaces the
+`x-fhgm-contribution-scope` key with one `x-fhgm-models` record under the
+native draft contract v0.1 and recomputes the exact-byte checksum. The GFF3
+feature payload bytes are unchanged; removing the `#~` lines yields
+[DanaCAF1_S6k.gff3](DanaCAF1_S6k.gff3) byte for byte. This derived feature
+payload remains derived from Laura K. Reed, *Model: Gene model for the
+ortholog of S6k in Drosophila ananassae*, CaltechDATA v1.0, CC BY 4.0
+([deposit](https://doi.org/10.22002/e86gh-a7p16),
+[rights metadata](https://api.datacite.org/dois/10.22002/e86gh-a7p16),
+[article](https://pmc.ncbi.nlm.nih.gov/articles/PMC12464738/)), and the record
+reuses only identifiers, attribution and the verified reference result already
+recorded in this directory: the file-local `modelId` repeats the gene feature
+ID as a placeholder — model ID authority remains open in #204 — and
+`modelVersion` repeats the recorded deposit version.
+
+```sh
+python3 embed_models.py DanaCAF1_S6k.fhgff3.gff3 /tmp/derived.gff3
+cmp DanaCAF1_S6k.fhgm-models.fhgff3.gff3 /tmp/derived.gff3
+python3 ../../model/validate_fhgm.py --base-schema /path/to/fhgff3-v0.5.0.json \
+  DanaCAF1_S6k.fhgm-models.fhgff3.gff3
+```
+
+This is a proposal fixture for #204 review: it claims no FHGM contract,
+validation support or curator acceptance.
