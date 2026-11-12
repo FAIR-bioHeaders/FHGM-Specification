@@ -71,6 +71,7 @@
           },
           "uri": {
             "description": "ORCID URI, mirroring the shared FHGFF3 Author object",
+            "type": "string",
             "format": "uri",
             "pattern": "^https://orcid\\.org/[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]$"
           }
@@ -89,6 +90,7 @@
           "description": {"$ref": "#/$defs/text"},
           "uri": {
             "description": "Location of the cited evidence, when one was supplied",
+            "type": "string",
             "format": "uri"
           }
         }
@@ -110,12 +112,13 @@
             "properties": {
               "name": {"$ref": "#/$defs/text"},
               "version": {"$ref": "#/$defs/text"},
-              "uri": {"format": "uri"}
+              "uri": {"type": "string", "format": "uri"}
             }
           }
         },
         "protocol": {
           "description": "Curation protocol or workflow reference URI, mirroring the FHGFF3 annotationProtocol role",
+          "type": "string",
           "format": "uri"
         },
         "limitations": {
@@ -134,6 +137,7 @@
       "properties": {
         "article": {
           "description": "Article DOI, mirroring the FHGFF3 scholarlyArticle pattern",
+          "type": "string",
           "pattern": "^10\\.[0-9]+(\\.[0-9]+)*/\\S+$"
         },
         "deposit": {

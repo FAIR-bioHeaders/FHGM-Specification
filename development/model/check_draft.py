@@ -8,6 +8,7 @@ released base schema and checksum accept while the model-level checker
 rejects them. Requires fair-bioheaders and jsonschema; not part of CI.
 """
 
+import copy
 from pathlib import Path
 import subprocess
 import sys
@@ -67,6 +68,21 @@ def contract_examples(base, output):
         candidate.write_bytes(render(metadata, rows))
         expect(base, candidate, error)
 
+    invalid_fields = (
+        ("contributors", [{"name": "Example", "role": "curator", "uri": 42}]),
+        ("evidence", [{"description": "Synthetic evidence", "uri": 42}]),
+        ("methods", {"software": [{"name": "Synthetic software", "uri": 42}]}),
+        ("methods", {"protocol": 42}),
+        ("publication", {"article": None}),
+        ("evidence", [{"description": "Synthetic evidence", "uri": "not a URI"}]),
+        ("methods", {"protocol": "not a URI"}),
+    )
+    for field, value in invalid_fields:
+        invalid_metadata = copy.deepcopy(metadata)
+        invalid_metadata["x-fhgm-models"][0][field] = value
+        candidate.write_bytes(render(invalid_metadata, payload))
+        expect(base, candidate, "invalid under draft contract v0.1")
+
     models.append(dict(models[0]))
     candidate.write_bytes(render(metadata, payload))
     expect(base, candidate, "Ambiguous model ID")
@@ -112,9 +128,11 @@ def model_fixtures(base, output):
 
     v1 = MODEL_FIXTURES / "snapshot-v1.fhgff3.gff3"
     v2 = MODEL_FIXTURES / "snapshot-v2.fhgff3.gff3"
+    predecessor_name_mismatch = MODEL_FIXTURES / "predecessor-name-mismatch.fhgff3.gff3"
     expect(base, MODEL_FIXTURES / "valid-single.fhgff3.gff3")
     expect(base, v1)
     expect(base, v2, predecessor=v1)
+    expect(base, v2, predecessor=[v1, predecessor_name_mismatch])
     expect(base, MODEL_FIXTURES / "pointer-absent-snapshot.fhgff3.gff3",
            "predecessor is unresolvable", v1)
     expect(base, MODEL_FIXTURES / "ambiguous-model-id.fhgff3.gff3", "Ambiguous model ID")

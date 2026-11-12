@@ -16,11 +16,12 @@ import hashlib
 from io import BytesIO
 import json
 from pathlib import Path
-from urllib.parse import unquote_to_bytes
+import re
+from urllib.parse import unquote_to_bytes, urlsplit
 
 from bioheaders import HEADER, header_text, load_yaml, sequence_parts
 from bioheaders.cli import checksum
-from jsonschema import Draft202012Validator, ValidationError
+from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 from yaml import YAMLError
 
 BASE_SHA256 = "20ce320f5d706f11ed21cdece4dfb56e3568b50be126e25b4016f46f2e8e416c"
@@ -30,6 +31,26 @@ MODELS = "x-fhgm-models"
 RESOLVABLE = "resolvable"
 UNRESOLVABLE = "unresolvable"
 AMBIGUOUS = "ambiguous"
+
+FORMAT_CHECKER = Draft202012Validator.FORMAT_CHECKER
+if "uri" not in FORMAT_CHECKER.checkers:
+    FORMAT_CHECKER = FormatChecker()
+
+    @FORMAT_CHECKER.checks("uri")
+    def is_uri(value):
+        if not isinstance(value, str):
+            return True
+        if (
+            re.search(r"\s", value)
+            or re.search(r"%(?![0-9A-Fa-f]{2})", value)
+            or any(ord(char) < 0x21 or ord(char) > 0x7E or char in '<>"{}|\\^`' for char in value)
+        ):
+            return False
+        try:
+            parts = urlsplit(value)
+        except ValueError:
+            return False
+        return bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9+.-]*", parts.scheme))
 
 
 class ModelCheckError(ValueError):
@@ -167,7 +188,11 @@ def resolve_predecessor(model_id, model, header, predecessors):
         if (
             other_pointer
             and other_pointer["annotationChecksum"] == snapshot
+            and other_pointer["modelId"] == model_id
             and other_pointer["modelVersion"] == pointer["modelVersion"]
+            and other["modelVersion"] != prior["modelVersion"]
+            and links_match(assembly_keys(other_header), assembly_keys(prior_header))
+            and links_match(reference_keys(other), reference_keys(prior))
         ):
             return UNRESOLVABLE, (
                 "the pointed record already has a recorded successor "
@@ -203,7 +228,10 @@ def main():
     try:
         base = load_base(args.base_schema)
         transport = Draft202012Validator(json.loads(TRANSPORT.read_bytes()))
-        record_contract = Draft202012Validator(json.loads(MODEL_CONTRACT.read_bytes()))
+        record_contract = Draft202012Validator(
+            json.loads(MODEL_CONTRACT.read_bytes()),
+            format_checker=FORMAT_CHECKER,
+        )
         header, models = validate_snapshot(args.file.read_bytes(), base, transport, record_contract)
         predecessors = {}
         for path in args.predecessor:
