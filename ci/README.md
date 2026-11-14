@@ -1,10 +1,17 @@
 # FHGM continuous integration
 
-FHGM currently retains the inherited FHGFF3 baseline checks described below.
-These verify the pinned FHGFF3 reference and its existing fixtures; they do not
-validate an FHGM contract. Owned documentation includes `development/**/*.md`.
-No feature-model generation or deployment lane is enabled. New FHGM model checks
-will be designed with the draft contract, not inferred from passing baseline CI.
+FHGM retains the inherited FHGFF3 baseline checks described below and adds one
+draft-contract lane. The baseline checks verify the pinned FHGFF3 reference and
+its existing fixtures; they do not validate an FHGM contract. The
+**FHGM draft model conformance** workflow added with FHGM #9 does run the model
+checks — the [conformance manifest](../development/conformance/README.md) across
+its available layers, the v0.1 draft self-test, and an offline byte/digest
+lane — against the base schema pinned in
+[`development/conformance/provenance.json`](../development/conformance/provenance.json).
+It grants nothing: FHGM is unreleased, no registry row or schema URL is created,
+and selection rule V7 keeps the draft out of every release form. Owned
+documentation includes `development/**/*.md`. No feature-model generation or
+deployment lane is enabled.
 
 ## Inherited FHGFF3 baseline
 
@@ -20,20 +27,32 @@ validation boundaries. This implements the remaining CI scope in
 | Documentation lint and local links | `npx markdownlint-cli2@0.23.2 --config .markdownlint-cli2.jsonc` then `python3 scripts/check_docs.py` | Owned Markdown lint, existing local file targets, whitespace and conflict markers |
 | Header parity and typed microdata fixtures | `python3 -m unittest discover -s tests -v` then `python3 scripts/check_header_parity.py --upstream ../FAIR-bioHeaders-Specification` | Parity failure tests, typed microdata positive/rejection tests, and exact pinned source bytes |
 | Pinned shared header conformance | Commands below, in a disposable pinned shared checkout | Shared generated vectors, independent checksums and released toolkit acceptance/rejection |
+| Vector bytes, digests and manifest (standard library only) | `python3 development/conformance/run_conformance.py --offline` then `python3 -m unittest discover -s tests -p test_fhgm_conformance.py -v` | Recorded provenance against the tree, per-vector size/SHA-256, independently recomputed file-bound checksums, manifest self-consistency; no third-party import |
+| Base, checksum, GFF3 and model layers on the recorded vectors | `python3 development/conformance/run_conformance.py --base-schema <pinned fhgff3.json> --gff3-validate <gff3-validate> --verbose`, plus `python3 development/model/check_draft.py <pinned fhgff3.json>` | 31 draft FHGM vectors across four separately reported layers, byte regeneration, the v0.1 self-test matrix, and the suite tests against the installed toolkit |
+| Downstream draft pins still point at these bytes | `python3 development/conformance/run_conformance.py --offline --check-downstream-pins` | Scheduled/manual only: compares each consumer's recorded sha256 with the contract bytes on `main`. A failure means a pin needs refreshing in the consumer repository; it does not invalidate this repository's vectors |
 | External documentation links | `lychee --config ci/lychee.toml --no-progress $(python3 scripts/check_docs.py --list)` | Scheduled/manual HTTP checks; failures remain failures |
 
 CI uses Ubuntu 24.04, Python 3.13 and Node 24. Actions are pinned to commits;
 markdownlint-cli2 is pinned to 0.23.2 and Lychee to 0.24.2. The conformance toolkit baseline
 is the shared suite's fair-bioheaders 0.8.1 release, with its JSON-LD extra.
-Transitive package dependencies resolve from that release's declared constraints;
-this is a released-version baseline, not a fully hash-locked environment.
+The FHGM model lane is a **separate, explicitly selected environment**: the
+recorded vector outcomes were observed with fair-bioheaders 0.11.0 and jsonschema
+(see `observedWith` in `development/conformance/provenance.json`), the GFF3 feature
+layer runs in a second venv with `gff3-validator==0.1.0` installed **without** its
+`headers` extra, because that extra pins `fair-bioheaders >=0.4,<0.5` and would
+downgrade the environment the checker runs in. `check_draft.py` additionally
+passes with 0.8.1, so no recorded outcome depends on a toolkit newer than the
+baseline above. Transitive package dependencies resolve from those releases'
+declared constraints; this is a released-version baseline, not a fully
+hash-locked environment.
 
-Both workflows run on all PRs targeting `main` and pushes to `main`, with no
-path-filtered pending checks. Both allow manual dispatch. Permissions are read-only,
+Three workflows run on all PRs targeting `main` and pushes to `main`, with no
+path-filtered pending checks. All allow manual dispatch. Permissions are read-only,
 checkout credentials are not persisted, and every job has a timeout. External
-links run on Monday and manual dispatch only; their absence on a PR means **not
-run**, not verified. Branch protection remains a maintainer decision after actual
-workflow results are available.
+links and the downstream pin-freshness lane run on their schedules and manual
+dispatch only; their absence on a PR means **not run**, not verified. Branch
+protection remains a maintainer decision after actual workflow results are
+available.
 
 ## Owned documentation scope
 

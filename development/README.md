@@ -11,7 +11,7 @@ artifact.
 This directory contains the proposal and its review implementation: the
 [draft native model](model/README.md), its
 [fixture set](examples/model/README.md), the
-conformance vectors and the
+[conformance vectors and model-level checks](conformance/README.md) and the
 [contract review record](CONTRACT-REVIEW.md).
 
 ## Setup provenance

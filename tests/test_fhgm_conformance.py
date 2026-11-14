@@ -1,0 +1,430 @@
+# SPDX-License-Identifier: MPL-2.0
+"""Offline integrity checks for the draft FHGM conformance suite.
+
+Runs with the standard library alone, so it works in the documentation and
+header-parity lanes where ``fair-bioheaders`` and ``jsonschema`` are not
+installed. These tests never run the model checker; they verify what a reviewer
+can check without it — that the recorded provenance matches the bytes in the
+tree, that every vector's own bytes, digests and file-bound checksum are what the
+manifest says, that the manifest is internally consistent and cites only rules it
+defines, and that the gap claim the suite makes is arithmetically true.
+
+The model-layer expectations themselves are observed only by
+``development/conformance/run_conformance.py``, which reports the base, checksum,
+GFF3 and model layers separately.
+"""
+
+from base64 import b64encode
+from hashlib import new as hash_new
+from hashlib import sha256
+import importlib.util
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+CONFORMANCE = ROOT / "development" / "conformance"
+MODEL = ROOT / "development" / "model"
+RUNNER = CONFORMANCE / "run_conformance.py"
+VECTOR_ID = re.compile(r"^[a-z0-9][a-z0-9.-]*$")
+CHECKSUM_PREFIX = b"#~checksum: "
+# Rule ids already owned by the shared conformance manifest. A draft FHGM id must
+# not collide with one of them, because absorption into the shared suite is an
+# open decision of the publication PR.
+SHARED_RULE_ID = re.compile(r"^(?:R(?:1[0-5]|[1-9])|M[1-5]|J[1-9]|P[12]|G[1-3]|V[1-7])$")
+
+SPEC = importlib.util.spec_from_file_location("fhgm_run_conformance", RUNNER)
+runner = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(runner)
+
+
+def manifest():
+    return json.loads((CONFORMANCE / "manifest.json").read_text())
+
+
+def provenance():
+    return json.loads((CONFORMANCE / "provenance.json").read_text())
+
+
+def recompute_checksum(data):
+    """SHA-512/256 over every byte except the root checksum line, padded base64."""
+    covered = b"".join(line for line in data.splitlines(keepends=True)
+                       if not line.startswith(CHECKSUM_PREFIX))
+    return b64encode(hash_new("sha512_256", covered).digest()).decode()
+
+
+class ManifestShape(unittest.TestCase):
+    def setUp(self):
+        self.manifest = manifest()
+
+    def test_top_level_fields(self):
+        for field in ("manifestVersion", "status", "specification", "decisionRecord",
+                      "checker", "recordContract", "transportOverlay", "provenance",
+                      "baseSchema", "ruleVocabulary", "contextVocabulary", "layers",
+                      "rules", "openScope", "vectors", "retired"):
+            with self.subTest(field=field):
+                self.assertIn(field, self.manifest)
+        self.assertEqual(1, self.manifest["manifestVersion"])
+
+    def test_the_draft_words_the_status_without_becoming_a_release(self):
+        status = self.manifest["status"]
+        for phrase in ("no released contract", "no schemaVersion", "no schema URL",
+                       "versions.json", "V7"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, status)
+
+    def test_vector_ids_are_unique_and_kebab_case(self):
+        ids = [vector["id"] for vector in self.manifest["vectors"]]
+        self.assertEqual(len(ids), len(set(ids)), "duplicate vector id")
+        for vector_id in ids:
+            with self.subTest(vector=vector_id):
+                self.assertRegex(vector_id, VECTOR_ID)
+
+    def test_generated_vectors_are_named_for_their_ids(self):
+        for vector in self.manifest["vectors"]:
+            if vector["file"].startswith("vectors/"):
+                with self.subTest(vector=vector["id"]):
+                    self.assertEqual(f"{vector['id']}.fhgff3.gff3", Path(vector["file"]).name)
+
+    def test_cited_rules_exist_and_polarity_is_recorded(self):
+        rules = self.manifest["rules"]
+        for vector in self.manifest["vectors"]:
+            cited = [vector["rule"]] if "rule" in vector else vector["rules"]
+            for rule in cited + vector.get("sharedRules", []):
+                with self.subTest(vector=vector["id"], rule=rule):
+                    self.assertIn(rule, rules)
+            with self.subTest(vector=vector["id"]):
+                self.assertTrue(vector["description"])
+                self.assertIn(vector["expected"], ("valid", "invalid"))
+                if vector["expected"] == "valid":
+                    self.assertNotIn("rule", vector)
+                    self.assertNotIn("reason", vector)
+                    self.assertTrue(cited)
+                else:
+                    self.assertEqual(1, len(cited), "an invalid vector breaks one rule")
+                    self.assertTrue(vector["reason"])
+
+    def test_shared_rule_citations_are_marked_shared(self):
+        for vector in self.manifest["vectors"]:
+            for rule in vector.get("sharedRules", []):
+                with self.subTest(vector=vector["id"], rule=rule):
+                    self.assertTrue(self.manifest["rules"][rule].get("shared"),
+                                    f"{rule} is cited as shared but not recorded that way")
+
+    def test_draft_rule_ids_do_not_collide_with_the_shared_suite(self):
+        for rule, summary in self.manifest["rules"].items():
+            with self.subTest(rule=rule):
+                if summary.get("shared"):
+                    self.assertRegex(rule, SHARED_RULE_ID)
+                else:
+                    self.assertFalse(SHARED_RULE_ID.match(rule),
+                                     f"{rule} is already owned by the shared manifest")
+                    self.assertRegex(rule, r"^[KB][1-9]$")
+
+    def test_open_scope_ids_are_cited_by_no_vector(self):
+        open_ids = set(self.manifest["openScope"])
+        for vector in self.manifest["vectors"]:
+            cited = set([vector["rule"]] if "rule" in vector else vector["rules"])
+            cited |= set(vector.get("sharedRules", []))
+            self.assertEqual(set(), cited & open_ids, f"{vector['id']} cites an open-scope id")
+        for rule, summary in self.manifest["openScope"].items():
+            with self.subTest(scope=rule):
+                for field in ("summary", "decision", "vectors"):
+                    self.assertTrue(summary[field], f"{rule} has no {field}")
+
+    def test_rule_sources_resolve(self):
+        for rule, summary in self.manifest["rules"].items():
+            with self.subTest(rule=rule):
+                self.assertTrue(summary["summary"])
+                source = summary["source"]
+                if source.startswith("https://"):
+                    continue
+                target = (CONFORMANCE / source.split("#", 1)[0]).resolve()
+                self.assertTrue(target.is_file(), f"{rule} cites {source}, not in the tree")
+                if "#" in source:
+                    anchor = source.rsplit("#", 1)[1]
+                    text = target.read_text(encoding="utf-8")
+                    slugs = {re.sub(r"[^a-z0-9 -]", "", line[3:].strip().lower().replace(" ", "-"))
+                             for line in text.splitlines() if line.startswith("## ")}
+                    self.assertIn(anchor, slugs,
+                                  f"{rule} cites anchor {anchor!r}, which no heading in "
+                                  f"{target.name} produces")
+
+    def test_every_model_rule_has_both_polarities(self):
+        positive, negative = set(), set()
+        for vector in self.manifest["vectors"]:
+            cited = [vector["rule"]] if "rule" in vector else vector["rules"]
+            for rule in cited:
+                (positive if vector["expected"] == "valid" else negative).add(rule)
+        for rule, summary in self.manifest["rules"].items():
+            if summary.get("shared") or rule.startswith("B"):
+                continue
+            with self.subTest(rule=rule):
+                self.assertIn(rule, positive, "no positive vector")
+                self.assertIn(rule, negative, "no negative vector")
+
+    def test_rejected_ids_are_never_reused(self):
+        retired = [entry["id"] for entry in self.manifest["retired"]]
+        live = [vector["id"] for vector in self.manifest["vectors"]]
+        self.assertEqual(set(), set(retired) & set(live))
+
+
+class Contexts(unittest.TestCase):
+    def setUp(self):
+        self.manifest = manifest()
+        self.by_file = {}
+        for vector in self.manifest["vectors"]:
+            self.by_file.setdefault(vector["file"], []).append(vector)
+
+    def test_predecessors_exist_and_are_vectors(self):
+        for vector in self.manifest["vectors"]:
+            for predecessor in (vector.get("context") or {}).get("predecessors", []):
+                with self.subTest(vector=vector["id"], predecessor=predecessor):
+                    self.assertIn(predecessor, self.by_file,
+                                  "a context snapshot must itself be a vector")
+                    self.assertTrue((CONFORMANCE / predecessor).is_file())
+                    self.assertNotEqual(predecessor, vector["file"],
+                                        "a vector cannot be its own predecessor")
+
+    def test_history_is_always_a_recorded_fhgff3_file(self):
+        """A supplied snapshot must be structurally valid, whatever its model verdict.
+
+        The checker resolves only the selected file's pointers, so history may
+        carry an unresolvable or ambiguous claim of its own - that is the bound
+        open scope O6 and O7 describe. What it may not be is a file the released
+        schema or the checksum rejects: the suite would then be resolving
+        pointers against bytes no reader would accept.
+        """
+        for vector in self.manifest["vectors"]:
+            for predecessor in (vector.get("context") or {}).get("predecessors", []):
+                with self.subTest(vector=vector["id"], predecessor=predecessor):
+                    cited = self.by_file[predecessor]
+                    self.assertTrue(cited, "history is not a recorded vector")
+                    self.assertTrue(any(other["layers"]["base"] == "accept"
+                                        and other["layers"]["checksum"] == "verify"
+                                        for other in cited),
+                                    "history is recorded as failing the released layers")
+
+    def test_context_dependence_is_pinned_by_a_pair(self):
+        """Deviation D3's bound needs the same bytes to go both ways."""
+        by_id = {vector["id"]: vector for vector in self.manifest["vectors"]}
+        accepted = by_id["gap-pointer-without-recorded-successor"]
+        refused = by_id["gap-skip-with-recorded-successor-supplied"]
+        self.assertEqual(accepted["file"], refused["file"])
+        self.assertEqual("valid", accepted["expected"])
+        self.assertEqual("invalid", refused["expected"])
+        self.assertLess(len((accepted.get("context") or {}).get("predecessors", [])),
+                        len((refused.get("context") or {}).get("predecessors", [])))
+
+
+class Bytes(unittest.TestCase):
+    def setUp(self):
+        self.vectors = manifest()["vectors"]
+
+    def test_recorded_bytes_and_checksums_match_the_files(self):
+        for vector in self.vectors:
+            path = (CONFORMANCE / vector["file"]).resolve()
+            with self.subTest(vector=vector["id"]):
+                self.assertTrue(path.is_file(), f"missing {vector['file']}")
+                data = path.read_bytes()
+                self.assertEqual(vector["bytes"]["size"], len(data), "size drifted")
+                self.assertEqual(vector["bytes"]["sha256"], sha256(data).hexdigest(),
+                                 "sha256 drifted")
+                stated = runner.stated_checksum(data)
+                self.assertIsNotNone(stated, "no checksum line")
+                self.assertEqual(vector["checksum"], stated, "stated digest drifted")
+                verified = recompute_checksum(data) == stated
+                self.assertEqual(vector["layers"]["checksum"] == "verify", verified,
+                                 "the recorded checksum outcome does not match the bytes")
+
+    def test_covered_bytes_exclude_only_the_checksum_line(self):
+        vector = next(v for v in self.vectors if v["id"] == "single-record")
+        data = (CONFORMANCE / vector["file"]).read_bytes()
+        lines = data.splitlines(keepends=True)
+        index = next(i for i, line in enumerate(lines) if line.startswith(CHECKSUM_PREFIX))
+        expected = b"".join(line for i, line in enumerate(lines) if i != index)
+        self.assertEqual(expected, runner.covered_bytes(data))
+        self.assertEqual(len(data) - len(expected), len(lines[index]))
+        self.assertEqual(b"\n", lines[index][-1:])
+
+    def test_independent_checksum_matches_the_toolkit_when_present(self):
+        try:
+            from bioheaders.cli import checksum as toolkit_checksum
+        except ImportError:
+            self.skipTest("fair-bioheaders is not installed in this interpreter")
+        from io import BytesIO
+
+        for vector in self.vectors:
+            if vector["layers"]["checksum"] != "verify":
+                continue
+            data = (CONFORMANCE / vector["file"]).read_bytes()
+            with self.subTest(vector=vector["id"]):
+                self.assertEqual(recompute_checksum(data),
+                                 toolkit_checksum(BytesIO(data), "gff3"))
+
+    def test_vectors_are_pinned_against_line_ending_conversion(self):
+        self.assertIn("development/conformance/** -text",
+                      (ROOT / ".gitattributes").read_text())
+
+
+class Provenance(unittest.TestCase):
+    def setUp(self):
+        self.provenance = provenance()
+
+    def test_base_schema_record_is_complete(self):
+        record = self.provenance["baseSchema"]
+        for field in ("repository", "url", "ref", "commit", "path", "size", "sha256",
+                      "retrieved", "retrievalCommand", "crossCheck", "whyThisRelease"):
+            with self.subTest(field=field):
+                self.assertTrue(record.get(field), f"{field} is missing")
+        self.assertRegex(record["commit"], r"^[0-9a-f]{40}$")
+        self.assertRegex(record["sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(record["retrieved"], r"^\d{4}-\d{2}-\d{2}$")
+
+    def test_base_schema_digest_agrees_with_the_checker_and_the_manifest(self):
+        source = (MODEL / "validate_fhgm.py").read_text()
+        pinned = re.search(r'^BASE_SHA256 = "([0-9a-f]{64})"$', source, re.MULTILINE)
+        self.assertIsNotNone(pinned, "the checker no longer pins its base schema bytes")
+        self.assertEqual(self.provenance["baseSchema"]["sha256"], pinned.group(1))
+        self.assertIn("provenance.json", manifest()["baseSchema"])
+
+    def test_recorded_contract_and_generator_bytes_match_the_tree(self):
+        artifacts = self.provenance["contractArtifacts"] + self.provenance["vectorGenerators"]
+        self.assertTrue(artifacts)
+        for artifact in artifacts:
+            path = ROOT / artifact["local"]
+            with self.subTest(artifact=artifact["local"]):
+                self.assertTrue(path.is_file(), "recorded artifact is missing")
+                data = path.read_bytes()
+                self.assertEqual(artifact["sha256"], sha256(data).hexdigest(),
+                                 "digest drifted: re-record provenance.json, then re-seal")
+                self.assertEqual(artifact["size"], len(data), "size drifted")
+
+    def test_the_recorded_contract_is_the_one_the_checker_loads(self):
+        names = {Path(artifact["local"]).name for artifact in self.provenance["contractArtifacts"]}
+        checker = (MODEL / "validate_fhgm.py").read_text()
+        for name in ("fhgm-model.schema.json", "fhgm-draft.schema.json"):
+            with self.subTest(schema=name):
+                self.assertIn(name, names, "the checker's contract is not pinned")
+                self.assertIn(name, checker, "the checker no longer loads this file")
+
+    def test_observed_tool_versions_are_recorded(self):
+        observed = self.provenance["observedWith"]
+        for field in ("python", "fair-bioheaders", "jsonschema", "PyYAML", "gff3-validator",
+                      "note"):
+            with self.subTest(field=field):
+                self.assertTrue(observed.get(field), f"{field} is missing")
+
+    def test_synthetic_content_and_attribution_are_declared(self):
+        self.assertIn("synthetic", self.provenance["syntheticContent"]["statement"].lower())
+        self.assertIn("CaltechDATA", self.provenance["syntheticContent"]["attribution"])
+
+    def test_downstream_draft_pins_are_tracked_for_the_freshness_lane(self):
+        pins = self.provenance["downstreamPins"]
+        self.assertTrue(pins, "a draft pin another repository holds on our bytes must be tracked")
+        for pin in pins:
+            with self.subTest(pin=pin["name"]):
+                self.assertTrue((ROOT / pin["tracks"]).is_file())
+                self.assertIn(pin["field"], ("sha256", "commit"))
+                self.assertTrue(pin["asOf"])
+                self.assertTrue(pin["checkedBy"])
+
+
+class Census(unittest.TestCase):
+    def setUp(self):
+        self.vectors = manifest()["vectors"]
+
+    def test_a_model_rejection_is_gap_proof_unless_the_base_layer_already_catches_it(self):
+        rejected = [vector for vector in self.vectors if vector["layers"]["model"] == "reject"]
+        self.assertTrue(rejected)
+        for vector in rejected:
+            boundary = vector["rule"].startswith("B")
+            with self.subTest(vector=vector["id"]):
+                caught_by_released_layers = (vector["layers"]["base"] == "reject"
+                                             or vector["layers"]["checksum"] == "stale")
+                self.assertEqual(boundary, caught_by_released_layers,
+                                 "the gap claim and the recorded layers disagree")
+        gaps = [vector for vector in rejected if not vector["rule"].startswith("B")]
+        self.assertEqual(len(rejected) - len([v for v in rejected if v["rule"].startswith("B")]),
+                         len(gaps))
+
+    def test_positive_vectors_pass_every_recorded_layer(self):
+        for vector in [v for v in self.vectors if v["expected"] == "valid"]:
+            with self.subTest(vector=vector["id"]):
+                self.assertEqual("accept", vector["layers"]["base"])
+                self.assertEqual("verify", vector["layers"]["checksum"])
+                self.assertEqual("accept", vector["layers"]["gff3"])
+                self.assertEqual("pass", vector["layers"]["model"])
+
+    def test_readme_lists_every_vector(self):
+        text = (CONFORMANCE / "README.md").read_text()
+        documented = set(re.findall(r"^\| `([a-z0-9.-]+)` \|", text, re.MULTILINE))
+        for vector in self.vectors:
+            with self.subTest(vector=vector["id"]):
+                self.assertIn(vector["id"], documented,
+                              "the README census table must list every manifest vector")
+
+    def test_nothing_in_the_suite_claims_a_released_fhgm_identity(self):
+        """Rule V7: the draft takes no release form, not even in a fixture byte."""
+        for path in sorted(CONFORMANCE.rglob("*")):
+            if not path.is_file() or path.suffix not in (".json", ".gff3", ".md", ".py"):
+                continue
+            with self.subTest(path=path.name):
+                self.assertNotIn("w3id.org/fair-bioheaders/fhgm",
+                                 path.read_text(encoding="utf-8", errors="ignore"))
+
+
+class Runner(unittest.TestCase):
+    def test_offline_lane_passes_and_reports_skipped_lanes(self):
+        result = subprocess.run([sys.executable, str(RUNNER), "--offline"],
+                                capture_output=True, text=True, cwd=ROOT)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("vectors matched their recorded outcomes", result.stdout)
+        self.assertIn("skipped", result.stdout)
+
+    def test_sealing_is_idempotent_on_the_committed_manifest(self):
+        """Recorded digests are current, and sealing cannot rewrite an expectation."""
+        sealed = runner.seal(manifest())
+        self.assertEqual((CONFORMANCE / "manifest.json").read_text(), sealed)
+
+    def test_validation_rejects_a_broken_manifest(self):
+        first = lambda document: document["vectors"][0]
+        invalid = lambda document: next(v for v in document["vectors"]
+                                        if v["expected"] == "invalid")
+        with_context = lambda document: next(v for v in document["vectors"]
+                                             if (v.get("context") or {}).get("predecessors"))
+        defects = {
+            "duplicate id": lambda document: document["vectors"].append(dict(first(document))),
+            "unknown rule": lambda document: first(document).update(rules=["K9"]),
+            "unknown shared rule": lambda document: first(document).update(sharedRules=["R77"]),
+            "missing reason": lambda document: invalid(document).pop("reason"),
+            "valid must not record a reason": lambda document: invalid(document).update(
+                expected="valid"),
+            "invalid must not cite a rule list": lambda document: invalid(document).update(
+                rules=["K2"]),
+            "missing file": lambda document: first(document).update(
+                file="vectors/valid/not-here.fhgff3.gff3"),
+            "file not named for the id": lambda document: first(document).update(
+                file="vectors/valid/supplied-external-model-id.fhgff3.gff3"),
+            "self predecessor": lambda document: with_context(document)["context"][
+                "predecessors"].append(with_context(document)["file"]),
+            "unknown predecessor": lambda document: with_context(document)["context"][
+                "predecessors"].append("../examples/contract/rich.fhgff3.gff3"),
+            "open scope citation": lambda document: first(document).update(rules=["O1"]),
+        }
+        for name, defect in defects.items():
+            with self.subTest(defect=name):
+                document = manifest()
+                try:
+                    defect(document)
+                except (KeyError, IndexError, TypeError, StopIteration) as error:
+                    self.fail(f"defect {name!r} does not apply to the manifest: {error}")
+                problems = runner.manifest_problems(document)
+                self.assertTrue(problems, "the runner accepted a broken manifest")
+
+
+if __name__ == "__main__":
+    unittest.main()
