@@ -83,7 +83,8 @@ ortholog of S6k in Drosophila ananassae*, CaltechDATA v1.0, CC BY 4.0
 [article](https://pmc.ncbi.nlm.nih.gov/articles/PMC12464738/)), and the record
 reuses only identifiers, attribution and the verified reference result already
 recorded in this directory: the file-local `modelId` repeats the gene feature
-ID as a placeholder — model ID authority remains open in #204 — and
+ID — file-local identity is the reviewed default for model ID (#204 Q2,
+2026-11-14), while who may mint an *external* model ID stays a curator question — and
 `modelVersion` repeats the recorded deposit version.
 
 ```sh
