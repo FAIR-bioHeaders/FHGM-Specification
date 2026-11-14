@@ -320,7 +320,7 @@ def check_vector(vector, lanes, base_schema):
             problems.append(f"recorded reason {vector['reason']!r} not in output: {model_text}")
     if gff3 != "skipped" and gff3 != layers["gff3"]:
         problems.append(f"GFF3 layer {gff3} != recorded {layers['gff3']}: {gff3_text}")
-    gap = layers["model"] == "reject" and layers["base"] == "accept" and outcome == "verify"
+    gap = model == "reject" and base == "accept" and recomputed == stated
     return problems, {"base": base, "model": model, "gff3": gff3, "gap": gap}
 
 
