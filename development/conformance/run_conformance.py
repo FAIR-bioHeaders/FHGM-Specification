@@ -513,6 +513,10 @@ def main():
 
     results = []
     failed = []
+    if args.seal:
+        if args.offline:
+            raise Failure("--seal requires a non-offline run to verify layer outcomes")
+        seal(manifest)
     for vector in vectors:
         problems, outcome = check_vector(vector, lanes, args.base_schema)
         result = {
