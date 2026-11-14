@@ -177,16 +177,11 @@ python development/model/check_draft.py /tmp/fhgff3-v0.5.0.json
 [`../examples/model/`](../examples/model/README.md) byte-for-byte, runs every
 acceptance and rejection fixture against the checker, and re-proves that the
 base schema alone accepts the model-invalid files. The manifest-driven
-conformance suite (FHGM #9) is the vector census and the CI lane:
-
-```sh
-python3 development/conformance/run_conformance.py --base-schema /tmp/fhgff3-v0.5.0.json
-python3 development/conformance/run_conformance.py --offline   # bytes and digests only
-```
+conformance suite and its CI lane are proposed in the stacked FHGM #9 work;
+they are not included in this standalone dispositions PR.
 
 Run `gff3-validate --no-header` separately for GFF3 syntax and feature-graph
-checks — the conformance runner does that when the tool is supplied and reports
-the lane as skipped otherwise — and remember that reference sequence matching and
-biological evidence assessment require their own inputs. See the
+checks; reference sequence matching and biological evidence assessment require
+their own inputs. See the
 [INSDC supplement](../INSDC-COVERAGE.md) for the coverage boundary:
 the experimental records add no coverage to any released contract.
