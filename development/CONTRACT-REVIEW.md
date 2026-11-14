@@ -218,13 +218,10 @@ re-proves each run, including that the released base schema and checksum accept
 every model-level rejection fixture. The contract fixtures were updated to the
 v0.1 record shape on 2026-11-12 and their checksums recomputed.
 
-CI integration landed with #9 rather than waiting for publication: the
-model-conformance workflow runs the conformance runner, this self-test and the
-offline byte/digest lane on every pull request and push to `main`. Every
-outcome recorded in the manifest was observed by running the committed checker
-on 2026-11-14 with the toolkit, `jsonschema`, Python and `gff3-validate`
-versions named in `development/conformance/provenance.json`; the workflow's own
-first execution is the run of this pull request, reported back here once it
-finishes. Two review findings came out of writing the vectors, recorded above:
+CI integration is proposed in the stacked FHGM #9 work rather than included
+in this branch. That work adds the model-conformance workflow, conformance
+runner and offline byte/digest lane; its provenance and workflow results must
+be checked on that PR. This branch's existing CI does not run the FHGM checker.
+Two review findings came out of preparing those vectors, recorded above:
 supplied snapshots' own pointers are not resolved (Q7), and rule K5 requires a
 comparable reference form rather than only the absence of a contradiction.
