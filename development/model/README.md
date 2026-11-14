@@ -5,7 +5,7 @@ Status: reviewed native draft contract v0.1 (proposal) under shared
 review. The 2026-11-14 joint review took its positions in the
 [review dispositions](../CONTRACT-REVIEW.md#review-dispositions-2026-11-14).
 The maintainer accepted the packet on 2026-11-14 ("we can publish"); publication
-itself is **not performed here** — no `schemaVersion`, no w3id schema URL and no
+itself is **not performed here** - no `schemaVersion`, no w3id schema URL and no
 `schemas/versions.json` entry exists or is claimed for FHGM, and selection rule
 V7 keeps the draft out of every release form until the shared publication PR
 lands. Publication stays with the shared specification.
@@ -50,7 +50,7 @@ The pilots (FHGM-Specification PRs #3/#4, summarized in the shared
 pointer that names an unchanged neighbor model or a stale predecessor file:
 those files pass schema and integrity checks unchanged. These rules therefore
 live in the separate model-level checker below, not in any JSON Schema. Each
-carries the stable id the conformance manifest
+carries the stable id the [conformance manifest](../conformance/manifest.json)
 cites; the two ids before them are the transport floor and the record shape the
 checker enforces through the JSON Schema files.
 
@@ -77,6 +77,13 @@ checker enforces through the JSON Schema files.
   must name its own `modelId` (deviation D2), and when the supplied set contains
   a recorded successor of the pointed record the pointer must name that successor
   rather than skip it (version-gap misuse).
+
+The manifest adds one more id, **B1**, for the boundary these rules sit on: a file
+must already satisfy the released FHGFF3 base schema and its exact-byte checksum
+before any FHGM verdict exists. Model checks add to those guarantees and never
+replace them, so a rejection reported under B1 (the 1.0-transport vector and a
+checksum-tampered file) is not evidence of a model-level gap. Everything the
+checker reports under K3–K6 is.
 
 ## Transport: FHGFF3-embedded records (normative draft wording)
 
@@ -113,9 +120,9 @@ grants nothing and changes no released contract.
 - The draft states **no** semantics for split, merge, assembly migration,
   transcript-only scope or companion-file identity (open question Q6, left to
   curators). A file that needs one of those is outside v0.1 rather than invalid
-  under it: the checker reports only what it checks, and the conformance
-  manifest (`development/conformance/manifest.json`) records the list as open
-  scope with no vectors.
+  under it: the checker reports only what it checks, and the [conformance
+  manifest](../conformance/manifest.json) records the list as open scope with no
+  vectors.
 
 ### Checker verdicts
 
@@ -177,11 +184,17 @@ python development/model/check_draft.py /tmp/fhgff3-v0.5.0.json
 [`../examples/model/`](../examples/model/README.md) byte-for-byte, runs every
 acceptance and rejection fixture against the checker, and re-proves that the
 base schema alone accepts the model-invalid files. The manifest-driven
-conformance suite and its CI lane are proposed in the stacked FHGM #9 work;
-they are not included in this standalone dispositions PR.
+[conformance suite](../conformance/README.md) is the vector census and the CI
+lane:
+
+```sh
+python3 development/conformance/run_conformance.py --base-schema /tmp/fhgff3-v0.5.0.json
+python3 development/conformance/run_conformance.py --offline   # bytes and digests only
+```
 
 Run `gff3-validate --no-header` separately for GFF3 syntax and feature-graph
-checks; reference sequence matching and biological evidence assessment require
-their own inputs. See the
+checks — the conformance runner does that when the tool is supplied and reports
+the lane as skipped otherwise — and remember that reference sequence matching and
+biological evidence assessment require their own inputs. See the
 [INSDC supplement](../INSDC-COVERAGE.md) for the coverage boundary:
 the experimental records add no coverage to any released contract.

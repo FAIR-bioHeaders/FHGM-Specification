@@ -149,11 +149,11 @@ against the [FHGM adoption decision
 packet](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/proposals/fhgm-adoption-packet.md)
 merged in the shared specification, which the maintainer accepted on
 2026-11-14 ("we can publish"). The positions below are what the reviewed
-contract now states. They are review decisions inside a still-unreleased draft:
-nothing here publishes, versions or registers FHGM, and per selection rule V7
-the draft takes no release form until the shared publication PR lands. The
-release vehicle (`v0.7.0` with FHT or its own `v0.8.0`) is a maintainer decision;
-this record assumes neither.
+contract now states. They are review decisions inside a
+still-unreleased draft: nothing here publishes, versions or registers FHGM, and
+per selection rule V7 the draft takes no release form until the shared
+publication PR lands. The release vehicle (`v0.7.0` with FHT or its own
+`v0.8.0`) is a maintainer decision; this record assumes neither.
 
 | Item | Disposition taken | Evidence and dissent |
 | --- | --- | --- |
@@ -200,7 +200,7 @@ this record assumes neither.
 | [Minimal](examples/contract/minimal.fhgff3.gff3) and [rich](examples/contract/rich.fhgff3.gff3) | Both pass the base schema with format checking and exact-byte checksum verification. Available GFF3 core checks report zero errors and warnings. |
 | [S6k](examples/s6k/README.md) | The headed conversion passes the base contract. The recorded sequence match and separate stop warnings remain visible. |
 | [Revision pilot](examples/revision/README.md) | Original, revision and two intentionally bad pointers pass the base contract. The model-level resolution check rejects the wrong-model and stale pointers. An unsupported `derivedFrom.relationship` is rejected by the base. |
-| [Contract v0.1 fixtures](examples/model/README.md) | All eleven fixtures — three positives and eight rejections — pass the released base schema and exact-byte checksum; only the model-level checker distinguishes them, per the fixture table. They are cited in place by the FHGM #9 conformance manifest (`development/conformance/manifest.json`), which adds 14 generated vectors, re-runs three of these files under different supplied histories, and includes the contract examples and the S6k record fixture: 31 vectors over 28 files, 12 valid and 19 invalid, 17 of the 19 rejections gap-proof. |
+| [Contract v0.1 fixtures](examples/model/README.md) | All eleven fixtures — three positives and eight rejections — pass the released base schema and exact-byte checksum; only the model-level checker distinguishes them, per the fixture table. They are cited in place by the [conformance manifest](conformance/manifest.json), which adds 14 generated vectors, re-runs three of these committed files under different supplied histories, and includes the contract examples and the S6k record fixture: 31 vectors over 28 files, 12 valid and 19 invalid, 17 of the 19 rejections gap-proof. |
 | Glys source archive and unconverted deposits | Source material only. They have not been verified as headed FHGFF3 examples. |
 
 The base schema accepts experimental extension content without checking FHGM
@@ -218,10 +218,14 @@ re-proves each run, including that the released base schema and checksum accept
 every model-level rejection fixture. The contract fixtures were updated to the
 v0.1 record shape on 2026-11-12 and their checksums recomputed.
 
-CI integration is proposed in the stacked FHGM #9 work rather than included
-in this branch. That work adds the model-conformance workflow, conformance
-runner and offline byte/digest lane; its provenance and workflow results must
-be checked on that PR. This branch's existing CI does not run the FHGM checker.
-Two review findings came out of preparing those vectors, recorded above:
+CI integration landed with #9 rather than waiting for publication: the
+[model-conformance workflow](../.github/workflows/model-conformance.yml) runs the
+[conformance runner](conformance/README.md), this self-test and the offline
+byte/digest lane on every pull request and push to `main`. Every outcome recorded
+in the manifest was observed by running the committed checker on 2026-11-14 with
+the toolkit, `jsonschema`, Python and `gff3-validate` versions named in
+[`conformance/provenance.json`](conformance/provenance.json); the workflow's own
+first execution is the run of this pull request, reported back here once it
+finishes. Two review findings came out of writing the vectors, recorded above:
 supplied snapshots' own pointers are not resolved (Q7), and rule K5 requires a
 comparable reference form rather than only the absence of a contradiction.

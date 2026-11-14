@@ -1,0 +1,849 @@
+{
+  "manifestVersion": 1,
+  "status": "Draft FHGM conformance suite, prepared from the reviewed model contract. FHGM has no released contract, no schemaVersion, no schema URL and no schemas/versions.json entry, and selection rule V7 keeps it that way until the shared publication PR lands; nothing here publishes, adopts or claims support. Every outcome recorded below is an observation of development/model/validate_fhgm.py run against the base-schema bytes recorded in provenance.json, re-verified by run_conformance.py.",
+  "specification": "../model/README.md",
+  "decisionRecord": "../CONTRACT-REVIEW.md",
+  "checker": "../model/validate_fhgm.py",
+  "recordContract": "../model/fhgm-model.schema.json",
+  "transportOverlay": "../model/fhgm-draft.schema.json",
+  "provenance": "provenance.json",
+  "baseSchema": "provenance.json records the released FHGFF3 1.1 bytes every outcome here was observed against: repository, tag, commit, path, sha256 and retrieval date. run_conformance.py verifies those bytes, the checker's own pinned digest and the recorded contract and generator artifacts before it reports anything.",
+  "ruleVocabulary": "K1-K6 are the FHGM model-level rules and B1 the boundary above them; they are drafted in this repository and are not registered in the shared conformance manifest, whose R1-R15, M, J, P, G and V namespaces keep their meanings. Vectors may also cite shared rules (sharedRules) where the shared text is the authority. The shared suite enumerates released types only, so this manifest is the seed the #204 publication PR either absorbs into conformance/manifest.json under ids it chooses, or mirrors with a cross-repository digest check - see README.md.",
+  "contextVocabulary": "Pointer resolution is context-dependent: `context.predecessors` names the prior snapshots handed to the checker, in addition to the vector's own bytes. Two entries may therefore share one file and differ only in the history supplied - that pair is how deviation D3's bound is pinned.",
+  "layers": "Each vector records what four independent checks report: base (the released fhgff3.json schema alone, over the parsed header), checksum (verify when the file-bound SHA-512/256 covers the bytes, stale when the header states a digest the bytes no longer produce), gff3 (gff3-validate --no-header over the feature layer, a separate tool: every vector here is recorded as accept, so no rejection in this suite can be attributed to GFF3 syntax) and model (the draft checker's outcome). The checksum field always holds the value the file states, stale or not, so a tampered vector pins which digest it kept. An invalid vector records the reason substring the checker must print. A reader without gff3-validate reports that layer as skipped; no FHGM rule depends on it.",
+  "rules": {
+    "K1": {
+      "summary": "Transport: an FHGM-carrying file keeps the released FHGFF3 1.1 schema URI and schemaVersion and carries one or more records under the single top-level x-fhgm-models key (docs/FORMAT.md R15). A file stating FHGFF3 1.0 cannot carry the extension at all.",
+      "source": "../model/README.md#model-level-constraints-the-base-schema-cannot-enforce"
+    },
+    "K2": {
+      "summary": "Record shape: every record validates against the native record contract, whose required set is modelId, modelVersion, featureId and reference (deviation D1); nested objects are closed and their opaque values are non-empty strings.",
+      "source": "../model/fhgm-model.schema.json"
+    },
+    "K3": {
+      "summary": "modelId is unique within one annotation snapshot. A duplicate makes the identity a pointer needs unselectable, reported under the name ambiguous, and rejects that snapshot (checker rule 1, deviation D4).",
+      "source": "../model/README.md#model-level-constraints-the-base-schema-cannot-enforce"
+    },
+    "K4": {
+      "summary": "featureId resolves, percent-decoded, to exactly one local gene row in the enclosing file (checker rule 2).",
+      "source": "../model/README.md#model-level-constraints-the-base-schema-cannot-enforce"
+    },
+    "K5": {
+      "summary": "A record reference shares at least one comparable form with the file genome link and never contradicts it (checker rule 3). Both halves are enforced, which is stricter than the adoption packet's D1 summary; the maintainers confirm that strength.",
+      "source": "../model/README.md#model-level-constraints-the-base-schema-cannot-enforce"
+    },
+    "K6": {
+      "summary": "A predecessor pointer resolves against explicitly supplied prior snapshots only: it names its own modelId (deviation D2), the recorded version differs, the assembly link and record reference match, and a recorded successor present in the supplied set is not skipped (checker rule 4, deviation D3).",
+      "source": "../model/README.md#model-level-constraints-the-base-schema-cannot-enforce"
+    },
+    "R3": {
+      "shared": true,
+      "origin": "docs/FORMAT.md (FAIR-bioHeaders-Specification)",
+      "summary": "Shared checksum rule 3, cited rather than redefined: the file checksum excludes the root checksum line and its terminator and covers every other byte, so it covers the embedded record bytes.",
+      "source": "https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/FORMAT.md"
+    },
+    "R15": {
+      "shared": true,
+      "origin": "docs/FORMAT.md (FAIR-bioHeaders-Specification)",
+      "summary": "Shared extension rule, cited rather than redefined: a top-level x- key is admitted from FHR 2.1 and FHP and FHGFF3 1.1; any other unknown key and any x- key inside a nested object stays invalid.",
+      "source": "https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/FORMAT.md"
+    },
+    "B1": {
+      "summary": "Boundary, not a model rule: a file must already satisfy the released FHGFF3 base schema and its exact-byte checksum before any FHGM verdict exists. Model checks add to those guarantees and never replace them, so a rejection reported under B1 is not evidence of a model-level gap.",
+      "source": "../model/README.md#transport-fhgff3-embedded-records-normative-draft-wording"
+    }
+  },
+  "openScope": {
+    "O1": {
+      "summary": "Transcript-only contribution scope.",
+      "decision": "#204 Q6, curator decision",
+      "vectors": "none - no outcome asserted"
+    },
+    "O2": {
+      "summary": "Split and merge of models across records.",
+      "decision": "#204 Q6, curator decision",
+      "vectors": "none - no outcome asserted"
+    },
+    "O3": {
+      "summary": "Assembly migration of a model between references.",
+      "decision": "#204 Q6, curator decision",
+      "vectors": "none - no outcome asserted"
+    },
+    "O4": {
+      "summary": "Companion-file (transcript and peptide) identity.",
+      "decision": "#204 Q6, curator decision",
+      "vectors": "none - no outcome asserted"
+    },
+    "O5": {
+      "summary": "Who may mint an external model identifier.",
+      "decision": "#204 Q2, curator residue",
+      "vectors": "supplied-external-model-id admits a supplied value; it authorises nothing"
+    },
+    "O6": {
+      "summary": "Whether a supplied snapshot with an unresolved own pointer may serve as history.",
+      "decision": "raised as #204 Q7 on 2026-11-14; v0.x says yes",
+      "vectors": "history-with-unresolved-own-pointer pins behavior, not a ruling"
+    },
+    "O7": {
+      "summary": "Whether ambiguous should be reachable as a per-pointer verdict.",
+      "decision": "#204 D4 review of 2026-11-14: snapshot level only in v0.x",
+      "vectors": "pointer-into-ambiguous-history pins the observable behavior"
+    },
+    "O8": {
+      "summary": "Curator acceptance of a resolved revision.",
+      "decision": "separate decision with its own evidence, outside the header check",
+      "vectors": "none - no file carries an acceptance assertion"
+    }
+  },
+  "vectors": [
+    {
+      "id": "both-reference-forms",
+      "file": "vectors/valid/both-reference-forms.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K5"
+      ],
+      "description": "Rule K5 with a file carrying both released FHGFF3 genome-link forms: one record binds the FHR parent checksum, the other the accession plus supplied SeqCol digest, and each finds a comparable form.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "1P5U+vhOhzH96CZR3tlQwQN8pItGDe63dH3oe0t2aT8=",
+      "bytes": {
+        "size": 1215,
+        "sha256": "a9720110c88170b21abab6e1c845905ccfb3d482bda5135442a81f539e86fe78"
+      }
+    },
+    {
+      "id": "contract-minimal-file",
+      "file": "../examples/contract/minimal.fhgff3.gff3",
+      "generator": "committed",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K2"
+      ],
+      "description": "The PR #7 contract example: released FHGFF3 1.1 identity plus the x-fhgm-models array, one record, no pointer.",
+      "sharedRules": [
+        "R15"
+      ],
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "/TyPutE5fH7sndxWSSTSL0vaMW83zHhU/LQTcZRH6Z0=",
+      "bytes": {
+        "size": 755,
+        "sha256": "14c37f5d09604d9514f5e98eb0fd289f9434ccce7d199ccdd1588dd011c34f57"
+      }
+    },
+    {
+      "id": "contract-rich-revision-chain",
+      "file": "../examples/contract/rich.fhgff3.gff3",
+      "generator": "committed",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K6"
+      ],
+      "description": "The PR #7 rich example resolved against the minimal example it names: the pointer's checksum, modelId and modelVersion all match.",
+      "context": {
+        "predecessors": [
+          "../examples/contract/minimal.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "eWhsEs3dFoASKWYoJhPQrWH9aoxDj6YHAibfqDqNTk4=",
+      "bytes": {
+        "size": 1240,
+        "sha256": "ebf7238069fb5315b58b14536673354eeb79b1878b0a7e7cd5436a47b29d9ef2"
+      }
+    },
+    {
+      "id": "file-linked-by-fhr-parent",
+      "file": "vectors/valid/file-linked-by-fhr-parent.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K5"
+      ],
+      "description": "The other FHGFF3 genome-link branch at file scope - a derivedFrom FHR annotates link and no genomeReference - with the record bound the same way. No v0.1 fixture exercised this branch.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "E5WBT7XXBottf0CeA4yUGIdaI55/TGgrI4ds/SzgWFI=",
+      "bytes": {
+        "size": 935,
+        "sha256": "5add0025916e2ab085b0f9ea29347f5881773a382f4e305261ef1dfed19718ac"
+      }
+    },
+    {
+      "id": "gap-pointer-without-recorded-successor",
+      "file": "../examples/model/version-gap-skip.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K6"
+      ],
+      "description": "The same bytes as gap-skip-with-recorded-successor-supplied with only the pointed snapshot supplied: resolvable. The pair is the point - the bound deviation D3 adopted cuts both ways, so the checker contradicts no chain it was not handed and claims no transitive or external history.",
+      "context": {
+        "predecessors": [
+          "../examples/model/snapshot-v1.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "eWayprO9nRTnZ0pp5dFFZsrOlxXTVLKLaQ6AlkoqZ1c=",
+      "bytes": {
+        "size": 1223,
+        "sha256": "77e5dc904e5dc020020ff02790dad9b32b7a1a0e0f45c343d4ea802505e58edd"
+      }
+    },
+    {
+      "id": "history-with-unresolved-own-pointer",
+      "file": "../examples/model/snapshot-v2.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K6"
+      ],
+      "description": "A supplied snapshot whose own pointer does not resolve still serves as history, because the checker resolves only the selected file's pointers. Raised as question Q7 by the 2026-11-14 review; v0.x keeps this weaker bounded behavior and the vector makes the bound visible rather than accidental.",
+      "context": {
+        "predecessors": [
+          "../examples/model/snapshot-v1.fhgff3.gff3",
+          "../examples/model/pointer-version-mismatch.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "5bYtJn9PQv+3tG9TNgIzKchJSBDgL8FslgP3QAb601M=",
+      "bytes": {
+        "size": 1223,
+        "sha256": "c42fdf0a84640f55fb0ac476343bf64cbfcbc7ae57410753b2d1fdf1861b23bd"
+      }
+    },
+    {
+      "id": "percent-decoded-feature-target",
+      "file": "vectors/valid/percent-decoded-feature-target.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K4"
+      ],
+      "description": "Rule K4 compares decoded identifiers: the record names toy-a while the gene row is written ID=toy%2Da.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "8vPZRuqHkrw3YKGtkdEfKyftMfq7Sh1RvlK99fmSUvQ=",
+      "bytes": {
+        "size": 960,
+        "sha256": "7a43e409f894859bd33ff3b5924813b29df62c282e5b8ce0b07f190bf02d2369"
+      }
+    },
+    {
+      "id": "revision-resolves-supplied-history",
+      "file": "../examples/model/snapshot-v2.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K2",
+        "K3",
+        "K6"
+      ],
+      "description": "A single-predecessor, same-assembly revision resolved against one explicitly supplied snapshot: verdict resolvable, which states only that the pointer identifies its predecessor record and never that a curator accepted the revision.",
+      "context": {
+        "predecessors": [
+          "../examples/model/snapshot-v1.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "5bYtJn9PQv+3tG9TNgIzKchJSBDgL8FslgP3QAb601M=",
+      "bytes": {
+        "size": 1223,
+        "sha256": "c42fdf0a84640f55fb0ac476343bf64cbfcbc7ae57410753b2d1fdf1861b23bd"
+      }
+    },
+    {
+      "id": "s6k-derived-record-fixture",
+      "file": "../examples/s6k/DanaCAF1_S6k.fhgm-models.fhgff3.gff3",
+      "generator": "embed_models",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K2",
+        "K4"
+      ],
+      "description": "The only non-synthetic content in the suite: one draft record wrapping the attributed, reference-verified S6k deposit fixture. Its bytes are re-derived by embed_models.py from the committed profile fixture rather than copied, so the deposit attribution and the record shape are checked together.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "krWpdzrhfx1SE7SYJlzxMCXiHg64ujNO6L26SF5asZ8=",
+      "bytes": {
+        "size": 4574,
+        "sha256": "bc00668960410d7acf6b38680439f87f9cc2b7f978425db189b15664a2e1f177"
+      }
+    },
+    {
+      "id": "single-record",
+      "file": "../examples/model/valid-single.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K2"
+      ],
+      "description": "One record, no predecessor claim: base schema, transport overlay, record contract and the uniqueness, target and agreement rules all hold.",
+      "sharedRules": [
+        "R15"
+      ],
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "P+HDA/e5TBwmQagHan7vKSQZGpM7oIa57sPNPE/HOSs=",
+      "bytes": {
+        "size": 923,
+        "sha256": "7f400445754e9a561da6a67c46f9bbaab532001276da998a4758294390bbf367"
+      }
+    },
+    {
+      "id": "supplied-external-model-id",
+      "file": "vectors/valid/supplied-external-model-id.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K2"
+      ],
+      "description": "Review disposition Q2. File-local identity is the default, and a producer-supplied external identifier may occupy the same opaque field: the modelId is not the featureId and needs no matching registry. The identifier sits in the documentation-only urn:example: namespace and claims no authority. modelVersion is equally opaque.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "j17+cBhdN3m1QzJcyrXKkGBEab2LoIvZmgkVOQfe+ZU=",
+      "bytes": {
+        "size": 984,
+        "sha256": "008cdf56aded57961bb146d2b6192953a084ed6dd36e65dbbff10f9d3991c048"
+      }
+    },
+    {
+      "id": "two-records-unique-ids",
+      "file": "../examples/model/snapshot-v1.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K2",
+        "K3"
+      ],
+      "description": "Two records with distinct modelIds in one snapshot, both targeting gene rows of a noncoding feature layer. This is the snapshot the pointer vectors below hand to the checker.",
+      "sharedRules": [
+        "R15"
+      ],
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "mLL01gudzlxP9lVjGu2XwxFI72RpAXMTEv5q2S9e4UM=",
+      "bytes": {
+        "size": 1100,
+        "sha256": "706ec80436e0abf2b25af9f286bc2dd29466150b3a40cb5d4f433e77e6872cfe"
+      }
+    },
+    {
+      "id": "ambiguous-model-id-in-snapshot",
+      "file": "../examples/model/ambiguous-model-id.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K3",
+      "reason": "Ambiguous model ID",
+      "description": "Deviation D4 as adopted: a duplicate modelId makes the identity a pointer needs unselectable, reported under the name ambiguous rather than as a generic invalid record, because the defect belongs to the snapshot.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "Q4uaux42N2pxeolmFp4awJE5bQKNbrFgYgS+H8fUjmQ=",
+      "bytes": {
+        "size": 1100,
+        "sha256": "da09d10bc4da0c6ba9c94b2180372ec1b9b3469996c4dd44e676481048e180e4"
+      }
+    },
+    {
+      "id": "empty-model-array",
+      "file": "vectors/invalid/empty-model-array.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K1",
+      "reason": "should be non-empty",
+      "description": "The transport requires one or more records, so an empty x-fhgm-models array is not an FHGM file at all. The base schema accepts it, because any extension value is valid there.",
+      "sharedRules": [
+        "R15"
+      ],
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "5LzPAJuT3ydw+PGjO7evvfbURs8MvhsweRKjeq7BTaM=",
+      "bytes": {
+        "size": 782,
+        "sha256": "2428eaaad84045477ce5e8063eab7cfca6a0369a4c628e0841e0a3054e15f6c3"
+      }
+    },
+    {
+      "id": "feature-target-absent",
+      "file": "vectors/invalid/feature-target-absent.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K4",
+      "reason": "must target one local gene row",
+      "description": "Rule K4: the record's featureId matches no local row.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "QR4Bzl+FHs90bGdoUx/vW6aLwDW+KH4THyKKlJJqMIA=",
+      "bytes": {
+        "size": 964,
+        "sha256": "61bfd704dc73dc9434cc34f41440dc70293619fd3435b6ad895162efb1cce544"
+      }
+    },
+    {
+      "id": "feature-target-duplicate-rows",
+      "file": "vectors/invalid/feature-target-duplicate-rows.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K4",
+      "reason": "must target one local gene row",
+      "description": "Rule K4: exactly one row, so two gene rows sharing the ID resolve to no target.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "lFSsGALQdIb8RPZG26Y8ONeoESYcpn3dzAflwjSWUqY=",
+      "bytes": {
+        "size": 992,
+        "sha256": "20fe45ede108e9a504a86c4184cc5c1ccef8feb4e19fe73859bc3c4e02800d2f"
+      }
+    },
+    {
+      "id": "feature-target-transcript-row",
+      "file": "vectors/invalid/feature-target-transcript-row.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K4",
+      "reason": "must target one local gene row",
+      "description": "Rule K4's v0.1 scope, not a ruling on #204 Q6: a transcript row is not a gene row, and v0.1 declares no transcript target. Transcript-only contribution stays with curators.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "cbKSArx3NDo5zJs9EB6GQOZC8N0O9wb117RkLl8q0s8=",
+      "bytes": {
+        "size": 962,
+        "sha256": "0b78cc60b396f9a941b731202f88bbb65c7d1be70c5708123faf126328c84b86"
+      }
+    },
+    {
+      "id": "gap-skip-with-recorded-successor-supplied",
+      "file": "../examples/model/version-gap-skip.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "already has a recorded successor",
+      "description": "Deviation D3 as adopted. The pointer skips the recorded successor of the pointed model, and that successor is in the supplied set, so the pointer is refused.",
+      "context": {
+        "predecessors": [
+          "../examples/model/snapshot-v1.fhgff3.gff3",
+          "../examples/model/snapshot-v2.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "eWayprO9nRTnZ0pp5dFFZsrOlxXTVLKLaQ6AlkoqZ1c=",
+      "bytes": {
+        "size": 1223,
+        "sha256": "77e5dc904e5dc020020ff02790dad9b32b7a1a0e0f45c343d4ea802505e58edd"
+      }
+    },
+    {
+      "id": "pointer-into-ambiguous-history",
+      "file": "vectors/invalid/pointer-into-ambiguous-history.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K3",
+      "reason": "Ambiguous model ID",
+      "description": "Deviation D4 at snapshot level, reached through the pointer side: the supplied prior snapshot carries a duplicate modelId, so loading it rejects the run and no verdict for this record's pointer is reported. Ambiguity is observable at snapshot level only (open scope O7).",
+      "context": {
+        "predecessors": [
+          "../examples/model/ambiguous-model-id.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "/+IQgLjSJZOVcBKsTILZEorOHbOpvmdjnSR3p7FZSi4=",
+      "bytes": {
+        "size": 1081,
+        "sha256": "e3a839642ff428b75040d7438a0684b5a0f402dd41adac016a782ae99fbb9e62"
+      }
+    },
+    {
+      "id": "predecessor-names-neighbor-model",
+      "file": "../examples/model/predecessor-name-mismatch.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "the pointer names another model ID",
+      "description": "Deviation D2, kept at the review, and the attack the pilots showed the released base schema waving through: the pointer names the unchanged neighbour model-b instead of the record's own model-a.",
+      "context": {
+        "predecessors": [
+          "../examples/model/snapshot-v1.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "Y8MtotsffyVTfnehi/Z7gLUwR9Qlh6f4qwzLSZF/zYg=",
+      "bytes": {
+        "size": 1223,
+        "sha256": "12d817b65e1d148cb9e41307f417ae0a165191c225986a452185ac8d2ff304f5"
+      }
+    },
+    {
+      "id": "predecessor-version-mismatch",
+      "file": "../examples/model/pointer-version-mismatch.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "the predecessor records version",
+      "description": "The pointer claims a predecessor version the pinned snapshot does not record. Values are compared for equality only, so '9' is not newer than '1' - it is simply not what was recorded (review disposition Q3).",
+      "context": {
+        "predecessors": [
+          "../examples/model/snapshot-v1.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "b4IGaP/hjEZnUw/gHQs/kCrhmJnJ40c8K3v44nEJvmk=",
+      "bytes": {
+        "size": 1223,
+        "sha256": "14d6175b13b6ec86ae84695f95797266034cc3297f5bcfad3c86fef8f4d8cfd1"
+      }
+    },
+    {
+      "id": "predecessor-version-reused",
+      "file": "../examples/model/version-reuse.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "reuses the predecessor model version",
+      "description": "The only version rule v0.1 states: an immediate revision must differ from its predecessor. Opaque equality is the whole of the semantics (review disposition Q3).",
+      "context": {
+        "predecessors": [
+          "../examples/model/snapshot-v1.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "yy/mPxrhzUyIUI/4Itl2jPKTECAjJckLzFcL/H1Jz30=",
+      "bytes": {
+        "size": 1223,
+        "sha256": "82763b0480533203ed7d51536b969cee05b7ff9dc187a53a087e93e157eb972f"
+      }
+    },
+    {
+      "id": "record-numeric-model-version",
+      "file": "vectors/invalid/record-numeric-model-version.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is not of type 'string'",
+      "description": "modelVersion is an opaque string, not a number: the YAML value 2 is not the string '2'. No ordering is claimed either way.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "bQl46zHP+FQi5WY4xO6t6n4TeVz2gPDyS4xJ5C+zeA8=",
+      "bytes": {
+        "size": 956,
+        "sha256": "88e8d27eabfc1d06f8cef804b1b9a4fa4a70901f6c442dd86b38b1d314885491"
+      }
+    },
+    {
+      "id": "record-reference-contradicts-file",
+      "file": "../examples/model/record-reference-conflict.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K5",
+      "reason": "contradicts the file genome link",
+      "description": "Rule K5's contradiction half: the record binds a different accession than the enclosing file's genome link. No checksum can reveal this, because both byte streams are internally consistent.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "7nxnzuageSrh6bpYY5jjwjddc1P4uBP8TRgWPgyfV9o=",
+      "bytes": {
+        "size": 920,
+        "sha256": "8ea1e35cf442149bebfc679d82333ec40e9363758bcc5e7c457e0f2968c39443"
+      }
+    },
+    {
+      "id": "record-unknown-key",
+      "file": "vectors/invalid/record-unknown-key.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "Additional properties are not allowed",
+      "description": "The record object is closed. An unknown key inside a record is invalid even though FORMAT.md R15 admits top-level x- keys and the base schema never looks inside the array.",
+      "sharedRules": [
+        "R15"
+      ],
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "8M152Jdhlha5ZM36+eX6RWy+Dq5T3EFVf9tcGW1PUZE=",
+      "bytes": {
+        "size": 983,
+        "sha256": "781eb4e7eda9710923cdffa70d528a0dc29c3aa3cdbaeedb19ff6a808f781f16"
+      }
+    },
+    {
+      "id": "record-without-reference",
+      "file": "../examples/model/record-without-reference.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "'reference' is a required property",
+      "description": "Deviation D1, kept at the review: a record must carry its own reference binding, so an extracted record cannot silently lose its assembly. The base schema ignores record contents entirely.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "+Oh9R2VYjabMpLlNVcjiLyURt3EGX6sgp5GEyTW7kzE=",
+      "bytes": {
+        "size": 807,
+        "sha256": "2fee4a274710e1ba3e017f259e9353939ca0536f02dbf740b1b3b5bf8a60d381"
+      }
+    },
+    {
+      "id": "reference-forms-not-comparable",
+      "file": "vectors/invalid/reference-forms-not-comparable.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K5",
+      "reason": "has no reference form comparable with the file genome link",
+      "description": "The half of rule K5 the adoption packet's D1 summary does not mention. Nothing contradicts here - the record binds an FHR parent checksum, the file an accession plus SeqCol digest - and the record is still rejected for sharing no comparable form. Whether v0.1 should be this strict is put to the maintainers (CONTRACT-REVIEW.md, review of 2026-11-14).",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "XARrpzyXmQuz9ey9d9HNLT+PmHRZV7FFu8EQypCJAsI=",
+      "bytes": {
+        "size": 915,
+        "sha256": "93eafce6cd8d0656bff3bec466c6f08eb961f0d5f20ccf6eba36e383d2aeb32e"
+      }
+    },
+    {
+      "id": "revision-without-supplied-history",
+      "file": "../examples/model/snapshot-v2.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "the predecessor snapshot is the current file or was not supplied",
+      "description": "The resolvable chain above run with an empty history set: unresolvable. Resolution is bounded to what the reviewer supplies, so an unsupplied chain is never assumed to hold.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "5bYtJn9PQv+3tG9TNgIzKchJSBDgL8FslgP3QAb601M=",
+      "bytes": {
+        "size": 1223,
+        "sha256": "c42fdf0a84640f55fb0ac476343bf64cbfcbc7ae57410753b2d1fdf1861b23bd"
+      }
+    },
+    {
+      "id": "stale-pointer-absent-history",
+      "file": "../examples/model/pointer-absent-snapshot.fhgff3.gff3",
+      "generator": "make_fixtures",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "the predecessor snapshot is the current file or was not supplied",
+      "description": "A pointer naming a digest no supplied snapshot carries (the checksum of unrelated bytes): unresolvable. The reported reason covers the absent-snapshot and current-file cases together, which v0.1 does not distinguish.",
+      "context": {
+        "predecessors": [
+          "../examples/model/snapshot-v1.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "+5lrWIOxTRSbXN6tKpoI6y91NIc5quP4RlVABMQJ//8=",
+      "bytes": {
+        "size": 1223,
+        "sha256": "5bac530f4300066f3957e3d3f20a897f1457378b57650d9294f561e3105496a9"
+      }
+    },
+    {
+      "id": "tampered-record-bytes",
+      "file": "vectors/invalid/tampered-record-bytes.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "B1",
+      "reason": "File checksum mismatch",
+      "description": "Integrity, not a model rule: one line added after the header makes the file-bound checksum stop covering the bytes, so the checker refuses before any model verdict. Recorded as a stale checksum and excluded from the gap claim, because the released checks catch it too.",
+      "sharedRules": [
+        "R3"
+      ],
+      "layers": {
+        "base": "accept",
+        "checksum": "stale",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "P+HDA/e5TBwmQagHan7vKSQZGpM7oIa57sPNPE/HOSs=",
+      "bytes": {
+        "size": 953,
+        "sha256": "d27e43eb1e98fe8147764aa13abf3798adcb407ce28fe5bccbea285c5fbb4e99"
+      }
+    },
+    {
+      "id": "transport-1-0-extension",
+      "file": "vectors/invalid/transport-1-0-extension.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "B1",
+      "reason": "'x-fhgm-models' should not be valid under",
+      "description": "The FORMAT.md R15 floor, and the one vector the released base schema itself rejects: a file stating FHGFF3 1.0 may not carry an extension key, so it never reaches a model verdict and is deliberately not gap-proof.",
+      "sharedRules": [
+        "R15"
+      ],
+      "layers": {
+        "base": "reject",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "sC8VDYBHC6KiuW7dExHaAda4Ls6r2wO5M0R9M1wYI40=",
+      "bytes": {
+        "size": 958,
+        "sha256": "787afca3c013253f68a8bbfea1d5947749cd3a5281abe4eac730b8dfb5c930a3"
+      }
+    }
+  ],
+  "retired": []
+}

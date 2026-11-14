@@ -5,7 +5,9 @@ Runs the acceptance and rejection matrix for the contract examples, the
 committed model fixtures (regenerated and compared byte-for-byte) and the
 S6k-derived record fixture. Also proves the demonstrated gap: files that the
 released base schema and checksum accept while the model-level checker
-rejects them. Requires fair-bioheaders and jsonschema; not part of CI.
+rejects them. Requires fair-bioheaders and jsonschema. The model-conformance
+workflow runs this matrix, and the manifest-driven runner in
+``development/conformance/``, on every pull request and push to ``main``.
 """
 
 import copy

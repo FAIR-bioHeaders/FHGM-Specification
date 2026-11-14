@@ -48,3 +48,11 @@ The real-provenance counterpart lives in the
 [S6k example](../s6k/README.md), where the same draft record shape wraps the
 attributed deposit-derived fixture. No fixture here asserts curator
 acceptance, biological correctness or INSDC readiness.
+
+These eleven fixtures are also vectors: the
+[conformance manifest](../../conformance/manifest.json) cites their committed
+bytes in place rather than copying them, and adds generated vectors, three
+context-dependent re-runs of the bytes above, and the contract examples. Run
+`python3 development/conformance/run_conformance.py --base-schema
+/path/to/fhgff3-v0.5.0.json` for the separately reported base, checksum, GFF3 and
+model layers across the whole set.
