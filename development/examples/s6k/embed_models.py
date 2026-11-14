@@ -41,7 +41,8 @@ def derive(data, source=SOFTWARE):
                 if key not in ("checksum", "x-fhgm-contribution-scope")}
     record = {
         # The file-local model ID reuses the gene feature ID of the converted
-        # deposit; model ID authority (curator versus derived) is open in #204.
+        # deposit. File-local identity is the reviewed default (#204 Q2, 2026-11-14);
+        # who may mint an external model ID stays a curator question.
         "modelId": FEATURE_ID,
         "modelVersion": header["version"],
         "featureId": FEATURE_ID,

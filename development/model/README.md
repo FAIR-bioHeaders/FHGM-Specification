@@ -1,17 +1,21 @@
 # Draft FHGM native model contract v0.1 (proposal)
 
-Status: native draft contract v0.1 (proposal) under shared
+Status: reviewed native draft contract v0.1 (proposal) under shared
 [#204](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/204)
-review; no publication, no support claims. This is the Option C hybrid adopted
-2026-11-12: a native FHGM model contract carried by FHGFF3-embedded `x-`
-transport. Nothing here is an adopted contract: no `schemaVersion`, no w3id
-schema URL and no `schemas/versions.json` entry exists or is claimed for FHGM.
-Publication stays with the shared specification after joint maintainer review.
+review. The 2026-11-14 joint review took its positions in the
+[review dispositions](../CONTRACT-REVIEW.md#review-dispositions-2026-11-14).
+The maintainer accepted the packet on 2026-11-14 ("we can publish"); publication
+itself is **not performed here** - no `schemaVersion`, no w3id schema URL and no
+`schemas/versions.json` entry exists or is claimed for FHGM, and selection rule
+V7 keeps the draft out of every release form until the shared publication PR
+lands. Publication stays with the shared specification.
 
 The draft advances the PR #10 overlay. The record contract is authored directly
-as JSON Schema in `fhgm-model.schema.json`; the family LinkML generation chain
-is one of the integration questions for shared review (see
-[the contract review](../CONTRACT-REVIEW.md)).
+as JSON Schema in `fhgm-model.schema.json`. The family LinkML generation chain
+stays an **undecided publication gate**, not a direction (open question Q5): the
+adoption packet's recommendation reads both as "migrate to LinkML at
+publication" and as "defer the choice", so this draft claims neither branch, and
+the publication PR must make the choice with each branch's cost named.
 
 ## Record fields
 
@@ -24,11 +28,11 @@ they are draft rationales, not adopted semantics.
 
 | Field | Requiredness | #204 concept | Draft rationale |
 | --- | --- | --- | --- |
-| `modelId` | Required, one opaque string | Model identity and scope | Unique within one annotation snapshot; stable across a revision of the same model on the same assembly. Who mints it — curator or derivation — is open. |
-| `modelVersion` | Required, one opaque string | Model identity and scope | Version semantics are open; v0.1 only requires an immediate revision to use a different value from its predecessor. No ordering is implied or checked. |
-| `featureId` | Required, one opaque string | Model identity and scope | Exact decoded local GFF3 feature ID. v0.1 resolves one `gene` row; isoforms stay in the native `ID`/`Parent` graph; transcript-only scope awaits curator review. Resolution is a checker rule, not a schema constraint. |
-| `reference` | Required; `genomeReference` (accession + supplied SeqCol digest) and/or `annotates` (FHR parent checksum) | Reference coordinates | Mirrors the FHGFF3 genome-link alternative so the record survives extraction from its file. The checker rejects a record reference that contradicts the file genome link. Never inferred; values are producer-supplied assertions. |
-| `predecessor` | Optional; then `annotationChecksum` + `modelId` + `modelVersion` all required | New and revised models | The revision pointer proven necessary in the pilots: prior annotation snapshot checksum, model ID and version. Absent means no revision claim. v0.1 supports single-predecessor, same-assembly revision only; split, merge and assembly migration stay open. |
+| `modelId` | Required, one opaque string | Model identity and scope | Unique within one annotation snapshot; stable across a revision of the same model on the same assembly. **File-local by default** (review disposition Q2, 2026-11-14): no minting authority is needed, and a producer-supplied external identifier may occupy this same opaque field. Who may mint external model IDs stays with curators. |
+| `modelVersion` | Required, one opaque string | Model identity and scope | **Opaque by review disposition (Q3)**: equality/difference only. An immediate revision must use a value different from its predecessor; no ordering is implied or checked, so `9` may name a revision earlier than `2`. Ordering needs curator use cases the pilots did not supply. |
+| `featureId` | Required, one opaque string | Model identity and scope | Exact decoded local GFF3 feature ID. v0.1 resolves one `gene` row; isoforms stay in the native `ID`/`Parent` graph; transcript-only scope awaits curator review (open question Q6). Resolution is a checker rule, not a schema constraint. |
+| `reference` | Required; `genomeReference` (accession + supplied SeqCol digest) and/or `annotates` (FHR parent checksum) | Reference coordinates | Mirrors the FHGFF3 genome-link alternative so the record survives extraction from its file; requiredness is adopted as deviation D1. Checker rule 3 is stronger than "does not contradict": the record reference must **share at least one comparable form** with the file genome link **and** never contradict it. Never inferred; values are producer-supplied assertions. |
+| `predecessor` | Optional; then `annotationChecksum` + `modelId` + `modelVersion` all required | New and revised models | The revision pointer proven necessary in the pilots: prior annotation snapshot checksum, model ID and version. Absent means no revision claim. Its `modelId` **must equal the record's own** `modelId` (deviation D2, adopted), which is what makes a rename impossible inside v0.x. Single-predecessor, same-assembly revision only; split, merge and assembly migration stay open. |
 | `contributors` | Optional nonempty list of `{name, role, nameType?, uri?}` | Credit and publication | Supplied model contributors and roles; author objects mirror the shared FHGFF3 `Author`. File metadata authors stay in `metadataAuthor`; article authorship, journal review and curator acceptance stay outside the record. |
 | `evidence` | Optional nonempty list of `{description, uri?}` | Evidence and methods | Supplied evidence assertions. An assertion is not a validation result; feature and biology checks belong to gff3-validator and reference matching to its own inputs. |
 | `methods` | Optional object: `software[] {name, version?, uri?}`, `protocol` URI, `limitations[]` | Evidence and methods | Tools with versions, a curation protocol reference and supplied limitations or uncertainty. Software objects mirror the FHGFF3 `Software` role. |
@@ -45,18 +49,41 @@ The pilots (FHGM-Specification PRs #3/#4, summarized in the shared
 `docs/FHGM.md`) showed the released FHGFF3 1.1 schema accepts a revision
 pointer that names an unchanged neighbor model or a stale predecessor file:
 those files pass schema and integrity checks unchanged. These rules therefore
-live in the separate model-level checker below, not in any JSON Schema:
+live in the separate model-level checker below, not in any JSON Schema. Each
+carries the stable id the [conformance manifest](../conformance/manifest.json)
+cites; the two ids before them are the transport floor and the record shape the
+checker enforces through the JSON Schema files.
 
-1. `modelId` is unique within one snapshot; a collision makes the identity
-   ambiguous and the snapshot invalid.
-2. `featureId` resolves to exactly one local `gene` row (percent-decoded).
-3. A record `reference` shares at least one comparable form with the file
-   genome link and never contradicts it.
-4. A predecessor pointer resolves against explicitly supplied prior snapshots
-   only; the successor's assembly link and record reference must match the
-   predecessor's, the versions must differ, and — when the supplied set
-   contains a recorded successor of the pointed record — the pointer must name
-   that successor rather than skip it (version-gap misuse).
+- **K1 — transport.** A file the checker accepts keeps the released FHGFF3 1.1
+  `schema` URI and `schemaVersion` `"1.1"` and carries one or more records under
+  the single top-level `x-fhgm-models` key (FORMAT.md R15). A file stating
+  FHGFF3 `1.0` cannot carry the extension at all: the base schema rejects it.
+- **K2 — record shape.** Each record validates against
+  `fhgm-model.schema.json`, whose required set is `modelId`, `modelVersion`,
+  `featureId` and `reference` (deviation D1: `reference` stays required, so an
+  extracted record keeps its own assembly binding).
+- **K3** (rule 1 in the draft) — `modelId` is unique within one snapshot; a
+  collision makes the identity `ambiguous` and rejects the snapshot (deviation
+  D4).
+- **K4** (rule 2) — `featureId` resolves to exactly one local `gene` row
+  (percent-decoded).
+- **K5** (rule 3) — a record `reference` shares at least one comparable form with
+  the file genome link and never contradicts it. Both halves are enforced: an
+  accession-plus-digest file and an FHR-checksum record reject each other even
+  though neither contradicts the other.
+- **K6** (rule 4) — a predecessor pointer resolves against **explicitly supplied**
+  prior snapshots only (deviation D3): the successor's assembly link and record
+  reference must match the predecessor's, the versions must differ, the pointer
+  must name its own `modelId` (deviation D2), and when the supplied set contains
+  a recorded successor of the pointed record the pointer must name that successor
+  rather than skip it (version-gap misuse).
+
+The manifest adds one more id, **B1**, for the boundary these rules sit on: a file
+must already satisfy the released FHGFF3 base schema and its exact-byte checksum
+before any FHGM verdict exists. Model checks add to those guarantees and never
+replace them, so a rejection reported under B1 (the 1.0-transport vector and a
+checksum-tampered file) is not evidence of a model-level gap. Everything the
+checker reports under K3–K6 is.
 
 ## Transport: FHGFF3-embedded records (normative draft wording)
 
@@ -66,7 +93,12 @@ grants nothing and changes no released contract.
 - An FHGM-carrying file **must** be a valid FHGFF3 1.1 file and **must** keep
   the released FHGFF3 `schema` URI and `schemaVersion` `"1.1"`. FHGM adds no
   file-type identity at v0.1; selection happens by explicitly running the
-  model-level checker, per the recorded decision.
+  model-level checker, per the recorded decision. Review disposition Q4 keeps
+  that as the only expression of model-contract identity until publication: the
+  draft adds no in-record version marker and no contract URI, and both stay
+  additive later. The record carries no `schema` field, so the selection rules
+  do not reach it; draft-stage recognition runs through the V7 lane at the
+  contract/validator level, and publication mints the contract's own identifier.
 - Model records **must** be carried under the single top-level extension key
   `x-fhgm-models` as a sequence of one or more objects, per
   [FORMAT.md R15](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/main/docs/FORMAT.md)
@@ -82,15 +114,34 @@ grants nothing and changes no released contract.
   identity, pointers — is validated exclusively by the separate draft checker
   (`validate_fhgm.py`). A file that passes base schema, checksum and transport
   has **not** passed FHGM validation.
-- Pointer resolution is reported by the checker as one of three verdicts and
-  resolution **never** asserts curator acceptance of a revision; acceptance is
-  a separate decision with its own evidence, recorded outside the header
-  check.
+- Pointer resolution is reported per the verdicts below and resolution **never**
+  asserts curator acceptance of a revision; acceptance is a separate decision
+  with its own evidence, recorded outside the header check.
+- The draft states **no** semantics for split, merge, assembly migration,
+  transcript-only scope or companion-file identity (open question Q6, left to
+  curators). A file that needs one of those is outside v0.1 rather than invalid
+  under it: the checker reports only what it checks, and the [conformance
+  manifest](../conformance/manifest.json) records the list as open scope with no
+  vectors.
 
 ### Checker verdicts
 
-For each record with a `predecessor`, given the explicitly supplied prior
-snapshots (each of which must itself pass all checks):
+Two levels, three names. Deviation D4 keeps all three names in the interface;
+the review of 2026-11-14 records which level each appears at, because the draft
+README previously implied that `ambiguous` was reachable per pointer.
+
+Snapshot level, while loading the selected file or any supplied prior snapshot
+(rules K2–K5):
+
+- `ambiguous` — multiple records share one `modelId`, so the identity a pointer
+  needs cannot select a record. Ambiguity is a defect of that snapshot, so
+  loading it rejects the run; this includes a *supplied prior* that is itself
+  ambiguous. No pointer verdict is reported for such a run.
+- any other snapshot defect — a record contract violation, an unresolved feature
+  target, a reference that conflicts with the file link, a transport or base
+  schema failure, a checksum mismatch — aborts the run with that reason.
+
+Pointer level, after every loaded snapshot passed the checks above:
 
 - `resolvable` — exactly one prior record matches the pointer identity, on a
   matching assembly, with a changed version and no skipped recorded successor.
@@ -98,13 +149,22 @@ snapshots (each of which must itself pass all checks):
   file, the pointer names another model ID, the prior record or its recorded
   version differs, the version is reused, the assembly links conflict or share
   no comparable form, or a recorded successor of the pointed record was skipped.
-- `ambiguous` — the pointer identity cannot select one record because multiple
-  records share a `modelId` within a snapshot. Ambiguity is a defect of the
-  snapshot itself and rejects it.
+
+For each record with a `predecessor`, the checker resolves against the
+explicitly supplied prior snapshots. **Each supplied snapshot must itself pass
+the snapshot-level checks above; its own `predecessor` claim is not resolved** —
+that is the bound deviation D3 describes, and it is why a snapshot with an
+unverifiable or skipped intermediate link can still serve as history here. The
+review raised the question of whether reviewers should be allowed to supply such
+a chain (Q7 in the
+[review dispositions](../CONTRACT-REVIEW.md#review-dispositions-2026-11-14));
+v0.x keeps the bounded behavior and the conformance suite pins it rather than
+leaving it implicit.
 
 v0.1 accepts only `resolvable`; `unresolvable` and `ambiguous` exit non-zero
-with the reason. Even a `resolvable` verdict states only that the pointer
-identifies its predecessor record.
+with the reason, and the reason text is a stable part of the interface — the
+manifest cites the exact substring each vector must produce. Even a `resolvable`
+verdict states only that the pointer identifies its predecessor record.
 
 ## Running the draft checker
 
@@ -123,8 +183,18 @@ python development/model/check_draft.py /tmp/fhgff3-v0.5.0.json
 `check_draft.py` is the draft self-test: it regenerates
 [`../examples/model/`](../examples/model/README.md) byte-for-byte, runs every
 acceptance and rejection fixture against the checker, and re-proves that the
-base schema alone accepts the model-invalid files. Run `gff3-validate
---no-header` separately for GFF3 syntax and feature-graph checks; reference
-sequence matching and biological evidence assessment require their own inputs.
-See the [INSDC supplement](../INSDC-COVERAGE.md) for the coverage boundary:
+base schema alone accepts the model-invalid files. The manifest-driven
+[conformance suite](../conformance/README.md) is the vector census and the CI
+lane:
+
+```sh
+python3 development/conformance/run_conformance.py --base-schema /tmp/fhgff3-v0.5.0.json
+python3 development/conformance/run_conformance.py --offline   # bytes and digests only
+```
+
+Run `gff3-validate --no-header` separately for GFF3 syntax and feature-graph
+checks — the conformance runner does that when the tool is supplied and reports
+the lane as skipped otherwise — and remember that reference sequence matching and
+biological evidence assessment require their own inputs. See the
+[INSDC supplement](../INSDC-COVERAGE.md) for the coverage boundary:
 the experimental records add no coverage to any released contract.

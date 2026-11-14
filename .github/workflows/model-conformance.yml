@@ -1,0 +1,96 @@
+name: FHGM draft model conformance
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '41 6 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Draft-stage checks for the reviewed FHGM model contract (FHGM #8/#9). This lane
+# runs the model-level vectors and the v0.1 self-test from this repository's
+# development tree. It publishes nothing: FHGM has no released contract, no
+# schemaVersion, no schema URL and no versions.json row, and selection rule V7
+# keeps the draft out of every release form. The header-parity and shared
+# conformance lanes keep checking the pinned FHGFF3 baseline unchanged.
+
+jobs:
+  draft-integrity:
+    name: Vector bytes, digests and manifest (standard library only)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - name: Verify recorded provenance, vector bytes and file-bound checksums offline
+        run: python3 development/conformance/run_conformance.py --offline
+      - name: Run the offline suite tests
+        run: python3 -m unittest discover -s tests -p test_fhgm_conformance.py -v
+
+  model-vectors:
+    name: Base, checksum, GFF3 and model layers on the recorded vectors
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - name: Read the pinned base-schema revision
+        id: pin
+        run: |
+          echo "commit=$(python3 -c 'import json; print(json.load(open("development/conformance/provenance.json"))["baseSchema"]["commit"])')" >> "$GITHUB_OUTPUT"
+      - name: Check out the pinned base-schema revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: FAIR-bioHeaders/FAIR-bioHeaders-Specification
+          ref: ${{ steps.pin.outputs.commit }}
+          path: .upstream/FAIR-bioHeaders-Specification
+          persist-credentials: false
+      - name: Install the recorded checker and feature-validator environments
+        run: |
+          python3 -m venv "$RUNNER_TEMP/fhgm-model"
+          "$RUNNER_TEMP/fhgm-model/bin/python" -m pip install --quiet \
+            'fair-bioheaders[jsonld]==0.11.0' 'jsonschema==4.26.0' 'gff3-validator==0.1.0'
+      - name: Run the conformance manifest across every available layer
+        run: |
+          "$RUNNER_TEMP/fhgm-model/bin/python" development/conformance/run_conformance.py \
+            --base-schema .upstream/FAIR-bioHeaders-Specification/fhgff3.json \
+            --gff3-validate "$RUNNER_TEMP/fhgm-model/bin/gff3-validate" --verbose
+      - name: Run the v0.1 draft self-test on the same bytes
+        run: |
+          "$RUNNER_TEMP/fhgm-model/bin/python" development/model/check_draft.py \
+            .upstream/FAIR-bioHeaders-Specification/fhgff3.json
+      - name: Run the suite tests against the installed toolkit
+        run: |
+          "$RUNNER_TEMP/fhgm-model/bin/python" -m unittest discover -s tests -p test_fhgm_conformance.py -v
+
+  draft-pin-freshness:
+    name: Downstream draft pins still point at these bytes
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      # A failure here means a consumer repository's recorded sha256 no longer
+      # matches this repository's contract bytes. The refresh belongs to the
+      # consumer, against a commit already merged to main - never before it, and
+      # never as a rename, a promotion or a release-shaped URL.
+      - name: Compare each recorded consumer pin with the contract bytes on main
+        run: python3 development/conformance/run_conformance.py --offline --check-downstream-pins

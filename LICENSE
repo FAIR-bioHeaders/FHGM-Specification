@@ -17,6 +17,17 @@ MPL-2.0-covered FAIR BioHeaders contributions:
   development/examples/s6k/embed_models.py (not the separately attributed
   CaltechDATA-derived payload or header identifiers it reuses);
   development/model/*.py and development/model/*.json;
+  the draft-review and conformance work under development/conformance/ —
+  development/conformance/README.md, the generators and runner
+  development/conformance/*.py, the records
+  development/conformance/manifest.json and
+  development/conformance/provenance.json, and the synthetic generated vectors
+  development/conformance/vectors/**/*.gff3 (the vectors this suite cites in
+  place under development/examples/ stay covered by the entries above, and the
+  S6k-derived vector keeps reusing the separately attributed CaltechDATA payload
+  without any grant in it); the .gitattributes lines covering development/; the
+  FHGM draft-conformance lane in .github/workflows/model-conformance.yml; and the
+  ci/README.md text describing that lane;
   the FHGM-local section of AGENTS.md; the FHGM CI
   introduction in ci/README.md; and the documentation-scope additions in
   .markdownlint-cli2.jsonc, introduced by the FHGM development setup change.
