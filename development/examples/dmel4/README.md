@@ -131,9 +131,9 @@ Environment: Python 3.15.0, `fair-bioheaders` 0.11.0, `jsonschema` 4.26.0,
 Toolkit integrity of the chain:
 
 ```text
-$ bioheaders verify Dmel-NC_004353.4-chr4.fhr.fa            → Checksum verified. (exit 0)
-$ bioheaders verify Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3 → Checksum verified. (exit 0)
-$ bioheaders verify Dmel_CG11076-Mpv17.snapshot-v2.fhgff3.gff3 → Checksum verified. (exit 0)
+bioheaders verify Dmel-NC_004353.4-chr4.fhr.fa              → Checksum verified. (exit 0)
+bioheaders verify Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3 → Checksum verified. (exit 0)
+bioheaders verify Dmel_CG11076-Mpv17.snapshot-v2.fhgff3.gff3 → Checksum verified. (exit 0)
 ```
 
 `verify-links` — three cases, all recorded:
