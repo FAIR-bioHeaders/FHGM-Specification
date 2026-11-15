@@ -378,6 +378,45 @@ def main():
             print(f"  - {n}")
         print()
 
+        # Expectation gate: the table above is only evidence if the recorded
+        # outcomes are the required ones. base/verify/gff3/model/gap per case;
+        # "" model means pass.
+        EXPECT = {
+            "fixture-v1": ("accept", "verify", "accept", "pass", False),
+            "fixture-v2-with-history": ("accept", "verify", "accept", "pass", False),
+            "fixture-v2-without-history": ("accept", "verify", "accept", "reject", True),
+            "mutant-k2-numeric-version": ("accept", "verify", "accept", "reject", True),
+            "mutant-k3-duplicate-modelid": ("accept", "verify", "accept", "reject", True),
+            "mutant-k4-target-transcript": ("accept", "verify", "accept", "reject", True),
+            "mutant-k4-target-absent": ("accept", "verify", "accept", "reject", True),
+            "mutant-k5-contradicts": ("accept", "verify", "accept", "reject", True),
+            "mutant-k5-not-comparable": ("accept", "verify", "accept", "reject", True),
+            "mutant-k6-neighbor-pointer": ("accept", "verify", "accept", "reject", True),
+            "mutant-k6-version-reused": ("accept", "verify", "accept", "reject", True),
+            "mutant-k1-empty-models": ("accept", "verify", "accept", "reject", True),
+            "mutant-transport-fhgff3-12": ("reject (ValidationError)", "verify",
+                                           "accept", "reject", False),
+            "tamper-payload-byte": ("accept", "stale", "accept", "reject", False),
+        }
+        problems = []
+        if gff3_validate is not None:
+            for name, (eb, ev, eg, em, egap) in EXPECT.items():
+                m = mutants[name]
+                if (m["base"], m["verify"], m["gff3"], m["model"], m["gap"]) != (
+                        eb, ev, eg, em, egap):
+                    problems.append(
+                        f"{name}: got "
+                        f"{(m['base'], m['verify'], m['gff3'], m['model'], m['gap'])}, "
+                        f"expected {(eb, ev, eg, em, egap)}"
+                    )
+        else:
+            print("gff3 lane unavailable: expectation gate skipped "
+                  "(install gff3-validator to run it)")
+        if problems:
+            for p in problems:
+                print(f"EXPECTATION MISMATCH: {p}")
+            raise SystemExit("recorded layer outcomes did not match expectations")
+
         # Neutered-checker controls.
         checker_text = CHECKER.read_text()
         print("neutered-checker controls:")

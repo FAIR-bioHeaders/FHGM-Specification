@@ -177,7 +177,8 @@ with `--genome Dmel-NC_004353.4-chr4.fhr.fa` executes the genome-aware lane:
 `exercise_rules.py` applies one realistic producer error per case to the
 real fixture headers and re-runs all four layers; each mutant gets a fresh
 correct checksum from the toolkit, so any rejection cannot be a checksum or
-transport artifact. Output of the run kept in this directory (exit 0):
+transport artifact. The script exits 0 only if every expectation above holds;
+its exit-0 run output is transcribed below (2026-11-15):
 
 | case | rule | base | verify | gff3 | model | layer gap |
 | --- | --- | --- | --- | --- | --- | --- |
