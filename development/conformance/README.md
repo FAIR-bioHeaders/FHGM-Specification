@@ -229,3 +229,13 @@ to derive an FHGM gene model (or an FHGFF3 annotation) for that organism, and no
 gene model has been fabricated to fill the gap. FHGM fixtures with a companion
 annotation release remain an open item of
 [#206](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/206).
+
+Status update 2026-11-15: the annotated-source gap in the **examples** lane is
+closed — [../examples/dmel4/](../examples/dmel4/README.md) holds real
+chromosome-4 gene-model fixtures (new model, revision snapshot, multi-isoform
+locus plus a single-exon neighbor) derived from RefSeq
+`GCF_000001215.4` with full provenance, and its `exercise_rules.py` shows
+which model-level rules the real locus exercises. The **vector** census above
+is unchanged (31 vectors, bytes and manifest untouched): promoting any real
+case into a digest-pinned normative vector is a separate review decision,
+gated on the curator round like everything else here.

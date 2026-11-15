@@ -22,3 +22,8 @@ Keep original payload bytes and any derived file distinct, documenting every
 transformation. Do not write FH checksums by hand or label ordinary source hashes
 as FH checksums. Add headed FHGM examples only after draft payload/schema selection
 and explicit tooling support exist. Mark synthetic fixtures clearly.
+
+Real-data case added 2026-11-15: [dmel4/](dmel4/) carries the source review
+(`SOURCE.md`), provenance record and two headed snapshot fixtures built from
+the RefSeq annotation of *Drosophila melanogaster* `GCF_000001215.4`
+chromosome 4. They are examples, not conformance vectors.
