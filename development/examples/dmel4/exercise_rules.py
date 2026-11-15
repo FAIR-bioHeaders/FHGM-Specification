@@ -283,7 +283,12 @@ def main():
             verify = layer_verify(toolkit, path)
             gff3 = layer_gff3(gff3_validate, path)
             model, reason = layer_model(args.base_schema, path, predecessors)
-            gap = base == "accept" and verify == "verify" and model == "reject"
+            gap = (
+                base == "accept"
+                and verify == "verify"
+                and gff3 == "accept"
+                and model == "reject"
+            )
             mutants[name] = {
                 "path": path,
                 "rule": rule,
