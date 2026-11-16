@@ -301,11 +301,11 @@ confirmed per file rather than asserted by the suite.
 
 ## FHGFF3 1.2 basis
 
-Under the dual-base decision of the same day, the promoted bytes were also
-re-observed under the released FHGFF3 1.2 identity: the dmel4 exercise
-re-runs the same 10 cases recombined under `v0.6.0`/`1.2` with fresh toolkit
-checksums and mixed-identity chains, and all 10 reproduce with identical model
-verdicts and reasons (`exercise_rules.py` exits non-zero otherwise). The
+The reported 10/10 FHGFF3 1.2 agreement comes from
+[PR #17's dual-base tree](https://github.com/FAIR-bioHeaders/FHGM-Specification/pull/17),
+whose dmel4 exercise re-runs the ten cases under `v0.6.0`/`1.2` with fresh
+checksums and mixed-identity chains. This branch's exercise does not run that
+lane: it still expects its single 1.2 transport mutant to be base-rejected.
 conformance matrix lane's per-vector twins for the promoted 12 seal into
 `base_matrix.json` when this batch lands on a tree that carries PR #17's
 matrix lane — recorded below as a follow-through, not claimed as done here.
