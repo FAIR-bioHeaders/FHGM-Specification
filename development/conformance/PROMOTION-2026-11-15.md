@@ -306,17 +306,27 @@ The reported 10/10 FHGFF3 1.2 agreement comes from
 whose dmel4 exercise re-runs the ten cases under `v0.6.0`/`1.2` with fresh
 checksums and mixed-identity chains. This branch's exercise does not run that
 lane: it still expects its single 1.2 transport mutant to be base-rejected.
-conformance matrix lane's per-vector twins for the promoted 12 seal into
-`base_matrix.json` when this batch lands on a tree that carries PR #17's
-matrix lane — recorded below as a follow-through, not claimed as done here.
+The conformance matrix lane's per-vector twins for the promoted 12 will seal
+into `base_matrix.json` when this batch lands on a tree that carries PR #17's
+matrix lane — recorded as a follow-through of the merge order, not claimed as
+done here.
 
 ## Neutered-checker evidence (from the 2026-11-15 example-lane run)
 
 `exercise_rules.py` N-K3/N-K4/N-K5/N-K6: each control disables exactly one
 guard (the script refuses unless the old text occurs exactly once and the
-bytes change), flips its own rejection 1→0 and keeps the cross-control
-rejection standing; all four pass. This is the non-vacuity proof that the
-attributed rule — not an adjacent one — produces each promoted expectation.
+bytes change), flips its own rejection 1→0 and keeps one selected
+cross-control rejection standing; all four pass. This is the non-vacuity
+proof for the four cases it covers — duplicate-ID, transcript-target,
+contradictory-reference and neighbor-pointer — that the attributed guard, not
+an adjacent one, produces those rejections. N-K5's cross-control additionally
+shows `mutant-k5-not-comparable` stays rejected with the contradiction guard
+disabled — the two K5 halves are independent checks — but its own guard is not
+itself neutered. The remaining five promoted cases carry no direct neuter; for
+them the evidence is the reason-string identity plus
+rule-level agreement between two independent implementations (controls 1 and 3
+above), and a reviewer who wants guard-level attribution for those should say
+so on this PR rather than assume it exists.
 
 ## Review checklist for the independent reader
 
