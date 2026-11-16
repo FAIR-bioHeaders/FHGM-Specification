@@ -86,6 +86,11 @@ zero warnings on all 43 sealed files and all 43 matrix twins, including the
 duplicate-gene-ID vector. The feature layer and the model layer are orthogonal,
 and no rejection in this suite can be attributed to GFF3 syntax.
 
+The unresolved distinction between local feature-ID resolution and the external
+GFF3 executor is addressed in the
+[layer-semantics proposal](LAYER-SEMANTICS-PROPOSAL.md) for #22. It is not adopted
+and changes no manifest or acceptance outcome.
+
 ## Rules
 
 `K1`–`K6` and `B1` are drafted in this repository and are **not** registered in
