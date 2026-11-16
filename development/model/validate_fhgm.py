@@ -191,6 +191,8 @@ def parse_snapshot(data):
 
 def validate_snapshot(data, candidates, transport, record_contract, label="carrier"):
     header = parse_snapshot(data)
+    if not isinstance(header, dict):
+        raise ValueError("FHGFF3 header metadata must be an object")
     digest, record, base, basis = choose_base(header.get("schemaVersion"), candidates)
     print(f"Base selection: {label} declares schemaVersion "
           f"{header.get('schemaVersion')!r} -> {describe(record, digest)} ({basis})")
