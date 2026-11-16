@@ -128,7 +128,7 @@
     "path": "fhgff3.json at tag v0.5.0 of FAIR-bioHeaders-Specification",
     "url": "https://raw.githubusercontent.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/v0.5.0/fhgff3.json",
     "sha256": "20ce320f5d706f11ed21cdece4dfb56e3568b50be126e25b4016f46f2e8e416c",
-    "note": "equal to the BASE_SHA256 pinned by development/model/validate_fhgm.py and to development/conformance/provenance.json"
+    "note": "registered in development/model/base-schemas.json, which validate_fhgm.py consults to select the base per carrier (dual-base decision 2026-11-15; these fixtures declare 1.1 and are judged by these bytes), and recorded in development/conformance/provenance.json"
   },
   "environment": {
     "python": "3.15.0",

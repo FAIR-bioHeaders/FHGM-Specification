@@ -124,9 +124,12 @@ that FlyBase or RefSeq revised `CG11076`.
 
 Environment: Python 3.15.0, `fair-bioheaders` 0.11.0, `jsonschema` 4.26.0,
 `gff3-validator` 0.1.0; base schema = FHGFF3 `fhgff3.json` at tag `v0.5.0`
-(SHA-256 `20ce320f…e8e416c`, the bytes pinned by `validate_fhgm.py` and by
-`development/conformance/provenance.json`; a nonsense-tag control URL returned
-404, confirming the raw path is real).
+(SHA-256 `20ce320f…e8e416c`, registered in `development/model/base-schemas.json`
+and selected by `validate_fhgm.py` for these 1.1-declaring fixtures; the same
+record is in `development/conformance/provenance.json`; a nonsense-tag control
+URL returned 404, confirming the raw path is real). The exercise lane is
+re-run below under both registered releases (v0.5.0 and v0.6.0) following the
+maintainer dual-base decision of 2026-11-15.
 
 Toolkit integrity of the chain:
 
@@ -194,14 +197,16 @@ its exit-0 run output is transcribed below (2026-11-15):
 | `mutant-k6-neighbor-pointer` | K6 | accept | verify | accept | reject | yes |
 | `mutant-k6-version-reused` | K6 | accept | verify | accept | reject | yes |
 | `mutant-k1-empty-models` | K1 | accept | verify | accept | reject | yes |
-| `mutant-transport-fhgff3-12` | K1/B1 | reject | verify | accept | reject | no |
+| `mutant-transport-fhgff3-12` | K1 | accept | verify | accept | pass | — |
 | `tamper-payload-byte` | B1 | accept | stale | accept | reject | no |
 
-Every rejection above was reproduced with its full reason string; 10 of the
-12 model-layer rejections are gap-proof — the released FHGFF3 1.1 base schema
-accepts them and the exact-byte checksum verifies, and **only** the model
-checker distinguishes them, on real annotated data. The reasons quoted by the
-script:
+Table transcribed 2026-11-15 after the dual-base decision: the FHGFF3 1.2
+identity mutant is now a **positive** transport case (it was the base-layer
+rejection finding F1 recorded below), so the run holds 11 model-layer
+rejections, of which **10 are gap-proof** — the released base schema accepts
+them and the exact-byte checksum verifies, and **only** the model checker
+distinguishes them, on real annotated data. The 11th (`tamper-payload-byte`)
+is caught by the released checksum too. The reasons quoted by the script:
 
 ```text
 fixture-v2-without-history: Model 'gene-Dmel_CG11076' predecessor is unresolvable: the predecessor snapshot is the current file or was not supplied
@@ -214,6 +219,31 @@ mutant-k5-not-comparable: Model 'gene-Dmel_CG11076' has no reference form compar
 mutant-k6-neighbor-pointer: … the pointer names another model ID 'gene-Dmel_CG11077'
 mutant-k6-version-reused: … the revision reuses the predecessor model version
 mutant-k1-empty-models: $['x-fhgm-models']: [] should be non-empty
+```
+
+### Dual-base re-run: the gap-proof set under the FHGFF3 1.2 base
+
+The same script rebuilds each of the 10 gap-proof cases under the released
+1.2 identity (`schema` and `schemaVersion` moved, a fresh correct
+toolkit-recomputed checksum, records and feature bytes untouched, predecessors
+kept as the committed 1.1 snapshots — the mixed-identity chain a base-line
+release bump produces in the field) and requires every verdict and reason to
+reproduce. Exit-0 run output (2026-11-15):
+
+```text
+dual-base re-run of the gap-proof set (FHGFF3 1.2 identity):
+  twin12-fixture-v2-without-history: base=accept verify=verify model=reject reason reproduced
+  twin12-mutant-k2-numeric-version: base=accept verify=verify model=reject reason reproduced
+  twin12-mutant-k3-duplicate-modelid: base=accept verify=verify model=reject reason reproduced
+  twin12-mutant-k4-target-transcript: base=accept verify=verify model=reject reason reproduced
+  twin12-mutant-k4-target-absent: base=accept verify=verify model=reject reason reproduced
+  twin12-mutant-k5-contradicts: base=accept verify=verify model=reject reason reproduced
+  twin12-mutant-k5-not-comparable: base=accept verify=verify model=reject reason reproduced
+  twin12-mutant-k6-neighbor-pointer: base=accept verify=verify model=reject reason reproduced
+  twin12-mutant-k6-version-reused: base=accept verify=verify model=reject reason reproduced
+  twin12-mutant-k1-empty-models: base=accept verify=verify model=reject reason reproduced
+  10/10 gap-proof rejections reproduce unchanged under the 1.2 base; the 1.2
+  mutant itself is admitted as a positive carrier.
 ```
 
 ### Neutered-checker controls (non-vacuity proof)
@@ -258,13 +288,22 @@ detection power for those. What only this real annotated genome produced:
   rhetorical.
 - The K1/B1 transport boundary against the **current** released FHGFF3
   identity (1.2 / v0.6.0) — not representable in synthetic bytes alone
-  without deciding which released version the draft rides on (finding F1).
+  without deciding which released version the draft rides on (finding F1,
+  since resolved: the decision of 2026-11-15 admits both released identities,
+  and the re-run above shows the K-layer verdicts are base-invariant).
 - The `verify-links` subset-vs-assembly behavior above, which no K rule
   covers and which only real parent files exercise.
 
 ## Findings for #8/#9 (draft, no decisions taken here)
 
-1. **F1 — the draft's base identity lags the released FHGFF3.** K1 requires
+1. **F1 — the draft's base identity lags the released FHGFF3.**
+   **Resolved by maintainer decision 2026-11-15: support both released bases
+   (option C of the A/B/C framing).** The harness now selects the base from
+   the carrier's declared identity (`development/model/base-schemas.json` plus
+   the checker's selection lane and the conformance suite's 1.2 matrix); the
+   sealed 1.1 vectors keep their bytes and expectations. The text below is the
+   finding as filed on 2026-11-15, kept unrewritten as the review record.
+   K1 requires
    the FHGFF3 `1.1` identity and the checker pins the v0.5.0 bytes, but the
    released contract is FHGFF3 `1.2` (v0.6.0) — which the same toolkit
    verifies fine (`mutant-transport-fhgff3-12`: `verify` passes; the base

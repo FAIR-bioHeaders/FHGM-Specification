@@ -1,5 +1,29 @@
 # FHGM changelog
 
+## Unreleased — dual FHGFF3 base support (2026-11-15)
+
+- Per the maintainer decision of 2026-11-15, the draft harness admits both
+  released FHGFF3 bases: v0.5.0/schemaVersion 1.1 and v0.6.0/schemaVersion 1.2.
+  Selection, not substitution: `development/model/base-schemas.json` registers
+  the released bytes by tag-resolved digest, the checker routes each carrier by
+  its declared `schemaVersion` and prints the selection, and the transport
+  overlay carries two closed identity branches.
+- The conformance suite gains the `base_matrix.json` lane: every sealed vector
+  is re-observed as an identity-rewritten twin under the v0.6.0 bytes. All 31
+  vector entries in `manifest.json` keep their bytes and expectations; the
+  manifest's K1 rule summary, base descriptor and a `baseMatrix` pointer moved,
+  so the manifest file's own digest changed (consumers holding byte-pins
+  refresh against the merged commit as their own action).
+- Measured: 31 twins, 0 verdict changes against the sealed lane; the gap claim
+  (17/19 base-and-checksum-passing, model-only rejections) holds identically on
+  both bases. The dmel4 example lane reproduces the 10 gap-proof real-data
+  rejections under the 1.2 identity and now carries the 1.2 transport case as a
+  positive control (former finding F1).
+- `check_draft.py` and `exercise_rules.py` accept the registered bases and run
+  the matrix per base with cross-routing checks. Draft status unchanged: no
+  FHGM contract, schema version, release, w3id/tag URL or toolkit support is
+  introduced (selection rule V7).
+
 ## Unreleased — native draft contract v0.1 proposal (2026-11-12)
 
 - Per the recorded Option C hybrid decision in shared #204, advance the draft

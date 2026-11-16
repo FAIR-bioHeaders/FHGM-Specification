@@ -229,3 +229,29 @@ first execution is the run of this pull request, reported back here once it
 finishes. Two review findings came out of writing the vectors, recorded above:
 supplied snapshots' own pointers are not resolved (Q7), and rule K5 requires a
 comparable reference form rather than only the absence of a contradiction.
+
+## Maintainer decisions recorded 2026-11-15
+
+1. **Dual FHGFF3 base support (closes the F1 framing from the real-data
+   examples, [examples/dmel4/README.md](examples/dmel4/README.md)).**
+   Asked as "rebase the single pin to 1.2 (A), stay pinned to 1.1 (B), support
+   both (C)", the maintainer decided **C**. Implemented as base *selection*: the
+   checker routes each carrier by its declared `schemaVersion` against the
+   registry in `model/base-schemas.json`, the overlay admits the two released
+   identity branches, and the conformance suite is matrixed — the sealed 1.1
+   lane and its evidence trail stay intact, the new `base_matrix.json` records
+   the 1.2 observation. Nothing about this changes rule V7: FHGM stays a draft
+   with no release form. Measured outcome: 31 twins, 0 verdict changes; the
+   17/19 gap-proof split holds on both bases; the v0.5.0→v0.6.0 release delta
+   (dotted BUSCO dataset versions, gated to 1.2 carriers) touches no FHGM
+   content because no vector or fixture carries a `completeness` object.
+2. **Promotion of selected example-lane cases to normative vectors.** The 10
+   gap-proof rejections measured over the real *Drosophila* chr4 fixtures are
+   the candidate set. Promotion runs as a separate draft PR whose recorded
+   expectations require independent review by a second reader — the derivation
+   author cannot approve them — and nothing merges on this repository's agent
+   lanes. The retired `T1–T3` id shape stays retired: promoted vectors keep
+   kebab-case ids in this suite's existing style (`K`/`B` rule labels stay local
+   to this repository, as the manifest's rule vocabulary records), and
+   `selfChecksum`/`parentLink` semantics are unaffected (FHGM records keep no
+   file identity of their own).
