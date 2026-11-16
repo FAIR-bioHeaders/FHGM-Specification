@@ -133,17 +133,6 @@
       "checkedBy": "run_conformance.py --check-downstream-pins (network; scheduled and dispatch only, so PR lanes stay offline)"
     },
     {
-      "name": "JavaScript library draft-lane suite-manifest pin",
-      "consumer": "FAIR-bioHeaders/FAIR-bioHeaders-Tools-JavaScript",
-      "url": "https://raw.githubusercontent.com/FAIR-bioHeaders/FAIR-bioHeaders-Tools-JavaScript/main/drafts/provenance.json",
-      "path": "drafts/provenance.json",
-      "pointer": "/drafts/FHGM",
-      "tracks": "development/conformance/manifest.json",
-      "field": "suiteManifestSha256",
-      "asOf": "2026-11-15: the pin records sha256 31f14f022ff0858191170d1c8285bd83c7f943d88fd8cebc70f11712525617db at suiteCommit ac3d37b, fresh against the manifest bytes of that revision. The 2026-11-15 dual-base change edits only the manifest's rule-text strings (the K1 summary, the baseSchema descriptor and a baseMatrix pointer); all 31 vector entries keep their recorded bytes and expectations, but the manifest's own bytes move, so this pin goes stale when the change merges. Refreshing it is the consumer's action against a merged commit, never an FHGM-side edit.",
-      "checkedBy": "run_conformance.py --check-downstream-pins (network; scheduled and dispatch only, so PR lanes stay offline)"
-    },
-    {
       "name": "JavaScript library draft-lane transport-overlay pin",
       "consumer": "FAIR-bioHeaders/FAIR-bioHeaders-Tools-JavaScript",
       "url": "https://raw.githubusercontent.com/FAIR-bioHeaders/FAIR-bioHeaders-Tools-JavaScript/main/drafts/provenance.json",
@@ -151,7 +140,7 @@
       "pointer": "/drafts/FHGM/transportOverlay",
       "tracks": "development/model/fhgm-draft.schema.json",
       "field": "sha256",
-      "asOf": "2026-11-15: the pin records sha256 dd9f69274f26860bbfd71d0e8b2794420c5369fb5d40ce838fb6a9e6d5116e3d (the single-identity overlay). The dual-base overlay changes these bytes, so the pin and the consumer's vendored copy fhgm-transport-draft.json go stale when the change merges; the consumer's src/fhgm.js already treats R15 as admitting 1.2 carriers, per its own note. Refresh is the consumer's action. Tools-R vendors byte copies of this suite (tests/draft/fhgm/) and checks them with its own tools/check_vendoring.R; those copies go stale the same way and are refreshed by that repository, not here.",
+      "asOf": "2026-11-15, re-verified against the consumer's server main the same day: the pin records sha256 dd9f69274f26860bbfd71d0e8b2794420c5369fb5d40ce838fb6a9e6d5116e3d (the single-identity overlay, suiteCommit ac3d37b). The dual-base overlay changes these bytes, so the pin and the consumer's vendored copy fhgm-transport-draft.json go stale when this change merges; the consumer's src/fhgm.js already treats R15 as admitting 1.2 carriers, per its own note. The record-contract pin on the same main (sha256 bf1553ca...) tracks bytes this change leaves untouched and stays fresh. Scope of the same merge's staleness, reported not fixed here: JavaScript main does NOT yet field-pin our manifest - a suiteManifestSha256 pin for the 31-vector manifest exists only on that repository's unmerged draft-lane branch and will move when that branch rebases onto the new bytes - and Tools-R main vendors byte copies of the suite (tests/draft/fhgm/: manifest 31f14f02..., provenance.json, the vector files) checked by its own tools/check_vendoring.R; the vendored manifest and provenance move at merge while every vendored vector file stays byte-identical, because no manifest vector entry changes. Every refresh is the consumer's action against the merged commit, never an FHGM-side edit.",
       "checkedBy": "run_conformance.py --check-downstream-pins (network; scheduled and dispatch only, so PR lanes stay offline)"
     }
   ]
