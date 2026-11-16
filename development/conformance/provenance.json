@@ -66,8 +66,8 @@
     {
       "local": "development/model/validate_fhgm.py",
       "role": "model-level checker (K3-K6) and base selector, the authority for every recorded outcome",
-      "size": 14204,
-      "sha256": "d514fe709fd2f62096ded8a47edfeafbffa2a863e49733ed94e435ea11fb12d0"
+      "size": 14310,
+      "sha256": "f14e60732d3de2c0633c7601f7e2847a4668c084b8ab7ff093f0c35b58a592f7"
     },
     {
       "local": "development/model/base-schemas.json",
@@ -100,6 +100,12 @@
       "role": "shared render, canonical-JSON and checksum helpers reused by both generators (PR #4 pilot machinery)",
       "size": 6056,
       "sha256": "9614c6c370bc532e18ea98886449d9e9278c0a17c792a63c16f61c00f14e8cb8"
+    },
+    {
+      "local": "development/conformance/make_dmel_vectors.py",
+      "role": "emits the promoted real-data vectors named dmel-* from the committed examples/dmel4 fixtures (draft promotion packet, PROMOTION-2026-11-15.md; one documented header mutation per case, canonical render with a fresh checksum, feature bytes untouched)",
+      "size": 5708,
+      "sha256": "4e0290a1651dcce402605077553398b185fda10a68769aefdc31a5497379424c"
     }
   ],
   "observedWith": {
@@ -108,7 +114,7 @@
     "jsonschema": "4.26.0",
     "PyYAML": "6.0.3",
     "hashlibOpenSSL": "OpenSSL 4.1.0 23 Oct 2026",
-    "note": "Every sealed-lane outcome comes from a run of development/model/validate_fhgm.py with these versions. check_draft.py was additionally re-run with fair-bioheaders 0.8.1 (the shared conformance job's toolkit baseline in this repository's header-parity.yml), and run_conformance.py passed end to end under 0.8.1 as well, so no sealed outcome depends on a toolkit newer than the one that job installs. The 2026-11-15 dual-base rework re-observed both lanes under the same versions (0.11.0 toolkit; the checker imports the toolkit's header reader and checksum implementation; the matrix lane's twins are derived with the standard library only). The GFF3 feature lane was observed twice: with gff3-validator 0.1.0 built from the local gff3-validator checkout and with the 0.1.0 wheel installed from PyPI (the CI environment); both report zero errors and zero warnings on all 31 vectors, and the matrix lane repeats that observation on the 31 twins.",
+    "note": "Every sealed-lane outcome comes from a run of development/model/validate_fhgm.py with these versions. check_draft.py was additionally re-run with fair-bioheaders 0.8.1 (the shared conformance job's toolkit baseline in this repository's header-parity.yml), and run_conformance.py passed end to end under 0.8.1 as well. The 2026-11-15 dual-base rework re-observed both lanes with fair-bioheaders 0.11.0; the checker imports the toolkit's header reader and checksum implementation, and matrix twins are derived with the standard library. The 12 promoted dmel-* vectors were observed by the same checker and toolkit. The GFF3 feature lane was observed with gff3-validator 0.1.0 built from the local checkout and with the PyPI wheel (the CI environment); both report zero errors and zero warnings on the original 31 vectors, the 12 promoted vectors and, after sealing, their 12 matrix twins. The wrong-parent digest in dmel-reference-contradicts-file is the committed S6k fixture's own checksum, read from its bytes at generation time.",
     "gff3-validator": "0.1.0"
   },
   "independence": {
@@ -117,7 +123,7 @@
     "notRun": "gff3-validate 0.1.0 (local checkout build and the PyPI wheel) ran the feature layer over every vector; the lane is optional at run time and reports skipped where the tool is absent. Header checks were deliberately skipped with --no-header, because the FHGFF3 header identity is the base layer of this suite, not its subject."
   },
   "syntheticContent": {
-    "statement": "Every vector except s6k-derived-record-fixture is synthetic. The accession SYNTHETIC_ASSEMBLY.1 and the SeqCol digest come from the revision pilot's one-record toy collection (>toy with 100 'A' bases), the accessions, model IDs, DOIs, URNs and evidence strings are placeholders scoped to these directories, and the synthetic FHR parent digest is computed over declared synthetic bytes. No accession, digest, identifier or biological relationship was invented for a real resource. The matrix twins inherit exactly their source vector's content with the two released-identity lines rewritten and the checksum recomputed; they invent nothing.",
+    "statement": "The original synthetic vector set, except s6k-derived-record-fixture, is synthetic. The accession SYNTHETIC_ASSEMBLY.1 and the SeqCol digest come from the revision pilot's one-record toy collection (>toy with 100 'A' bases), the accessions, model IDs, DOIs, URNs and evidence strings are placeholders scoped to these directories, and the synthetic FHR parent digest is computed over declared synthetic bytes. The dmel-* promotion-batch vectors are not synthetic: their feature rows, accessions, coordinates, identifiers and pointers come verbatim or by documented single-field mutation from the real-data fixtures under development/examples/dmel4/ (RefSeq GCF_000001215.4, chromosome NC_004353.4; see that directory's SOURCE.md and provenance.json); the only invented token is the clearly labelled gene-Dmel_absentFromThisFile, which asserts absence from the file and names no real resource. Matrix twins inherit their source vector's content with only the released-identity lines rewritten and the checksum recomputed; they invent nothing.",
     "attribution": "s6k-derived-record-fixture wraps a feature payload derived from Laura K. Reed, 'Model: Gene model for the ortholog of S6k in Drosophila ananassae', CaltechDATA v1.0, CC BY 4.0 (deposit https://doi.org/10.22002/e86gh-a7p16), as recorded in development/examples/s6k/README.md. Its record reuses only identifiers, attribution and the verified reference result already recorded there."
   },
   "downstreamPins": [
@@ -140,7 +146,7 @@
       "pointer": "/drafts/FHGM/transportOverlay",
       "tracks": "development/model/fhgm-draft.schema.json",
       "field": "sha256",
-      "asOf": "2026-11-15, re-verified against the consumer's server main the same day: the pin records sha256 dd9f69274f26860bbfd71d0e8b2794420c5369fb5d40ce838fb6a9e6d5116e3d (the single-identity overlay, suiteCommit ac3d37b). The dual-base overlay changes these bytes, so the pin and the consumer's vendored copy fhgm-transport-draft.json go stale when this change merges; the consumer's src/fhgm.js already treats R15 as admitting 1.2 carriers, per its own note. The record-contract pin on the same main (sha256 bf1553ca...) tracks bytes this change leaves untouched and stays fresh. Scope of the same merge's staleness, reported not fixed here: JavaScript main does NOT yet field-pin our manifest - a suiteManifestSha256 pin for the 31-vector manifest exists only on that repository's unmerged draft-lane branch and will move when that branch rebases onto the new bytes - and Tools-R main vendors byte copies of the suite (tests/draft/fhgm/: manifest 31f14f02..., provenance.json, the vector files) checked by its own tools/check_vendoring.R; the vendored manifest and provenance move at merge while every vendored vector file stays byte-identical, because no manifest vector entry changes. Every refresh is the consumer's action against the merged commit, never an FHGM-side edit.",
+      "asOf": "2026-11-15, re-verified against the consumer's server main the same day: the pin records sha256 dd9f69274f26860bbfd71d0e8b2794420c5369fb5d40ce838fb6a9e6d5116e3d (the single-identity overlay, suiteCommit ac3d37b). The dual-base overlay changes these bytes, so the pin and the consumer's vendored copy fhgm-transport-draft.json go stale when this change merges; the consumer's src/fhgm.js already treats R15 as admitting 1.2 carriers, per its own note. The record-contract pin on the same main (sha256 bf1553ca...) tracks bytes this change leaves untouched and stays fresh. Scope of the same merge's staleness, reported not fixed here: JavaScript main does NOT yet field-pin our manifest - a suiteManifestSha256 pin for the original 31-vector manifest exists only on that repository's unmerged draft-lane branch and will move when that branch rebases onto the merged 43-vector bytes - and Tools-R main vendors byte copies of the suite (tests/draft/fhgm/: manifest 31f14f02..., provenance.json, the original vector files) checked by its own tools/check_vendoring.R; the vendored manifest and provenance move at merge, and the 12 promoted vector entries and their files need to be considered by the consumer's refresh. Every refresh is the consumer's action against the merged commit, never an FHGM-side edit.",
       "checkedBy": "run_conformance.py --check-downstream-pins (network; scheduled and dispatch only, so PR lanes stay offline)"
     }
   ]

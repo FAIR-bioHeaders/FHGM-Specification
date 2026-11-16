@@ -16,7 +16,7 @@ An FHGM model record lives under the FHGFF3 header's `x-fhgm-models` extension
 key, where the released FHGFF3 base schema cannot see inside it — on either
 released identity, 1.1 or 1.2. Every
 model-level rejection recorded here therefore **also passes the released base
-schema and its exact-byte checksum** — 17 of the 19 invalid vectors do; the two
+schema and its exact-byte checksum** — 27 of the 29 invalid vectors do; the two
 exceptions are named below. That gap is the reason FHGM has a separate
 model-level checker, and it is why an FHGM conformance lane has to run the
 checker rather than evaluate a schema: schema-vector conformance cannot express
@@ -26,8 +26,7 @@ FHGM acceptance.
 
 - `manifest.json` — the rule ids, the open-scope list and the expected outcome of
   every vector, including the prior snapshots each pointer check is handed. The
-  sealed lane: all 31 vector entries keep the bytes and expectations observed
-  against the FHGFF3 1.1 (v0.5.0) base, unchanged by the dual-base work.
+  sealed lane runs all 43 vector entries against the FHGFF3 1.1 (v0.5.0) base.
 - `base_matrix.json` — the FHGFF3 1.2 matrix lane: for every sealed vector, the
   identity-rewritten twin's sealed digest and the layers observed against the
   v0.6.0 base, with an explicit agreement flag per vector (maintainer dual-base
@@ -41,6 +40,12 @@ FHGM acceptance.
   [revision pilot](../examples/revision/README.md) render helpers, the same
   synthetic assembly and the same one-record SeqCol collection as the v0.1
   fixture set.
+- `make_dmel_vectors.py` — companion generator for the promoted real-data batch:
+  each emitted file is one committed [dmel4](../examples/dmel4/README.md)
+  fixture header with exactly one documented producer-error mutation, rendered
+  canonical-line with a fresh computed checksum over the fixture's own verbatim
+  RefSeq feature rows. Draft promotion packet:
+  [PROMOTION-2026-11-15.md](PROMOTION-2026-11-15.md).
 - `run_conformance.py` — the independent runner. It imports nothing from
   `check_draft.py` or from the generators, recomputes every checksum with
   `hashlib`, derives the 1.2 twins from the sealed bytes by the same standard
@@ -60,11 +65,8 @@ The vectors reuse the overlay and snapshot machinery merged in
 [`8b0ca00`](https://github.com/FAIR-bioHeaders/FHGM-Specification/commit/8b0ca0055b84d69bc24e5daf4ad1950e91d11d0e)
 (native record contract, checker and v0.1 fixture set): the same
 `fhgm-draft.schema.json`, the same `fhgm-model.schema.json`, the same checker,
-the same `render`/`synthetic_reference`/`feature_payload` helpers. The 31 vectors
-cover 28 distinct files: 14 new generated vectors, 14 vectors citing the eleven
-committed v0.1 fixture bytes **in place** (three of them are the same bytes
-re-run under different supplied histories), two contract examples held as
-committed, and one S6k record vector re-derived with `embed_models.py`. Nothing
+the same `render`/`synthetic_reference`/`feature_payload` helpers. The census
+contains the original 31 vectors plus 12 promoted real-data vectors. Nothing
 here re-implements a reader, a checksum or a validator.
 
 ## Layers
@@ -80,9 +82,9 @@ reported separately and never collapsed into one "valid" boolean:
 | `model` | `validate_fhgm.py`: transport overlay, native record contract, rules K3–K6 and the pointer verdict | the reviewed draft contract |
 
 Every vector records `gff3: accept`: gff3-validator 0.1.0 reports zero errors and
-zero warnings on all 31 files, including the duplicate-gene-ID vector. The
-feature layer and the model layer are orthogonal, and no rejection in this suite
-can be attributed to GFF3 syntax.
+zero warnings on all 43 sealed files and all 43 matrix twins, including the
+duplicate-gene-ID vector. The feature layer and the model layer are orthogonal,
+and no rejection in this suite can be attributed to GFF3 syntax.
 
 ## Rules
 
@@ -110,8 +112,12 @@ pinned (`gap-skip-with-recorded-successor-supplied` against
 
 ## Vectors
 
-31 vectors: 12 valid, 19 invalid. Layer outcomes are `base` / `checksum` / `gff3`
-/ `model`.
+43 vectors: 14 valid, 29 invalid — the 31 sealed synthetic-plus-S6k census plus
+the 12-case real-data promotion batch (10 gap-proof rejections and 2 required
+positive anchors, `dmel-*`, promoted from the dmel4 example lane as a DRAFT
+pending independent review; see
+[PROMOTION-2026-11-15.md](PROMOTION-2026-11-15.md) and its review conditions).
+Layer outcomes are `base` / `checksum` / `gff3` / `model`.
 
 ### Valid
 
@@ -120,6 +126,8 @@ pinned (`gap-skip-with-recorded-successor-supplied` against
 | `both-reference-forms` | K1,K5 | `accept` / `verify` / `accept` / `pass` | 0 | Rule K5 with a file carrying both released FHGFF3 genome-link forms: one record binds the FHR parent checksum, the other the accession plus supplied SeqCol digest, and each finds a comparable form. |
 | `contract-minimal-file` | K1,K2,R15 | `accept` / `verify` / `accept` / `pass` | 0 | The PR #7 contract example: released FHGFF3 1.1 identity plus the `x-fhgm-models` array, one record, no pointer. |
 | `contract-rich-revision-chain` | K1,K6 | `accept` / `verify` / `accept` / `pass` | 1 | The PR #7 rich example resolved against the minimal example it names: pointer checksum, `modelId` and `modelVersion` all match. |
+| `dmel-snapshot-v1` | K1,K2,K4,K5 | `accept` / `verify` / `accept` / `pass` | 0 | Real chromosome-4 gene models (multi-isoform `Dmel_CG11076`, single-exon `Dmel_CG11077`) bound to both released genome-link forms with real values; the positive anchor the promoted pointer cases supply. |
+| `dmel-snapshot-v2-resolved` | K1,K2,K6 | `accept` / `verify` / `accept` / `pass` | 1 | The real revision snapshot resolved against the v1 anchor: checksum, own `modelId` and recorded version all match; `resolvable` states no curator acceptance. |
 | `file-linked-by-fhr-parent` | K1,K5 | `accept` / `verify` / `accept` / `pass` | 0 | The other FHGFF3 genome-link branch at file scope — a `derivedFrom` FHR annotates link and no `genomeReference` — with the record bound the same way. No v0.1 fixture exercised this branch. |
 | `gap-pointer-without-recorded-successor` | K6 | `accept` / `verify` / `accept` / `pass` | 1 | The same bytes as `gap-skip-with-recorded-successor-supplied` with only the pointed snapshot supplied: `resolvable`. The pair is the point — the bound D3 adopted cuts both ways. |
 | `history-with-unresolved-own-pointer` | K6 | `accept` / `verify` / `accept` / `pass` | 2 | A supplied snapshot whose own pointer does not resolve still serves as history, because the checker resolves only the selected file's pointers. Raised as question Q7 on 2026-11-14; this pins current behavior, it rules nothing. |
@@ -135,6 +143,16 @@ pinned (`gap-skip-with-recorded-successor-supplied` against
 | Vector | Rule | Layer outcomes | Histories supplied | What it pins |
 | --- | --- | --- | --- | --- |
 | `ambiguous-model-id-in-snapshot` | K3 | `accept` / `verify` / `accept` / `reject` | 0 | Deviation D4 as adopted: a duplicate `modelId` makes the identity a pointer needs unselectable, reported under the name `ambiguous` rather than as a generic invalid record, because the defect belongs to the snapshot. |
+| `dmel-duplicate-model-id` | K3 | `accept` / `verify` / `accept` / `reject` | 0 | Deviation D4 on real records: the unchanged neighbour appended a second time, two records share `gene-Dmel_CG11077`. |
+| `dmel-empty-model-array` | K1 | `accept` / `verify` / `accept` / `reject` | 0 | `x-fhgm-models` emptied on the real snapshot; the base schema accepts any extension value. |
+| `dmel-numeric-model-version` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | `modelVersion` set to the YAML integer `2` on the real CG record; the contract's `text` def takes non-empty strings. |
+| `dmel-pointer-names-neighbor` | K6 | `accept` / `verify` / `accept` / `reject` | 1 | Deviation D2 on real records: the v2 pointer names the neighbour `gene-Dmel_CG11077`; the predecessor snapshot itself is valid. |
+| `dmel-pointer-reuses-version` | K6 | `accept` / `verify` / `accept` / `reject` | 1 | Successor version equals the recorded predecessor version `'1'`: the only version rule v0.1 states, fired on real data. |
+| `dmel-reference-contradicts-file` | K5 | `accept` / `verify` / `accept` / `reject` | 0 | K5's contradiction half with a real wrong parent: the MP record re-bound to `annotates` = the committed S6k fixture's own checksum — a genuine FHGFF3 digest that is not this file's parent. |
+| `dmel-reference-not-comparable` | K5 | `accept` / `verify` / `accept` / `reject` | 0 | K5's strictness half on real data: file keeps only the FHR-subset `derivedFrom` link while the CG record keeps only accession+SeqCol; nothing contradicts, no shared comparable form. |
+| `dmel-revision-without-history` | K6 | `accept` / `verify` / `accept` / `reject` | 0 | The committed v2 revision bytes with no supplied history: `unresolvable` — deviation D3's bound on real records. |
+| `dmel-target-absent` | K4 | `accept` / `verify` / `accept` / `reject` | 0 | `featureId` changed to `gene-Dmel_absentFromThisFile`, which no row in the real payload carries; the token is clearly labelled and names no real resource. |
+| `dmel-target-transcript-row` | K4 | `accept` / `verify` / `accept` / `reject` | 0 | The exact real confusion: `featureId` set to `rna-NM_143687.4`, a real mRNA row of the same gene. v0.1 scope only; #204 Q6 stays open. |
 | `empty-model-array` | K1,R15 | `accept` / `verify` / `accept` / `reject` | 0 | The transport requires one or more records, so an empty `x-fhgm-models` array is not an FHGM file at all. The base schema accepts it: any extension value is valid there. |
 | `feature-target-absent` | K4 | `accept` / `verify` / `accept` / `reject` | 0 | Rule K4: the record's `featureId` matches no local row. |
 | `feature-target-duplicate-rows` | K4 | `accept` / `verify` / `accept` / `reject` | 0 | Rule K4: exactly one row, so two gene rows sharing the ID resolve to no target. |
@@ -153,6 +171,20 @@ pinned (`gap-skip-with-recorded-successor-supplied` against
 | `stale-pointer-absent-history` | K6 | `accept` / `verify` / `accept` / `reject` | 1 | A pointer naming a digest no supplied snapshot carries: `unresolvable`. The reported reason covers the absent-snapshot and current-file cases together, which v0.1 does not distinguish. |
 | `tampered-record-bytes` | B1,R3 | `accept` / `stale` / `accept` / `reject` | 0 | Integrity, not a model rule: one line added after the header makes the file-bound checksum stop covering the bytes, so the checker refuses before any model verdict. Excluded from the gap claim because the released checks catch it too. |
 | `transport-1-0-extension` | B1,R15 | `reject` / `verify` / `accept` / `reject` | 0 | The R15 floor, and the one vector the released base schema itself rejects: a file stating FHGFF3 1.0 may not carry an extension key, so it never reaches a model verdict. Deliberately not gap-proof. |
+
+## Promotion status of the `dmel-*` batch
+
+The 12 `dmel-*` cases were **measured** in the example lane (the 2026-11-15
+`exercise_rules.py` run: 10 gap-proof rejections, 4/4 neutered-checker controls)
+and are promoted here as a **draft**: every expectation in their manifest entries
+is an observation of the committed checker over generator-emitted bytes, and the
+contract-text derivations sit in
+[PROMOTION-2026-11-15.md](PROMOTION-2026-11-15.md). Review conditions stated
+there and binding on this batch: the expectations require independent review,
+the reviewer must not be the derivation's author, and nothing merges on the
+deriver's own approval. This promotion changes no earlier vector's bytes or
+expectation; it moves the manifest file's own digest, which consumers byte-pin
+as their own refresh action.
 
 ## Open scope — no vector, no outcome
 
@@ -196,9 +228,10 @@ Implementation — base **selection**, not base substitution:
 - The transport overlay admits exactly two closed identity branches (v0.5.0 URI
   set with `1.1`; v0.6.0 URI set with `1.2`), so a citation and a version that
   contradict each other are rejected.
-- `manifest.json`'s 31 vector entries — bytes, layers, reasons, contexts — are
-  **unchanged**; the sealed lane still runs against v0.5.0 bytes alone, and its
-  rule text was updated only where K1's identity wording became false.
+- The original 31 `manifest.json` vector entries — bytes, layers, reasons,
+  contexts — are **unchanged**; the 12 promoted entries are also evaluated in
+  both lanes. The sealed lane runs against v0.5.0 bytes alone, and its rule text
+  was updated only where K1's identity wording became false.
 - `base_matrix.json` is the added lane. A twin replaces exactly two header
   lines of its vector (`#~schema` to the v0.6.0 w3id citation, `#~schemaVersion`
   to `1.2`, quoting style preserved) and the `#~checksum` line follows:
@@ -208,10 +241,10 @@ Implementation — base **selection**, not base substitution:
   files, making the lane a mixed-identity chain test as well (a 1.1 snapshot
   entering a 1.2-only harness — the realistic toolkit scenario).
 
-Measured result (2026-11-15, sealed by `--seal-matrix`): **31 twins,
+Measured result (2026-11-16 merged state, sealed by `--seal-matrix`): **43 twins,
 0 verdict changes** — every twin reproduces its sealed vector's four layers and
 reason substring under the v0.6.0 bytes, and the gap claim holds identically on
-both bases (17/19 rejections gap-proof). No contract finding came out of the
+both bases (27/29 rejections gap-proof). No contract finding came out of the
 comparison; the reason is visible in the release diff itself: between v0.5.0
 and v0.6.0 `fhgff3.json` the schemaVersion enum gains `1.2`,
 `Completeness.lineageDataset` gains dotted BUSCO dataset versions for carriers
@@ -296,18 +329,20 @@ closed — [../examples/dmel4/](../examples/dmel4/README.md) holds real
 chromosome-4 gene-model fixtures (new model, revision snapshot, multi-isoform
 locus plus a single-exon neighbor) derived from RefSeq
 `GCF_000001215.4` with full provenance, and its `exercise_rules.py` shows
-which model-level rules the real locus exercises. The **vector** census above
-is unchanged (31 vectors, bytes and manifest entries untouched). Promoting any
-real case into a digest-pinned normative vector is a separate review decision,
-gated on the curator round like everything else here; the dual-base matrix lane
-landed the same day by maintainer decision (see "Base matrix" above) and moves
-no vector byte.
+which model-level rules the real locus exercises. The maintainer then decided
+(promotion decision, 2026-11-15) that the measured gap-proof cases be promoted
+into the normative census under independent review: this directory's DRAFT
+promotion adds the 12 `dmel-*` vectors above (census 31 → 43) without touching
+any earlier vector's bytes or expectation, and records the per-case derivations
+and executor agreements in [PROMOTION-2026-11-15.md](PROMOTION-2026-11-15.md).
+The promotion PR stays a draft until a second reader has reviewed the
+expectations; the curator-round gating language for other open items is
+unchanged.
 
-Status update 2026-11-15 (second entry): the dual-base decision adds
+The dual-base decision adds
 `base_matrix.json`, the `base-schemas.json` registry and the runner's
-`--matrix` lane. All 31 `manifest.json` vector records keep their bytes and
-expectations; only K1's summary sentence, the `baseSchema`/`layers` descriptors
-and a `baseMatrix` pointer changed, so the manifest file's own digest moved
-(`31f14f02…` before this change; whatever the merged commit records after it)
-and consumers holding byte-pins on it refresh against the merged commit as
-their own action.
+`--matrix` lane. Its original 31 entries keep their bytes and observations;
+the 12 promoted vectors are included in both lanes. The manifest's rules,
+open-scope and status text are preserved; the added vector entries and dual-base
+descriptors change the manifest digest, so consumers holding byte-pins refresh
+against the merged commit as their own action.

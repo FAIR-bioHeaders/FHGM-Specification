@@ -1,5 +1,23 @@
 # FHGM changelog
 
+## Unreleased — real-data promotion batch, draft (2026-11-15)
+
+- Per the maintainer promotion decision of 2026-11-15, add the 12 `dmel-*`
+  vectors to the conformance census (31 → 43: 14 valid, 29 invalid): the 10
+  gap-proof real-data rejections measured by `examples/dmel4/exercise_rules.py`
+  plus the two positive anchors their pointer cases require. Emitted by
+  `make_dmel_vectors.py` from the committed dmel4 fixtures with one documented
+  mutation per case; feature rows remain verbatim RefSeq `GCF_000001215.4`
+  chromosome-4 bytes.
+- No earlier vector's bytes or expectations change. The manifest file digest
+  moves with the added entries; consumer byte-pins refresh in the consumer
+  repositories.
+- DRAFT promotion: every recorded expectation carries a contract-text
+  derivation in `development/conformance/PROMOTION-2026-11-15.md` and requires
+  independent review by a reader who is not the derivation's author; the
+  promoting PR stays a draft and merges on no agent approval. No FHGM contract,
+  schema version, release or toolkit support is introduced (rule V7).
+
 ## Unreleased — dual FHGFF3 base support (2026-11-15)
 
 - Per the maintainer decision of 2026-11-15, the draft harness admits both
@@ -9,20 +27,21 @@
   its declared `schemaVersion` and prints the selection, and the transport
   overlay carries two closed identity branches.
 - The conformance suite gains the `base_matrix.json` lane: every sealed vector
-  is re-observed as an identity-rewritten twin under the v0.6.0 bytes. All 31
-  vector entries in `manifest.json` keep their bytes and expectations; the
-  manifest's K1 rule summary, base descriptor and a `baseMatrix` pointer moved,
-  so the manifest file's own digest changed (consumers holding byte-pins
-  refresh against the merged commit as their own action).
-- Measured: 31 twins, 0 verdict changes against the sealed lane; the gap claim
-  (17/19 base-and-checksum-passing, model-only rejections) holds identically on
+  is re-observed as a twin under the v0.6.0 bytes. The original 31 vector entries
+  keep their bytes and expectations; the 12 promoted vectors are included in
+  both lanes. The manifest's rules, open-scope and status text are preserved;
+  added entries and dual-base descriptors change its digest, so consumers
+  holding byte-pins refresh against the merged commit as their own action.
+- Measured in the merged state: 43 twins, 0 verdict changes against the sealed
+  lane; the gap claim (27/29 base-and-checksum-passing, model-only rejections)
+  holds identically on
   both bases. The dmel4 example lane reproduces the 10 gap-proof real-data
   rejections under the 1.2 identity and now carries the 1.2 transport case as a
   positive control (former finding F1).
 - `check_draft.py` and `exercise_rules.py` accept the registered bases and run
-  the matrix per base with cross-routing checks. Draft status unchanged: no
-  FHGM contract, schema version, release, w3id/tag URL or toolkit support is
-  introduced (selection rule V7).
+the matrix per base with cross-routing checks. Draft status unchanged: no
+FHGM contract, schema version, release, w3id/tag URL or toolkit support is
+introduced (selection rule V7).
 
 ## Unreleased — native draft contract v0.1 proposal (2026-11-12)
 
