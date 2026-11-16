@@ -66,8 +66,9 @@
     {
       "local": "development/model/validate_fhgm.py",
       "role": "model-level checker (K3-K6) and base selector, the authority for every recorded outcome",
-      "size": 14204,
-      "sha256": "d514fe709fd2f62096ded8a47edfeafbffa2a863e49733ed94e435ea11fb12d0"
+      "size": 14310,
+      "sha256": "f14e60732d3de2c0633c7601f7e2847a4668c084b8ab7ff093f0c35b58a592f7",
+      "note": "Bytes include the Copilot-Autofix guard merged onto this branch 2026-11-15 (non-dict header -> clean ValueError instead of a traceback); reviewed, behavior-preserving for every sealed vector, re-recorded here against head 8b26102."
     },
     {
       "local": "development/model/base-schemas.json",
