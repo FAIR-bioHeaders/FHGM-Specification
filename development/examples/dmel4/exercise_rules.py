@@ -14,12 +14,19 @@ fresh correct exact-byte checksum from the released toolkit, so a rejection
 attributed to K3-K6 cannot be a checksum or transport artifact. For each
 mutant the script reports four layers separately:
 
-- ``base``    - the released FHGFF3 1.1 schema alone (the bytes pinned in
-                ``provenance.json``, v0.5.0), over the parsed header;
+- ``base``    - the released FHGFF3 schema alone, chosen per file by the
+                base-selection rule (v0.5.0 bytes for 1.1 carriers, v0.6.0
+                bytes for 1.2 carriers), over the parsed header;
 - ``verify``  - ``bioheaders verify`` (schema + exact-byte checksum);
 - ``gff3``    - ``gff3-validate --no-header`` when the CLI is available;
-- ``model``   - ``validate_fhgm.py``: transport overlay, record contract,
-                rules K3-K6 and pointer verdicts.
+- ``model``   - ``validate_fhgm.py``: base selection, transport overlay,
+                record contract, rules K3-K6 and pointer verdicts.
+
+Since the maintainer dual-base decision of 2026-11-15 the 1.2 identity is a
+carrier the draft admits, not a rejection case: the FHGFF3-1.2 mutant is a
+positive transport case, and every gap-proof K-rule rejection is re-run under
+1.2 identity (fresh toolkit-recomputed checksum, same records) to show the
+model layer's verdicts and reasons do not move between released bases.
 
 The neutered-checker controls copy ``validate_fhgm.py`` to a scratch tree,
 replace exactly one guard with a disabled form (the script asserts the old
@@ -33,7 +40,8 @@ Usage (from the repository root, with fair-bioheaders, jsonschema and
 optionally gff3-validator installed)::
 
     python3 development/examples/dmel4/exercise_rules.py \
-        --base-schema /path/to/fhgff3-v0.5.0.json [--gff3-validate CLI]
+        --base-schema /path/to/fhgff3-v0.5.0.json \
+        --base-schema /path/to/fhgff3-v0.6.0.json [--gff3-validate CLI]
 
 FHGM is a draft; nothing here publishes or adopts anything, and no mutant
 file is a conformance vector.
@@ -53,7 +61,7 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE.parent.parent / "model"))
 
 from bioheaders import HEADER, header_text, load_yaml, sequence_parts  # noqa: E402
-from validate_fhgm import load_base  # noqa: E402
+from validate_fhgm import choose_base, load_bases, parse_snapshot  # noqa: E402
 
 V1 = HERE / "Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3"
 V2 = HERE / "Dmel_CG11076-Mpv17.snapshot-v2.fhgff3.gff3"
@@ -86,12 +94,19 @@ def combine(toolkit, metadata, output):
     meta_path.unlink()
 
 
-def mutate(toolkit, workdir, name, edit, base_file=V1):
+def mutate(toolkit, workdir, name, edit, base_file=V1, identity=None):
     """Parse a committed fixture header, apply one edit, recombine with the
-    toolkit so the checksum is correct by construction."""
+    toolkit so the checksum is correct by construction.
+
+    ``identity=(schema URI, schemaVersion)`` additionally moves the released
+    file identity - this is how the FHGFF3 1.2 twins are built: same records,
+    same feature bytes, a fresh correct checksum over the new identity.
+    """
     metadata = parse_header(base_file.read_bytes())
     metadata.pop("checksum")
     edit(metadata)
+    if identity is not None:
+        metadata["schema"], metadata["schemaVersion"] = identity
     path = workdir / name
     combine(toolkit, metadata, path)
     return path
@@ -159,9 +174,12 @@ def edit_fhgff3_12(metadata):
 # layer probes
 # --------------------------------------------------------------------------
 
-def layer_base(base_validator, path):
+def layer_base(candidates, path):
+    """The released base schema ALONE, chosen by the carrier's declared version."""
     try:
-        base_validator.validate(parse_header(path.read_bytes()))
+        header = parse_header(path.read_bytes())
+        _, _, validator, _ = choose_base(header.get("schemaVersion"), candidates)
+        validator.validate(header)
         return "accept"
     except Exception as exc:  # jsonschema.ValidationError and parse failures
         return f"reject ({type(exc).__name__})"
@@ -183,8 +201,10 @@ def layer_gff3(gff3_validate, path):
     return "accept" if result.returncode == 0 else "reject"
 
 
-def layer_model(base_schema, path, predecessors=()):
-    argv = [sys.executable, str(CHECKER), "--base-schema", str(base_schema)]
+def layer_model(base_paths, path, predecessors=()):
+    argv = [sys.executable, str(CHECKER)]
+    for base_path in base_paths:
+        argv += ["--base-schema", str(base_path)]
     for prior in predecessors:
         argv += ["--predecessor", str(prior)]
     argv.append(str(path))
@@ -249,13 +269,16 @@ def build_neutered(checker_text, neuter_id, outdir):
         raise SystemExit(f"{neuter_id}: patch did not change the bytes")
     script = outdir / f"{neuter_id}-validate_fhgm.py"
     script.write_text(patched)
-    for schema in ("fhgm-draft.schema.json", "fhgm-model.schema.json"):
+    for schema in ("fhgm-draft.schema.json", "fhgm-model.schema.json",
+                   "base-schemas.json"):
         shutil.copyfile(CHECKER.with_name(schema), outdir / schema)
     return script
 
 
-def run_script(script, base_schema, path, predecessors=()):
-    argv = [sys.executable, str(script), "--base-schema", str(base_schema)]
+def run_script(script, base_paths, path, predecessors=()):
+    argv = [sys.executable, str(script)]
+    for base_path in base_paths:
+        argv += ["--base-schema", str(base_path)]
     for prior in predecessors:
         argv += ["--predecessor", str(prior)]
     argv.append(str(path))
@@ -265,7 +288,9 @@ def run_script(script, base_schema, path, predecessors=()):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base-schema", type=Path, required=True)
+    parser.add_argument("--base-schema", type=Path, action="append", required=True,
+                        help="released fhgff3.json bytes registered in base-schemas.json; "
+                             "supply both v0.5.0 and v0.6.0 for the dual-base lane")
     parser.add_argument("--toolkit", default=None, help="bioheaders CLI path")
     parser.add_argument("--gff3-validate", default=None, help="gff3-validate CLI path")
     args = parser.parse_args()
@@ -274,17 +299,23 @@ def main():
     if toolkit is None:
         raise SystemExit("bioheaders CLI not found; pass --toolkit")
     gff3_validate = args.gff3_validate or shutil.which("gff3-validate")
-    base_validator = load_base(args.base_schema)
+    candidates = load_bases(args.base_schema)
+    registered = {record["schemaVersion"] for _, record, _ in candidates}
+    if not {"1.1", "1.2"} <= registered:
+        raise SystemExit("the dual-base lane needs both registered releases supplied: "
+                         "--base-schema v0.5.0 --base-schema v0.6.0 "
+                         f"(got {sorted(registered)})")
+    base_paths = list(args.base_schema)
 
     workdir = Path(tempfile.mkdtemp(prefix="fhgm-dmel4-exercise-"))
     try:
         mutants = {}
 
         def add(name, path, rule, predecessors=(), note=""):
-            base = layer_base(base_validator, path)
+            base = layer_base(candidates, path)
             verify = layer_verify(toolkit, path)
             gff3 = layer_gff3(gff3_validate, path)
-            model, reason = layer_model(args.base_schema, path, predecessors)
+            model, reason = layer_model(base_paths, path, predecessors)
             gap = (
                 base == "accept"
                 and verify == "verify"
@@ -293,6 +324,7 @@ def main():
             )
             mutants[name] = {
                 "path": path,
+                "predecessors": tuple(str(prior) for prior in predecessors),
                 "rule": rule,
                 "base": base,
                 "verify": verify,
@@ -349,8 +381,10 @@ def main():
         add("mutant-k1-empty-models",
             mutate(toolkit, workdir, "k1-empty.fhgff3.gff3", edit_empty_models), "K1")
         add("mutant-transport-fhgff3-12",
-            mutate(toolkit, workdir, "k12-version.fhgff3.gff3", edit_fhgff3_12), "K1/B1",
-            note="released v0.6.0 FHGFF3 1.2 identity carrying x-fhgm-models")
+            mutate(toolkit, workdir, "k12-version.fhgff3.gff3", edit_fhgff3_12), "K1",
+            note="released v0.6.0 FHGFF3 1.2 identity carrying x-fhgm-models: a positive "
+                 "transport case since the 2026-11-15 dual-base decision (the 1.1-only "
+                 "harness rejected this at the base layer)")
 
         # B1: payload byte tamper, header (and its checksum) untouched.
         tampered = workdir / "b1-tamper.fhgff3.gff3"
@@ -401,8 +435,7 @@ def main():
             "mutant-k6-neighbor-pointer": ("accept", "verify", "accept", "reject", True),
             "mutant-k6-version-reused": ("accept", "verify", "accept", "reject", True),
             "mutant-k1-empty-models": ("accept", "verify", "accept", "reject", True),
-            "mutant-transport-fhgff3-12": ("reject (ValidationError)", "verify",
-                                           "accept", "reject", False),
+            "mutant-transport-fhgff3-12": ("accept", "verify", "accept", "pass", False),
             "tamper-payload-byte": ("accept", "stale", "accept", "reject", False),
         }
         problems = []
@@ -424,6 +457,41 @@ def main():
                 print(f"EXPECTATION MISMATCH: {p}")
             raise SystemExit("recorded layer outcomes did not match expectations")
 
+        # Dual-base re-run: every gap-proof rejection, recombined under the
+        # released FHGFF3 1.2 identity with a fresh toolkit checksum. Same
+        # records, same feature bytes; only the two identity lines move.
+        print("dual-base re-run of the gap-proof set (FHGFF3 1.2 identity):")
+        identity_12 = ("https://w3id.org/fair-bioheaders/fhgff3/v0.6.0", "1.2")
+        twin_moves = 0
+        for name in gaps:
+            source = mutants[name]["path"]
+            twin_name = f"twin12-{name}"
+            twin = mutate(toolkit, workdir, f"{twin_name}.fhgff3.gff3", lambda m: None,
+                          base_file=source, identity=identity_12)
+            # Predecessors stay the committed snapshots: a 1.2 carrier naming a
+            # 1.1 predecessor is the mixed-identity chain real revision history
+            # will contain after a base-line release bump.
+            preds = tuple(Path(prior) for prior in mutants[name]["predecessors"])
+            base = layer_base(candidates, twin)
+            verify = layer_verify(toolkit, twin)
+            model, reason = layer_model(base_paths, twin, predecessors=preds)
+            real_reason = mutants[name]["reason"]
+            agrees = (base == "accept" and verify == "verify" and model == "reject"
+                      and (not real_reason or real_reason in reason))
+            if not agrees:
+                raise SystemExit(
+                    f"{twin_name}: layer outcome ({base}, {verify}, {model}, {reason!r}) "
+                    f"does not reproduce the sealed rejection "
+                    f"({mutants[name]['base']}, {mutants[name]['verify']}, "
+                    f"{mutants[name]['model']}, {mutants[name]['reason']!r})")
+            twin_moves += 1
+            print(f"  {twin_name}: base=accept verify=verify model=reject "
+                  f"reason reproduced")
+        print(f"  {twin_moves}/{len(gaps)} gap-proof rejections reproduce unchanged under "
+              "the 1.2 base; the 1.2 mutant itself is admitted as a positive carrier "
+              "(see mutant-transport-fhgff3-12 above).")
+        print()
+
         # Neutered-checker controls.
         checker_text = CHECKER.read_text()
         print("neutered-checker controls:")
@@ -432,13 +500,13 @@ def main():
                         (control, control_preds)) in NEUTERS.items():
             script = build_neutered(checker_text, neuter_id, workdir)
             rc_real = run_script(
-                CHECKER, args.base_schema, mutants[primary]["path"], primary_preds
+                CHECKER, base_paths, mutants[primary]["path"], primary_preds
             )
             rc_pass = run_script(
-                script, args.base_schema, mutants[primary]["path"], primary_preds
+                script, base_paths, mutants[primary]["path"], primary_preds
             )
             rc_still = run_script(
-                script, args.base_schema, mutants[control]["path"], control_preds
+                script, base_paths, mutants[control]["path"], control_preds
             )
             ok = rc_real != 0 and rc_pass == 0 and rc_still != 0
             if not ok:

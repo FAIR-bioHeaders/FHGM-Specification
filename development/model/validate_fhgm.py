@@ -1,13 +1,19 @@
 # SPDX-License-Identifier: MPL-2.0
-"""Model-level checker for the draft FHGM contract v0.1 on an FHGFF3 1.1 file.
+"""Model-level checker for the draft FHGM contract v0.1 on FHGFF3 1.1/1.2 files.
 
-Runs three passes over an explicit selection: the released FHGFF3 1.1 base
-schema (transport and file identity only), the draft transport overlay
-(fhgm-draft.schema.json) and the native record contract
-(fhgm-model.schema.json) per embedded record. Pointer resolution then reports
-one verdict per revision claim: resolvable, unresolvable or ambiguous. A
-resolvable pointer only identifies a predecessor record; curator acceptance is
-never asserted here.
+Runs three passes over an explicit selection: the released FHGFF3 base schema
+(transport and file identity only), the draft transport overlay
+(fhgm-draft.schema.json) and the native record contract (fhgm-model.schema.json)
+per embedded record. Base selection, not base substitution: each loaded file
+declares a released FHGFF3 identity through its schemaVersion, and the checker
+validates it against the registered bytes of THAT release
+(base-schemas.json), refusing any file whose declared version no supplied base
+states. The selected base is printed for every loaded file, so each verdict
+carries the release bytes that produced it. Pointer resolution then reports one
+verdict per revision claim: resolvable, unresolvable or ambiguous. A resolvable
+pointer only identifies a predecessor record; curator acceptance is never
+asserted here. FHGM itself is a draft: it has no schemaVersion, no schema URL,
+no registry row and no release form (selection rule V7).
 """
 
 import argparse
@@ -24,7 +30,7 @@ from bioheaders.cli import checksum
 from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 from yaml import YAMLError
 
-BASE_SHA256 = "20ce320f5d706f11ed21cdece4dfb56e3568b50be126e25b4016f46f2e8e416c"
+BASE_REGISTRY = Path(__file__).with_name("base-schemas.json")
 TRANSPORT = Path(__file__).with_name("fhgm-draft.schema.json")
 MODEL_CONTRACT = Path(__file__).with_name("fhgm-model.schema.json")
 MODELS = "x-fhgm-models"
@@ -57,11 +63,72 @@ class ModelCheckError(ValueError):
     """A draft FHGM model-level rule failed; the reason is the message."""
 
 
-def load_base(path):
-    data = path.read_bytes()
-    if hashlib.sha256(data).hexdigest() != BASE_SHA256:
-        raise ValueError("Expected the released v0.5.0 fhgff3.json bytes")
-    return Draft202012Validator(json.loads(data), format_checker=Draft202012Validator.FORMAT_CHECKER)
+def _version_key(version):
+    return tuple(int(part) for part in version.split("."))
+
+
+def load_registry():
+    """The registered FHGFF3 base releases, keyed by their exact-byte digest."""
+    document = json.loads(BASE_REGISTRY.read_bytes())
+    return {record["sha256"]: record for record in document["bases"]}
+
+
+def load_bases(paths):
+    """Resolve each supplied --base-schema file against the registry.
+
+    Returns (digest, record, validator) triples oldest release first. Unknown
+    bytes are refused: a checker run must say which registered release it
+    evaluated.
+    """
+    registry = load_registry()
+    candidates = []
+    for path in paths:
+        data = path.read_bytes()
+        digest = hashlib.sha256(data).hexdigest()
+        record = registry.get(digest)
+        if record is None:
+            raise ValueError(
+                f"{path}: sha256 {digest} is not a registered FHGFF3 base release; "
+                f"{BASE_REGISTRY.name} registers "
+                f"{', '.join(sorted({r['schemaVersion'] for r in registry.values()}))}")
+        candidates.append((digest, record, Draft202012Validator(
+            json.loads(data), format_checker=Draft202012Validator.FORMAT_CHECKER)))
+    candidates.sort(key=lambda triple: _version_key(triple[1]["schemaVersion"]))
+    return candidates
+
+
+def choose_base(declared, candidates):
+    """Pick the candidate that validates a carrier declaring `declared`.
+
+    Returns (digest, record, validator, basis). Exact version match first; a
+    declared version with no base of its own among the candidates (a superseded
+    version such as 1.0) is judged by the oldest candidate whose enum states it,
+    because the R15 extension floor rides on that clause; a version no candidate
+    states at all is refused rather than evaluated against bytes the carrier
+    never cited.
+    """
+    if isinstance(declared, str) and re.fullmatch(r"[0-9]+\.[0-9]+", declared):
+        for digest, record, validator in candidates:
+            if record["schemaVersion"] == declared:
+                return (digest, record, validator,
+                        "exact match on the declared schemaVersion")
+        for digest, record, validator in candidates:
+            if declared in record["acceptsSchemaVersions"]:
+                return digest, record, validator, (
+                    f"no supplied base states {declared!r} as its own release; the "
+                    f"oldest supplied candidate whose enum includes it")
+        raise ValueError(
+            f"No supplied FHGFF3 base release states schemaVersion {declared!r}; "
+            "supply the release the carrier cites (see base-schemas.json)")
+    digest, record, validator = candidates[0]
+    return digest, record, validator, (
+        "carrier declares no usable schemaVersion string; probed with the oldest "
+        "supplied base, whose requiredness report is the verdict")
+
+
+def describe(record, digest):
+    return (f"{record['repository']}@{record['ref']} {record['path']} "
+            f"(sha256 {digest[:16]}...)")
 
 
 def gene_targets(data):
@@ -112,13 +179,23 @@ def links_match(left, right):
     return bool(left.keys() & right.keys()) and not links_conflict(left, right)
 
 
-def validate_snapshot(data, base, transport, record_contract):
+def parse_snapshot(data):
+    """The header document of a snapshot's exact bytes, before any validation."""
     lines = [
         header_text(line, b"#~")
         for kind, line in sequence_parts([data], b"#~", gff3=True)
         if kind is HEADER
     ]
-    header = load_yaml("\n".join(lines))
+    return load_yaml("\n".join(lines))
+
+
+def validate_snapshot(data, candidates, transport, record_contract, label="carrier"):
+    header = parse_snapshot(data)
+    if not isinstance(header, dict):
+        raise ValueError("FHGFF3 header metadata must be an object")
+    digest, record, base, basis = choose_base(header.get("schemaVersion"), candidates)
+    print(f"Base selection: {label} declares schemaVersion "
+          f"{header.get('schemaVersion')!r} -> {describe(record, digest)} ({basis})")
     base.validate(header)
     transport.validate(header)
     if checksum(BytesIO(data), "gff3") != header["checksum"]:
@@ -220,22 +297,27 @@ def validate_revisions(header, models, predecessors):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base-schema", type=Path, required=True)
+    parser.add_argument("--base-schema", type=Path, action="append", required=True,
+                        help="bytes of a released fhgff3.json named in base-schemas.json; "
+                             "repeat to hand the checker more than one base release")
     parser.add_argument("--predecessor", type=Path, action="append", default=[])
     parser.add_argument("file", type=Path)
     args = parser.parse_args()
 
     try:
-        base = load_base(args.base_schema)
+        candidates = load_bases(args.base_schema)
         transport = Draft202012Validator(json.loads(TRANSPORT.read_bytes()))
         record_contract = Draft202012Validator(
             json.loads(MODEL_CONTRACT.read_bytes()),
             format_checker=FORMAT_CHECKER,
         )
-        header, models = validate_snapshot(args.file.read_bytes(), base, transport, record_contract)
+        header, models = validate_snapshot(
+            args.file.read_bytes(), candidates, transport, record_contract)
         predecessors = {}
         for path in args.predecessor:
-            snapshot = validate_snapshot(path.read_bytes(), base, transport, record_contract)
+            snapshot = validate_snapshot(
+                path.read_bytes(), candidates, transport, record_contract,
+                label=f"predecessor {path.name}")
             predecessors[snapshot[0]["checksum"]] = snapshot
         validate_revisions(header, models, predecessors)
     except ValidationError as exc:

@@ -54,10 +54,15 @@ carries the stable id the [conformance manifest](../conformance/manifest.json)
 cites; the two ids before them are the transport floor and the record shape the
 checker enforces through the JSON Schema files.
 
-- **K1 — transport.** A file the checker accepts keeps the released FHGFF3 1.1
-  `schema` URI and `schemaVersion` `"1.1"` and carries one or more records under
-  the single top-level `x-fhgm-models` key (FORMAT.md R15). A file stating
-  FHGFF3 `1.0` cannot carry the extension at all: the base schema rejects it.
+- **K1 — transport.** A file the checker accepts keeps a released FHGFF3
+  identity — the `v0.5.0` citation with `schemaVersion` `"1.1"` or the `v0.6.0`
+  citation with `schemaVersion` `"1.2"` (maintainer dual-base decision of
+  2026-11-15; FORMAT.md R15 admits extension fields from `"1.1"`, so both
+  qualify and a citation and stated version that contradict each other are
+  rejected) — and carries one or more records under the single top-level
+  `x-fhgm-models` key. A file stating FHGFF3 `1.0` cannot carry the extension
+  at all: the base schema rejects it on either release, from byte-identical
+  clause text.
 - **K2 — record shape.** Each record validates against
   `fhgm-model.schema.json`, whose required set is `modelId`, `modelVersion`,
   `featureId` and `reference` (deviation D1: `reference` stays required, so an
@@ -78,6 +83,16 @@ checker enforces through the JSON Schema files.
   a recorded successor of the pointed record the pointer must name that successor
   rather than skip it (version-gap misuse).
 
+Base selection is part of the checker: `base-schemas.json` registers the released
+FHGFF3 bytes the checker accepts (v0.5.0 and v0.6.0, each resolved from its tag to
+its commit), the carrier's declared `schemaVersion` chooses which registered bytes
+validate it, a superseded declaration such as `1.0` is judged by the oldest
+supplied base that states it, and a declaration no supplied base states is refused
+with a selection error. The selected release is printed for every loaded file, so
+no verdict is silent about the bytes that produced it. This is selection, not
+substitution: the sealed conformance vectors keep their 1.1 bytes and their
+evidence trail, and the matrix lane re-observes 1.2 twins separately.
+
 The manifest adds one more id, **B1**, for the boundary these rules sit on: a file
 must already satisfy the released FHGFF3 base schema and its exact-byte checksum
 before any FHGM verdict exists. Model checks add to those guarantees and never
@@ -90,8 +105,11 @@ checker reports under K3–K6 is.
 This section is draft normative text for the adopted Option C transport; it
 grants nothing and changes no released contract.
 
-- An FHGM-carrying file **must** be a valid FHGFF3 1.1 file and **must** keep
-  the released FHGFF3 `schema` URI and `schemaVersion` `"1.1"`. FHGM adds no
+- An FHGM-carrying file **must** be a valid FHGFF3 file of an admitted identity
+  — the released `v0.5.0` citation with `schemaVersion` `"1.1"` or the released
+  `v0.6.0` citation with `schemaVersion` `"1.2"`, per the maintainer dual-base
+  decision of 2026-11-15 — and **must** keep that released FHGFF3 `schema` URI
+  and `schemaVersion` together, unaltered. FHGM adds no
   file-type identity at v0.1; selection happens by explicitly running the
   model-level checker, per the recorded decision. Review disposition Q4 keeps
   that as the only expression of model-contract identity until publication: the
@@ -170,14 +188,18 @@ verdict states only that the pointer identifies its predecessor record.
 
 Use Python with `fair-bioheaders` (the checker reuses its GFF3 header reader
 and checksum implementation) and `jsonschema`. From the FHGM repository root,
-with the released v0.5.0 base schema (the checker pins its bytes):
+with the released base schemas registered in `base-schemas.json` — the sealed
+fixtures declare FHGFF3 1.1 and need the v0.5.0 bytes; passing both releases
+lets the checker select per carrier:
 
 ```sh
 git -C /path/to/FAIR-bioHeaders-Specification show v0.5.0:fhgff3.json > /tmp/fhgff3-v0.5.0.json
+git -C /path/to/FAIR-bioHeaders-Specification show v0.6.0:fhgff3.json > /tmp/fhgff3-v0.6.0.json
 python development/model/validate_fhgm.py --base-schema /tmp/fhgff3-v0.5.0.json \
+  --base-schema /tmp/fhgff3-v0.6.0.json \
   --predecessor development/examples/contract/minimal.fhgff3.gff3 \
   development/examples/contract/rich.fhgff3.gff3
-python development/model/check_draft.py /tmp/fhgff3-v0.5.0.json
+python development/model/check_draft.py /tmp/fhgff3-v0.5.0.json /tmp/fhgff3-v0.6.0.json
 ```
 
 `check_draft.py` is the draft self-test: it regenerates
@@ -185,10 +207,13 @@ python development/model/check_draft.py /tmp/fhgff3-v0.5.0.json
 acceptance and rejection fixture against the checker, and re-proves that the
 base schema alone accepts the model-invalid files. The manifest-driven
 [conformance suite](../conformance/README.md) is the vector census and the CI
-lane:
+lane; `--matrix` additionally evaluates the FHGFF3 1.2 twins recorded in
+`base_matrix.json`:
 
 ```sh
 python3 development/conformance/run_conformance.py --base-schema /tmp/fhgff3-v0.5.0.json
+python3 development/conformance/run_conformance.py \
+  --base-schema /tmp/fhgff3-v0.5.0.json --base-schema /tmp/fhgff3-v0.6.0.json --matrix
 python3 development/conformance/run_conformance.py --offline   # bytes and digests only
 ```
 
