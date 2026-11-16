@@ -47,9 +47,10 @@ header, the file-bound SHA-512/256 checksum verifies over the exact bytes, and
 **only** the draft model-level checker rejects. Those cases are invisible to
 every released check; a vector for them is the only artifact that can pin the
 K-layer behavior. The ten were measured (not argued) on real annotated data
-on 2026-11-15, with four neutered-checker controls proving each rejection
-comes from exactly one rule and each control leaves the other rejections
-standing. The synthetic 17-of-19 gap-proof set covers the same clauses over
+on 2026-11-15. Four neutered-checker controls establish guard attribution for
+the duplicate-ID, transcript-target, contradictory-reference and neighbor-pointer
+cases, each preserving one selected cross-control rejection. The synthetic
+17-of-19 gap-proof set covers the same clauses over
 toy bytes; what the promoted batch adds is that the same clauses fire — with
 the same verdicts — on a real multi-isoform RefSeq locus, real nested-ID
 confusions, a real FHR-subset parent chain and a real-but-wrong parent digest.
