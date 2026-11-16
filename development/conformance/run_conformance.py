@@ -1007,8 +1007,9 @@ def main():
             sealed_result = sealed_by_id[vector["id"]]
             derived = twin_bytes(path_of(vector).read_bytes(),
                                  vector["layers"]["checksum"])[0]
-            gff3_observed = (twin_result["gff3"] if twin_result["gff3"] != "skipped"
-                             else sealed_result["gff3"])
+            if twin_result["gff3"] == "skipped":
+                raise Failure("--seal-matrix requires gff3-validate to observe the feature layer")
+            gff3_observed = twin_result["gff3"]
             observations[vector["id"]] = {
                 "method": twin_result["method"],
                 "invalid": vector["expected"] == "invalid",
