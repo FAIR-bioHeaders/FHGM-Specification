@@ -411,16 +411,6 @@ features; use gff3-validator for feature/biology checks.
   unresolved gating. Name each issue's actual remaining prerequisite instead
   of inheriting a stale gate reference, and do not add reverse blockers that
   create cycles — #157's own text warns against that.
-- When a gate issue closes, re-check the records that cite it. FAIR-bioHeaders-
-  Specification#157 closed COMPLETED on 2026-10-28, yet open issues still
-  cited it as a live gate weeks later, which makes finished work look
-  blocked. Do not promise a stable count for this: an organization-wide
-  text search for `#157` now also matches the stale-gate annotation comments
-  posted 2026-11-15 that quote it, so the annotations raised the count they
-  were meant to retire and the search is no longer a valid proxy for
-  unresolved gating. Name each issue's actual remaining prerequisite instead
-  of inheriting a stale gate reference, and do not add reverse blockers that
-  create cycles — #157's own text warns against that.
 - After each work run (implementation, tests, review pass), post a status comment
   on the issue or PR: what changed, checks run and results, commit/PR links,
   blockers, and the next action. Do not rely on chat history.
