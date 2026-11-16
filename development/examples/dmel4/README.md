@@ -1,10 +1,12 @@
 # Real-data example fixtures: two *Drosophila melanogaster* chromosome-4 gene models
 
-Status: **example lane** — real-data-derived fixtures with provenance. These
-files are **not** conformance vectors: `development/conformance/` still holds
-31 vectors over 28 synthetic-plus-S6k files, unchanged by this directory. A
-promotion of any case below into a digest-pinned, independently reviewed
-vector is a separate decision. FHGM is a draft under selection rule V7: no
+Status: **example lane** — real-data-derived fixtures with provenance. The
+fixture files themselves remain **not** vectors, but the maintainer promotion
+decision of 2026-11-15 lifts ten measured gap-proof rejections from this
+directory's `exercise_rules.py` run, plus two required positive anchors, into
+`development/conformance/` as digest-pinned `dmel-*` vectors (census 31 → 43)
+— as a DRAFT pending independent review of every expectation
+([../../conformance/PROMOTION-2026-11-15.md](../../conformance/PROMOTION-2026-11-15.md)). FHGM is a draft under selection rule V7: no
 `schemaVersion`, no registry row, no w3id URL, no toolkit-support claim and no
 release form attach to anything here, and no pointer resolved below asserts
 curator acceptance. Refs FHGM [#8](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/8),

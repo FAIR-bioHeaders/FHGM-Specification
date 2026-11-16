@@ -51,6 +51,7 @@ CHECKER = DEVELOPMENT / "model" / "validate_fhgm.py"
 GENERATORS = {
     "make_fixtures": DEVELOPMENT / "examples" / "model" / "make_fixtures.py",
     "make_vectors": HERE / "make_vectors.py",
+    "make_dmel_vectors": HERE / "make_dmel_vectors.py",
 }
 S6K_PROFILE = DEVELOPMENT / "examples" / "s6k" / "DanaCAF1_S6k.fhgff3.gff3"
 S6K_DERIVED = DEVELOPMENT / "examples" / "s6k" / "DanaCAF1_S6k.fhgm-models.fhgff3.gff3"

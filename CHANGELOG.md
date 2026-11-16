@@ -1,5 +1,23 @@
 # FHGM changelog
 
+## Unreleased — real-data promotion batch, draft (2026-11-15)
+
+- Per the maintainer promotion decision of 2026-11-15, add the 12 `dmel-*`
+  vectors to the conformance census (31 → 43: 14 valid, 29 invalid): the 10
+  gap-proof real-data rejections measured by `examples/dmel4/exercise_rules.py`
+  plus the two positive anchors their pointer cases require. Emitted by
+  `make_dmel_vectors.py` from the committed dmel4 fixtures with one documented
+  mutation per case; feature rows remain verbatim RefSeq `GCF_000001215.4`
+  chromosome-4 bytes.
+- No earlier vector's bytes or expectations change. The manifest file digest
+  moves with the added entries; consumer byte-pins refresh in the consumer
+  repositories.
+- DRAFT promotion: every recorded expectation carries a contract-text
+  derivation in `development/conformance/PROMOTION-2026-11-15.md` and requires
+  independent review by a reader who is not the derivation's author; the
+  promoting PR stays a draft and merges on no agent approval. No FHGM contract,
+  schema version, release or toolkit support is introduced (rule V7).
+
 ## Unreleased — native draft contract v0.1 proposal (2026-11-12)
 
 - Per the recorded Option C hybrid decision in shared #204, advance the draft

@@ -174,6 +174,60 @@
       }
     },
     {
+      "id": "dmel-snapshot-v1",
+      "file": "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3",
+      "generator": "committed",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K2",
+        "K4",
+        "K5"
+      ],
+      "description": "Two real chromosome-4 gene models (multi-isoform Dmel_CG11076 plus the single-exon neighbour Dmel_CG11077) bound to the two released genome-link forms with real values; the positive anchor the pointer cases below hand to the checker. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "4o7S2qFElvCqHkK59ZLarK9LGPO4Jwrsn1Ea6LwQZMY=",
+      "bytes": {
+        "size": 10096,
+        "sha256": "4e8d44ce289c6c891eba183449719d76c6b0f2df4549ec50927c50f7812d86fb"
+      }
+    },
+    {
+      "id": "dmel-snapshot-v2-resolved",
+      "file": "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v2.fhgff3.gff3",
+      "generator": "committed",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K2",
+        "K6"
+      ],
+      "description": "The real revision snapshot resolved against the v1 anchor: pointer checksum, own modelId and recorded version all match; verdict resolvable, which states no curator acceptance. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "8TaIBDS3IJv+OAyV0fr6jOC7bmjlF1JxAtJOQkAnVME=",
+      "bytes": {
+        "size": 10474,
+        "sha256": "1bcba240f11c332c85dfec2539eb359efd9623a959ac5a66021e7efb94ec73c9"
+      },
+      "context": {
+        "predecessors": [
+          "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3"
+        ]
+      }
+    },
+    {
       "id": "file-linked-by-fhr-parent",
       "file": "vectors/valid/file-linked-by-fhr-parent.fhgff3.gff3",
       "generator": "make_vectors",
@@ -421,6 +475,226 @@
       "bytes": {
         "size": 1100,
         "sha256": "da09d10bc4da0c6ba9c94b2180372ec1b9b3469996c4dd44e676481048e180e4"
+      }
+    },
+    {
+      "id": "dmel-duplicate-model-id",
+      "file": "vectors/invalid/dmel-duplicate-model-id.fhgff3.gff3",
+      "generator": "make_dmel_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K3",
+      "reason": "Ambiguous model ID",
+      "description": "Deviation D4 on real records: the unchanged neighbour model is appended a second time, two records share modelId gene-Dmel_CG11077, and the snapshot is rejected. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "u3bNK2JOomZkt3LIr3z3bzslYeYoo6RHC0K2uGFcHEA=",
+      "bytes": {
+        "size": 10686,
+        "sha256": "5e7a9cd810ec02ca7908ad25498ef71cb2c09d70b6d0a4c13f9d59a586050f8b"
+      }
+    },
+    {
+      "id": "dmel-empty-model-array",
+      "file": "vectors/invalid/dmel-empty-model-array.fhgff3.gff3",
+      "generator": "make_dmel_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K1",
+      "reason": "should be non-empty",
+      "description": "The transport requires one or more records: x-fhgm-models emptied on the real snapshot. The base schema accepts any extension value, so only the checker distinguishes an empty array from an FHGM file. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "XpJhVq0wOxtR8i6HNubKJYp8ImMTK2KSclJs3b2iQes=",
+      "bytes": {
+        "size": 8302,
+        "sha256": "17a00252a172fecf525a33f58cac491b615a210fd7d7dc70c9dc6a31686af460"
+      }
+    },
+    {
+      "id": "dmel-numeric-model-version",
+      "file": "vectors/invalid/dmel-numeric-model-version.fhgff3.gff3",
+      "generator": "make_dmel_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is not of type 'string'",
+      "description": "modelVersion set to the YAML integer 2 on the real CG record: the contract's opaque text field takes non-empty strings only (fhgm-model.schema.json $defs/text). Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "LUHTRiQ3InkHOzCEuSW6vpV6ycvQ8j/DMiS2in6huqA=",
+      "bytes": {
+        "size": 9927,
+        "sha256": "33df25c7e303b5ea6bb8b957bb751fe7b43a68c26eb41457d48ae8afb61e1524"
+      }
+    },
+    {
+      "id": "dmel-pointer-names-neighbor",
+      "file": "vectors/invalid/dmel-pointer-names-neighbor.fhgff3.gff3",
+      "generator": "make_dmel_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "the pointer names another model ID",
+      "description": "Deviation D2 attacked through the pointer on real records: the v2 CG record's predecessor names the unchanged neighbour gene-Dmel_CG11077. The predecessor snapshot itself is valid bytes with a verifying checksum. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "Qz5X4lezXQx43wXqWX/FKY0pHGe94BgvIS2lQhRu0YQ=",
+      "bytes": {
+        "size": 10278,
+        "sha256": "1f055d34e373d4de8137f90469c7a5875677eaa9f7454b1bcc90c1efc70f5ed0"
+      },
+      "context": {
+        "predecessors": [
+          "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3"
+        ]
+      }
+    },
+    {
+      "id": "dmel-pointer-reuses-version",
+      "file": "vectors/invalid/dmel-pointer-reuses-version.fhgff3.gff3",
+      "generator": "make_dmel_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "reuses the predecessor model version",
+      "description": "The successor's own modelVersion set to '1', equal to the recorded predecessor version: the one version rule v0.1 states (an immediate revision must differ) fires on real data. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "gSUzw+dYs503MEPVdD7IMN14iJODFmBvyGJBgumXODk=",
+      "bytes": {
+        "size": 10278,
+        "sha256": "eedc2d59b783013e8f2128a63a39064abfb32503e07134a5a0fce3e1a10cce2c"
+      },
+      "context": {
+        "predecessors": [
+          "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3"
+        ]
+      }
+    },
+    {
+      "id": "dmel-reference-contradicts-file",
+      "file": "vectors/invalid/dmel-reference-contradicts-file.fhgff3.gff3",
+      "generator": "make_dmel_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K5",
+      "reason": "contradicts the file genome link",
+      "description": "Rule K5's contradiction half with a real wrong parent: the MP record re-bound to annotates = the committed S6k example fixture's own checksum - a genuine FHGFF3 file digest that is simply not this file's parent, invisible to every released check. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "zv55GSPKWSqbTv5tJuwtnfv37Gm3603VHXhXZnjr8jo=",
+      "bytes": {
+        "size": 9929,
+        "sha256": "0cd2f55656f905086798b1f07c4c0ffa78e68d6f3f99ea38df1397a8fb29a258"
+      }
+    },
+    {
+      "id": "dmel-reference-not-comparable",
+      "file": "vectors/invalid/dmel-reference-not-comparable.fhgff3.gff3",
+      "generator": "make_dmel_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K5",
+      "reason": "has no reference form comparable with the file genome link",
+      "description": "Rule K5's strictness half on real data: the file's genomeReference dropped (only the FHR subset derivedFrom link remains) while the CG record keeps only its accession-plus-SeqCol binding. Nothing contradicts; no shared comparable form exists. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "RqH4dWTzCbjsJuskkHrXOCjXUceEvH6QbDZyxs5Eaj8=",
+      "bytes": {
+        "size": 9791,
+        "sha256": "0be8ba5aafb77fcb3e103bb07cdfe8b0222bd89b225930f3b4f59b92bfa42753"
+      }
+    },
+    {
+      "id": "dmel-revision-without-history",
+      "file": "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v2.fhgff3.gff3",
+      "generator": "committed",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "the predecessor snapshot is the current file or was not supplied",
+      "description": "Deviation D3's bound on real bytes: the committed v2 revision snapshot run with no supplied history - unresolvable, because resolution covers only what the reviewer hands over. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "8TaIBDS3IJv+OAyV0fr6jOC7bmjlF1JxAtJOQkAnVME=",
+      "bytes": {
+        "size": 10474,
+        "sha256": "1bcba240f11c332c85dfec2539eb359efd9623a959ac5a66021e7efb94ec73c9"
+      }
+    },
+    {
+      "id": "dmel-target-absent",
+      "file": "vectors/invalid/dmel-target-absent.fhgff3.gff3",
+      "generator": "make_dmel_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K4",
+      "reason": "must target one local gene row",
+      "description": "Rule K4: the CG record's featureId changed to gene-Dmel_absentFromThisFile, which no row in the real locus payload carries. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "xNNUUVlZmC0iD/66d1l+ZqwMOagG9HJ/9Ngwzo5+fjA=",
+      "bytes": {
+        "size": 9940,
+        "sha256": "ffd59b49022256b29a63acd727af5b1764cdcaf21eb6ebac3c18ad63136690e1"
+      }
+    },
+    {
+      "id": "dmel-target-transcript-row",
+      "file": "vectors/invalid/dmel-target-transcript-row.fhgff3.gff3",
+      "generator": "make_dmel_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K4",
+      "reason": "must target one local gene row",
+      "description": "Rule K4's v0.1 scope against the exact real confusion a producer editing a nested RefSeq graph faces: featureId set to rna-NM_143687.4, a real mRNA row of the same gene. A transcript row is not a gene row; #204 Q6 transcript-only scope stays open. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "cOUIEWcIDqaqCz1QrtXPdY9bGPtYGODE0rjCdTDDuwU=",
+      "bytes": {
+        "size": 9927,
+        "sha256": "deac006b3e4f88170c348dd0666409e197b3ac0b7c8801987a15943ae2783df0"
       }
     },
     {

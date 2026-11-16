@@ -2,10 +2,12 @@
 """Exercise the draft FHGM K-rules against the real Drosophila locus fixtures.
 
 This is an EXAMPLE-LANE demonstration, not a conformance-vector runner: the
-normative census stays in ``development/conformance/`` (31 vectors, unchanged
-by this directory). It answers one question with output: which model-level
-rules does a real annotated gene model actually exercise, and would a
-neutered checker accept what the real checker rejects?
+normative census lives in ``development/conformance/`` and this directory
+emits no vectors itself (it ran there while the census was 31; the
+2026-11-15 draft promotion added the 12 ``dmel-*`` cases derived from the
+measurements below, now 43 in total). It answers one question with output:
+which model-level rules does a real annotated gene model actually exercise,
+and would a neutered checker accept what the real checker rejects?
 
 Each mutation below changes ONLY header content; every mutant file gets a
 fresh correct exact-byte checksum from the released toolkit, so a rejection
