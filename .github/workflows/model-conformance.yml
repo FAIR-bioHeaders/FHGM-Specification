@@ -14,10 +14,12 @@ permissions:
 
 # Draft-stage checks for the reviewed FHGM model contract (FHGM #8/#9). This lane
 # runs the model-level vectors and the v0.1 self-test from this repository's
-# development tree. It publishes nothing: FHGM has no released contract, no
-# schemaVersion, no schema URL and no versions.json row, and selection rule V7
-# keeps the draft out of every release form. The header-parity and shared
-# conformance lanes keep checking the pinned FHGFF3 baseline unchanged.
+# development tree, across both released FHGFF3 bases (the sealed 1.1 lane and
+# the 1.2 matrix lane added by the dual-base decision of 2026-11-15). It
+# publishes nothing: FHGM has no released contract, no schemaVersion, no schema
+# URL and no versions.json row, and selection rule V7 keeps the draft out of
+# every release form. The header-parity and shared conformance lanes keep
+# checking the pinned FHGFF3 baseline unchanged.
 
 jobs:
   draft-integrity:
@@ -37,7 +39,7 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_fhgm_conformance.py -v
 
   model-vectors:
-    name: Base, checksum, GFF3 and model layers on the recorded vectors
+    name: Base, checksum, GFF3 and model layers on the recorded vectors, both bases
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -47,31 +49,42 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: '3.13'
-      - name: Read the pinned base-schema revision
+      - name: Read the two pinned base-schema commits from the checker registry
         id: pin
         run: |
-          echo "commit=$(python3 -c 'import json; print(json.load(open("development/conformance/provenance.json"))["baseSchema"]["commit"])')" >> "$GITHUB_OUTPUT"
-      - name: Check out the pinned base-schema revision
+          echo "commit11=$(python3 -c 'import json; print(json.load(open("development/model/base-schemas.json"))["bases"][0]["commit"])')" >> "$GITHUB_OUTPUT"
+          echo "commit12=$(python3 -c 'import json; print(json.load(open("development/model/base-schemas.json"))["bases"][1]["commit"])')" >> "$GITHUB_OUTPUT"
+      - name: Check out the FHGFF3 1.1 base-schema revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: FAIR-bioHeaders/FAIR-bioHeaders-Specification
-          ref: ${{ steps.pin.outputs.commit }}
-          path: .upstream/FAIR-bioHeaders-Specification
+          ref: ${{ steps.pin.outputs.commit11 }}
+          path: .upstream/spec-fhgff3-v0.5.0
+          persist-credentials: false
+      - name: Check out the FHGFF3 1.2 base-schema revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: FAIR-bioHeaders/FAIR-bioHeaders-Specification
+          ref: ${{ steps.pin.outputs.commit12 }}
+          path: .upstream/spec-fhgff3-v0.6.0
           persist-credentials: false
       - name: Install the recorded checker and feature-validator environments
         run: |
           python3 -m venv "$RUNNER_TEMP/fhgm-model"
           "$RUNNER_TEMP/fhgm-model/bin/python" -m pip install --quiet \
             'fair-bioheaders[jsonld]==0.11.0' 'jsonschema==4.26.0' 'gff3-validator==0.1.0'
-      - name: Run the conformance manifest across every available layer
+      - name: Run the conformance manifest across every available layer, both bases
         run: |
           "$RUNNER_TEMP/fhgm-model/bin/python" development/conformance/run_conformance.py \
-            --base-schema .upstream/FAIR-bioHeaders-Specification/fhgff3.json \
+            --base-schema .upstream/spec-fhgff3-v0.5.0/fhgff3.json \
+            --base-schema .upstream/spec-fhgff3-v0.6.0/fhgff3.json \
+            --matrix \
             --gff3-validate "$RUNNER_TEMP/fhgm-model/bin/gff3-validate" --verbose
-      - name: Run the v0.1 draft self-test on the same bytes
+      - name: Run the v0.1 draft self-test on the same bytes, once per base
         run: |
           "$RUNNER_TEMP/fhgm-model/bin/python" development/model/check_draft.py \
-            .upstream/FAIR-bioHeaders-Specification/fhgff3.json
+            .upstream/spec-fhgff3-v0.5.0/fhgff3.json \
+            .upstream/spec-fhgff3-v0.6.0/fhgff3.json
       - name: Run the suite tests against the installed toolkit
         run: |
           "$RUNNER_TEMP/fhgm-model/bin/python" -m unittest discover -s tests -p test_fhgm_conformance.py -v

@@ -29,6 +29,8 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFORMANCE = ROOT / "development" / "conformance"
 MODEL = ROOT / "development" / "model"
 RUNNER = CONFORMANCE / "run_conformance.py"
+REGISTRY = MODEL / "base-schemas.json"
+MATRIX = CONFORMANCE / "base_matrix.json"
 VECTOR_ID = re.compile(r"^[a-z0-9][a-z0-9.-]*$")
 CHECKSUM_PREFIX = b"#~checksum: "
 # Rule ids already owned by the shared conformance manifest. A draft FHGM id must
@@ -49,6 +51,14 @@ def provenance():
     return json.loads((CONFORMANCE / "provenance.json").read_text())
 
 
+def matrix():
+    return json.loads(MATRIX.read_text())
+
+
+def registry():
+    return json.loads(REGISTRY.read_text())
+
+
 def recompute_checksum(data):
     """SHA-512/256 over every byte except the root checksum line, padded base64."""
     covered = b"".join(line for line in data.splitlines(keepends=True)
@@ -63,8 +73,8 @@ class ManifestShape(unittest.TestCase):
     def test_top_level_fields(self):
         for field in ("manifestVersion", "status", "specification", "decisionRecord",
                       "checker", "recordContract", "transportOverlay", "provenance",
-                      "baseSchema", "ruleVocabulary", "contextVocabulary", "layers",
-                      "rules", "openScope", "vectors", "retired"):
+                      "baseSchema", "baseMatrix", "ruleVocabulary", "contextVocabulary",
+                      "layers", "rules", "openScope", "vectors", "retired"):
             with self.subTest(field=field):
                 self.assertIn(field, self.manifest)
         self.assertEqual(1, self.manifest["manifestVersion"])
@@ -284,12 +294,56 @@ class Provenance(unittest.TestCase):
         self.assertRegex(record["sha256"], r"^[0-9a-f]{64}$")
         self.assertRegex(record["retrieved"], r"^\d{4}-\d{2}-\d{2}$")
 
-    def test_base_schema_digest_agrees_with_the_checker_and_the_manifest(self):
-        source = (MODEL / "validate_fhgm.py").read_text()
-        pinned = re.search(r'^BASE_SHA256 = "([0-9a-f]{64})"$', source, re.MULTILINE)
-        self.assertIsNotNone(pinned, "the checker no longer pins its base schema bytes")
-        self.assertEqual(self.provenance["baseSchema"]["sha256"], pinned.group(1))
+    def test_both_base_records_resolve_tags_and_are_complete(self):
+        for key in ("baseSchema", "matrixBaseSchema"):
+            record = self.provenance[key]
+            for field in ("repository", "url", "ref", "tagObject", "commit", "path", "size",
+                          "sha256", "retrieved", "retrievalCommand", "crossCheck",
+                          "whyThisRelease"):
+                with self.subTest(base=key, field=field):
+                    self.assertTrue(record.get(field), f"{field} is missing")
+            self.assertRegex(record["ref"], r"^v\d+\.\d+\.\d+$",
+                             "released base bytes are recorded by tag, never by a branch")
+            self.assertNotEqual(record["ref"], "main")
+            self.assertRegex(record["commit"], r"^[0-9a-f]{40}$")
+            self.assertRegex(record["sha256"], r"^[0-9a-f]{64}$")
+            self.assertRegex(record["retrieved"], r"^\d{4}-\d{2}-\d{2}$")
+
+    def test_base_records_agree_with_the_registry_the_checker_loads(self):
+        # No regex over source text: the sidecar is the checker's authority and
+        # is compared field-for-field against the suite provenance.
+        entries = {e["sha256"]: e for e in registry()["bases"]}
+        self.assertEqual(len(entries), len(registry()["bases"]), "duplicate registry digest")
+        for key in ("baseSchema", "matrixBaseSchema"):
+            record = self.provenance[key]
+            with self.subTest(base=key):
+                self.assertIn(record["sha256"], entries,
+                              f"provenance {key} is not registered for the checker")
+                entry = entries[record["sha256"]]
+                for field in ("size", "ref", "commit", "path", "schemaVersion",
+                              "repository", "tagObject"):
+                    self.assertEqual(entry[field], record[field], f"{key}.{field} drifted")
+                # acceptsSchemaVersions is registry-only: the suite provenance quotes
+                # releases, the enum membership belongs to the checker's sidecar.
+                self.assertEqual(entry["schemaVersion"], record["schemaVersion"])
+
+    def test_registry_states_are_coherent(self):
+        versions = [e["schemaVersion"] for e in registry()["bases"]]
+        self.assertEqual(sorted(versions, key=lambda v: tuple(map(int, v.split(".")))),
+                         versions, "registry bases must be listed oldest first")
+        for entry in registry()["bases"]:
+            with self.subTest(base=entry["ref"]):
+                self.assertIn(entry["schemaVersion"], entry["acceptsSchemaVersions"],
+                              "a base must state its own schemaVersion")
+
+    def test_base_schema_digests_are_distinct(self):
+        digests = [self.provenance[k]["sha256"] for k in
+                   ("baseSchema", "matrixBaseSchema")]
+        self.assertEqual(2, len(set(digests)), "the two lanes must not share one base")
+
+    def test_manifest_points_at_the_provenance_and_the_matrix(self):
         self.assertIn("provenance.json", manifest()["baseSchema"])
+        self.assertEqual("base_matrix.json", manifest()["baseMatrix"])
 
     def test_recorded_contract_and_generator_bytes_match_the_tree(self):
         artifacts = self.provenance["contractArtifacts"] + self.provenance["vectorGenerators"]
@@ -328,7 +382,7 @@ class Provenance(unittest.TestCase):
         for pin in pins:
             with self.subTest(pin=pin["name"]):
                 self.assertTrue((ROOT / pin["tracks"]).is_file())
-                self.assertIn(pin["field"], ("sha256", "commit"))
+                self.assertIn(pin["field"], ("sha256", "commit", "suiteManifestSha256"))
                 self.assertTrue(pin["asOf"])
                 self.assertTrue(pin["checkedBy"])
 
@@ -382,8 +436,9 @@ class Runner(unittest.TestCase):
         result = subprocess.run([sys.executable, str(RUNNER), "--offline"],
                                 capture_output=True, text=True, cwd=ROOT)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertIn("vectors matched their recorded outcomes", result.stdout)
+        self.assertIn("vector checks matched their recorded outcomes", result.stdout)
         self.assertIn("skipped", result.stdout)
+        self.assertIn("Matrix integrity", result.stdout)
 
     def test_sealing_is_idempotent_on_the_committed_manifest(self):
         """Recorded digests are current, and sealing cannot rewrite an expectation."""
@@ -424,6 +479,111 @@ class Runner(unittest.TestCase):
                     self.fail(f"defect {name!r} does not apply to the manifest: {error}")
                 problems = runner.manifest_problems(document)
                 self.assertTrue(problems, "the runner accepted a broken manifest")
+
+
+class Twins(unittest.TestCase):
+    """The base_matrix lane: derivation, sealing and defect detection."""
+
+    def setUp(self):
+        self.manifest = manifest()
+        self.matrix = matrix()
+        self.by_id = {vector["id"]: vector for vector in self.manifest["vectors"]}
+        self.entries = {entry["id"]: entry for entry in self.matrix["vectors"]}
+
+    def test_matrix_covers_every_vector_exactly_once(self):
+        self.assertEqual(sorted(self.by_id), sorted(self.entries))
+
+    def test_sealed_twins_re_derive_from_the_committed_bytes(self):
+        self.assertEqual([], runner.verify_twins(self.matrix, self.manifest))
+
+    def test_twin_changes_only_the_identity_and_checksum_lines(self):
+        for vector in self.manifest["vectors"]:
+            data = runner.path_of(vector).read_bytes()
+            derived, method, _ = runner.twin_bytes(data, vector["layers"]["checksum"])
+            with self.subTest(vector=vector["id"]):
+                if method == "as-committed-1-0":
+                    self.assertEqual(data, derived)
+                    continue
+                changed = [
+                    (old, new) for old, new in zip(data.splitlines(), derived.splitlines())
+                    if old != new
+                ]
+                self.assertEqual(len(data.splitlines()), len(derived.splitlines()))
+                expected_lines = 3 if vector["layers"]["checksum"] == "verify" else 2
+                self.assertEqual(expected_lines, len(changed),
+                                 "expected schema, schemaVersion and (unless stale) "
+                                 "checksum lines to move")
+                for old, new in changed:
+                    self.assertTrue(old.startswith(b"#~schema: ")
+                                    or old.startswith(b"#~schemaVersion: ")
+                                    or old.startswith(b"#~checksum: "),
+                                    f"unexpected line moved: {old[:40]!r}")
+                # records and feature bytes are untouched by construction:
+                strip = lambda b: b"".join(  # noqa: E731
+                    line for line in b.splitlines(keepends=True)
+                    if not line.startswith((b"#~schema: ", b"#~schemaVersion: ",
+                                            b"#~checksum: ")))
+                self.assertEqual(strip(data), strip(derived))
+
+    def test_twin_derivation_is_deterministic(self):
+        for vector in self.manifest["vectors"]:
+            data = runner.path_of(vector).read_bytes()
+            with self.subTest(vector=vector["id"]):
+                self.assertEqual(runner.twin_bytes(data, vector["layers"]["checksum"]),
+                                 runner.twin_bytes(data, vector["layers"]["checksum"]))
+
+    def test_stale_twin_keeps_the_stated_digest_stale(self):
+        vector = self.by_id["tampered-record-bytes"]
+        data = runner.path_of(vector).read_bytes()
+        derived, _, _ = runner.twin_bytes(data, "stale")
+        self.assertEqual(runner.stated_checksum(derived), runner.stated_checksum(data))
+        self.assertNotEqual(runner.recompute_checksum(derived),
+                            runner.stated_checksum(derived))
+
+    def test_verified_twin_carries_a_fresh_correct_digest(self):
+        for vector in self.manifest["vectors"]:
+            if vector["id"] == "transport-1-0-extension":
+                continue
+            if vector["layers"]["checksum"] != "verify":
+                continue
+            data = runner.path_of(vector).read_bytes()
+            derived, method, _ = runner.twin_bytes(data, "verify")
+            with self.subTest(vector=vector["id"]):
+                self.assertEqual("identity-rewrite", method)
+                self.assertEqual(runner.recompute_checksum(derived),
+                                 runner.stated_checksum(derived))
+
+    def test_rewrite_of_a_non_1_1_carrier_refuses(self):
+        # The vacuous-control guard: feeding an already-1.2 file must raise,
+        # not silently "rewrite" it.
+        sealed = self.by_id["both-reference-forms"]
+        data = runner.path_of(sealed).read_bytes()
+        derived, _, _ = runner.twin_bytes(data, "verify")
+        with self.assertRaises(runner.Failure):
+            runner.twin_bytes(derived, "verify")
+
+    def test_matrix_problems_catches_broken_records(self):
+        defects = {
+            "missing twin": lambda d: d["vectors"].pop(0),
+            "extra twin": lambda d: d["vectors"].append(dict(d["vectors"][0])),
+            "duplicate id": lambda d: d["vectors"].append(dict(d["vectors"][1])),
+            "flipped agreement": lambda d: next(
+                e for e in d["vectors"] if e["sameAsSealed"]).update(sameAsSealed=False),
+            "changed polarity": lambda d: d["vectors"][0].update(expected="invalid"),
+            "unknown method": lambda d: d["vectors"][0].update(method="sideways"),
+            "layers edited under agreement": lambda d: next(
+                e.update(layers=dict(e["layers"], model="reject"))
+                for e in d["vectors"] if e["sameAsSealed"] and e["layers"]["model"] == "pass"),
+        }
+        for name, defect in defects.items():
+            with self.subTest(defect=name):
+                document = json.loads(MATRIX.read_text())
+                try:
+                    defect(document)
+                except (KeyError, IndexError, TypeError, StopIteration) as error:
+                    self.fail(f"defect {name!r} does not apply: {error}")
+                problems = runner.matrix_problems(document, self.manifest)
+                self.assertTrue(problems, "the runner accepted a broken matrix")
 
 
 if __name__ == "__main__":

@@ -8,6 +8,14 @@ released base schema and checksum accept while the model-level checker
 rejects them. Requires fair-bioheaders and jsonschema. The model-conformance
 workflow runs this matrix, and the manifest-driven runner in
 ``development/conformance/``, on every pull request and push to ``main``.
+
+Since the dual-base decision of 2026-11-15 the matrix runs once per supplied
+released FHGFF3 base (v0.5.0 and v0.6.0 bytes): every fixture keeps its verdict
+under each base alone. With both bases supplied the checker's selection itself
+is additionally exercised - each carrier must be routed to its declared release,
+a superseded declaration judged by the oldest candidate that states it, and a
+declaration no supplied base states refused with a selection error rather than
+an enum accident.
 """
 
 import copy
@@ -23,21 +31,55 @@ ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = ROOT / "model" / "validate_fhgm.py"
 FIXTURES = ROOT / "examples" / "contract"
 MODEL_FIXTURES = ROOT / "examples" / "model"
+CONFORMANCE_VECTORS = ROOT / "conformance" / "vectors"
 S6K = ROOT / "examples" / "s6k"
+FHGFF3_12_SCHEMA = "https://w3id.org/fair-bioheaders/fhgff3/v0.6.0"
 
 
-def expect(base, file, error=None, predecessor=None):
-    command = [sys.executable, str(VALIDATOR), "--base-schema", str(base), str(file)]
+def expect(base, file, error=None, predecessor=None, *extra_bases):
+    """Run the checker over one file with one or more base-schema candidates.
+
+    ``base`` may be a single path or a list of paths (each becomes one
+    ``--base-schema`` argument); ``predecessor`` a path or list of paths.
+    """
+    bases = base if isinstance(base, list) else [base, *extra_bases]
+    command = [sys.executable, str(VALIDATOR)]
+    for one in bases:
+        command += ["--base-schema", str(one)]
     if isinstance(predecessor, list):
         for path in predecessor:
             command.extend(["--predecessor", str(path)])
     elif predecessor:
         command.extend(["--predecessor", str(predecessor)])
+    command.append(str(file))
     result = subprocess.run(command, capture_output=True, text=True)
     if error is None:
         assert result.returncode == 0, result.stderr
     else:
         assert result.returncode == 1 and error in result.stderr, result
+    return result
+
+
+def twin_12(source, output, name):
+    """Re-render a fixture under the released FHGFF3 1.2 identity.
+
+    The two identity lines move and the checksum follows; records, pointers and
+    feature bytes are the source's, exactly as the conformance matrix lane
+    derives its twins.
+    """
+    metadata = parse_header(source.read_bytes().splitlines(keepends=True))
+    del metadata["checksum"]
+    metadata["schema"] = FHGFF3_12_SCHEMA
+    metadata["schemaVersion"] = "1.2"
+    # render() re-emits the ##gff-version directive itself; the payload is the
+    # feature lines only (every FHGM fixture is plain, no embedded FASTA).
+    payload = b"".join(
+        line for line in source.read_bytes().splitlines(keepends=True)
+        if not line.startswith(b"#")
+    )
+    candidate = output / name
+    candidate.write_bytes(render(metadata, payload))
+    return candidate
 
 
 def contract_examples(base, output):
@@ -106,6 +148,75 @@ def contract_examples(base, output):
     expect(base, candidate, "File checksum mismatch")
 
 
+def selection_checks(bases, output):
+    """Base selection is exercised only when more than one release is supplied."""
+    if len(bases) < 2:
+        print("Single base supplied: selection cross-checks skipped "
+              "(supply v0.5.0 and v0.6.0 bytes to run them).")
+        return
+    minimal = FIXTURES / "minimal.fhgff3.gff3"
+    rich = FIXTURES / "rich.fhgff3.gff3"
+    first, second = bases[0], bases[1]
+    # A 1.1 carrier routes to the v0.5.0 bytes even when the 1.2 bytes are also
+    # supplied, and a mixed chain (1.1 carrier naming a 1.1 predecessor with
+    # both candidates available) resolves.
+    routing = expect(first, rich, None, minimal, second)
+    assert "schemaVersion '1.1' -> FAIR-bioHeaders/FAIR-bioHeaders-Specification@v0.5.0" \
+        in routing.stdout, routing.stdout
+    twin = twin_12(minimal, output, "twin-minimal.fhgff3.gff3")
+    # A 1.2 carrier with a 1.1 predecessor under both candidates: each file is
+    # judged by its own declared release.
+    twin_rich = twin_12(rich, output, "twin-rich.fhgff3.gff3")
+    result = subprocess.run(
+        [sys.executable, str(VALIDATOR), "--base-schema", str(first),
+         "--base-schema", str(second), "--predecessor", str(minimal),
+         str(twin_rich)],
+        capture_output=True, text=True)
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    assert "schemaVersion '1.2' -> FAIR-bioHeaders/FAIR-bioHeaders-Specification@v0.6.0" \
+        in result.stdout, result.stdout
+    assert "schemaVersion '1.1' -> FAIR-bioHeaders/FAIR-bioHeaders-Specification@v0.5.0" \
+        in result.stdout, result.stdout
+    # A superseded 1.0 carrier with both candidates is judged by the oldest
+    # base that states 1.0 in its enum - the sealed v0.5.0 routing.
+    carrier_10 = CONFORMANCE_VECTORS / "invalid" / "transport-1-0-extension.fhgff3.gff3"
+    result = subprocess.run(
+        [sys.executable, str(VALIDATOR), "--base-schema", str(first),
+         "--base-schema", str(second), str(carrier_10)],
+        capture_output=True, text=True)
+    assert result.returncode == 1, result
+    assert "oldest supplied candidate" in result.stdout, result.stdout
+    assert "'x-fhgm-models' should not be valid under" in result.stderr, result.stderr
+    # A carrier declaring a version NO supplied base states at all is refused
+    # with a selection error, not an enum accident. Construct one: the 1.2 twin
+    # with its schemaVersion moved to 9.9.
+    metadata = parse_header(twin.read_bytes().splitlines(keepends=True))
+    del metadata["checksum"]
+    metadata["schemaVersion"] = "9.9"
+    future = output / "future-version.fhgff3.gff3"
+    future_payload = b"".join(
+        line for line in twin.read_bytes().splitlines(keepends=True)
+        if not line.startswith(b"#")
+    )
+    future.write_bytes(render(metadata, future_payload))
+    result = subprocess.run(
+        [sys.executable, str(VALIDATOR), "--base-schema", str(first),
+         "--base-schema", str(second), str(future)],
+        capture_output=True, text=True)
+    assert result.returncode == 1 and \
+        "No supplied FHGFF3 base release states schemaVersion '9.9'" in result.stderr, \
+        (result.stdout, result.stderr)
+    # The same 9.9 carrier against a single-base harness refuses identically.
+    result = subprocess.run(
+        [sys.executable, str(VALIDATOR), "--base-schema", str(second), str(future)],
+        capture_output=True, text=True)
+    assert result.returncode == 1 and \
+        "No supplied FHGFF3 base release states schemaVersion '9.9'" in result.stderr, \
+        (result.stdout, result.stderr)
+    print("Base selection checks passed: exact routing, oldest-stating fallback for "
+          "superseded 1.0, and refusal of a version no supplied base states.")
+
+
 def s6k_fixture(base):
     derived = S6K / "DanaCAF1_S6k.fhgm-models.fhgff3.gff3"
     plain = S6K / "DanaCAF1_S6k.gff3"
@@ -119,7 +230,7 @@ def s6k_fixture(base):
 
 def model_fixtures(base, output):
     generated = output / "regenerated"
-    generated.mkdir()
+    generated.mkdir(exist_ok=True)
     subprocess.run(
         [sys.executable, str(MODEL_FIXTURES / "make_fixtures.py"), str(generated)],
         check=True, capture_output=True,
@@ -175,9 +286,17 @@ def run(base, output):
     contract_examples(base, output)
     s6k_fixture(base)
     model_fixtures(base, output)
-    print("Draft FHGM contract v0.1 acceptance and rejection cases passed.")
+    print(f"Draft FHGM contract v0.1 acceptance and rejection cases passed "
+          f"against base {base.name}.")
 
 
 if __name__ == "__main__":
+    bases = [Path(argument) for argument in sys.argv[1:]]
+    if not bases:
+        raise SystemExit("usage: check_draft.py BASE [BASE ...]  "
+                         "(released fhgff3.json bytes registered in base-schemas.json)")
     with TemporaryDirectory() as directory:
-        run(Path(sys.argv[1]), Path(directory))
+        output = Path(directory)
+        for base in bases:
+            run(base, output)
+        selection_checks(bases, output)
