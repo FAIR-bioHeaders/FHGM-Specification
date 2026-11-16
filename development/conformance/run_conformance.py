@@ -19,11 +19,11 @@ manifest records it per vector). This script therefore reports the layers
 
 Two lanes run over one suite:
 
-    sealed lane  the 31 committed vectors, observed against the FHGFF3 1.1
+    sealed lane  the 43 committed vectors, observed against the FHGFF3 1.1
                  (v0.5.0) bytes. Every expectation lives in manifest.json and
                  keeps its evidence trail; the lane's semantics are unchanged
                  by the dual-base work.
-    matrix lane  (``--matrix``) identity-rewritten twins of the same 31
+    matrix lane  (``--matrix``) identity-rewritten twins of the same 43
                  vectors, evaluated against the FHGFF3 1.2 (v0.6.0) bytes with
                  nothing else altered: the ``#~schema`` and ``#~schemaVersion``
                  lines move to the v0.6.0 citation, and the checksum line is
@@ -81,6 +81,7 @@ REGISTRY = DEVELOPMENT / "model" / "base-schemas.json"
 GENERATORS = {
     "make_fixtures": DEVELOPMENT / "examples" / "model" / "make_fixtures.py",
     "make_vectors": HERE / "make_vectors.py",
+    "make_dmel_vectors": HERE / "make_dmel_vectors.py",
 }
 S6K_PROFILE = DEVELOPMENT / "examples" / "s6k" / "DanaCAF1_S6k.fhgff3.gff3"
 S6K_DERIVED = DEVELOPMENT / "examples" / "s6k" / "DanaCAF1_S6k.fhgm-models.fhgff3.gff3"
