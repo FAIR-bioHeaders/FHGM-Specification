@@ -811,7 +811,7 @@ def run_lane(vectors, matrix_entries, lanes, base_path, offline, verbose, lane):
                 layers_expected = {"base": None,
                                    "checksum": vector["layers"]["checksum"],
                                    "gff3": None, "model": None}
-                reason_expected = "" if vector["expected"] == "invalid" else None
+                reason_expected = vector.get("reason")
             else:
                 recorded = dict(entry["twin"])
                 layers_expected = entry["layers"]
