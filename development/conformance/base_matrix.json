@@ -5,16 +5,16 @@
   "specification": "../model/README.md",
   "manifest": "manifest.json",
   "base": "provenance.json matrixBaseSchema records the v0.6.0 bytes; base-schemas.json registers them for the checker.",
-  "method": "A twin replaces exactly two header lines of its sealed vector - #~schema moves to https://w3id.org/fair-bioheaders/fhgff3/v0.6.0 and #~schemaVersion to 1.2, both in the source's quoting style - and the #~checksum line follows: recomputed when the sealed record says verify, preserved when it says stale so the twin remains a stale-checksum case. Records, pointers and every feature byte are unchanged. A vector declaring FHGFF3 1.0 is evaluated as committed (method as-committed-1-0): its stated identity is the defect and there is no 1.2 form of the claim being tested. The 1.2 lane hands the checker ONLY the v0.6.0 base file and the same committed predecessors as the sealed lane, which is both the realistic toolkit scenario (0.11.0 bundles the 1.2 bytes alone) and a mixed-identity chain test: a 1.1 predecessor entering a 1.2-only harness is judged by the oldest base that states its declared version.",
+  "method": "A twin replaces exactly two header lines of its sealed vector - a v0.5.0 #~schema citation moves to https://w3id.org/fair-bioheaders/fhgff3/v0.6.0 (any other citation, such as the v0.6.0 FHR-Specification alias or raw main, is kept) and #~schemaVersion to 1.2, both in the source's quoting style - and the #~checksum line follows: recomputed when the sealed record says verify, preserved when it says stale so the twin remains a stale-checksum case. Records, pointers and every feature byte are unchanged. A vector declaring FHGFF3 1.0 is evaluated as committed (method as-committed-1-0): its stated identity is the defect and there is no 1.2 form of the claim being tested. The checker is handed both registered base files and the same committed predecessors as the sealed lane, and selects the release each loaded file cites by its schema URL: a 1.2 twin is judged by the v0.6.0 bytes and its 1.1 predecessor by the v0.5.0 bytes it cites, which makes the lane a mixed-identity chain test. The base layer is the v0.6.0 release alone.",
   "summary": {
-    "twins": 43,
-    "valid": 14,
-    "invalid": 29,
-    "identityRewritten": 42,
-    "asCommitted10": 1,
+    "twins": 47,
+    "valid": 16,
+    "invalid": 31,
+    "identityRewritten": 45,
+    "asCommitted10": 2,
     "verdictChangesAgainstSealed": 0,
     "changedVectors": [],
-    "gapProofUnder12": 27
+    "gapProofUnder12": 28
   },
   "findings": [],
   "vectors": [
@@ -741,8 +741,8 @@
         "gff3": "accept",
         "model": "reject"
       },
-      "reason": "'x-fhgm-models' should not be valid under",
-      "selectedBase": "v0.6.0 (1942be4cefc8b3a2...)",
+      "reason": "which no registered FHGFF3 base release answers to",
+      "selectedBase": "unknown",
       "sameAsSealed": true
     },
     {
@@ -1014,6 +1014,99 @@
       },
       "reason": "must target one local gene row",
       "selectedBase": "v0.6.0 (1942be4cefc8b3a2...)",
+      "sameAsSealed": true
+    },
+    {
+      "id": "fhr-specification-alias-v0.6.0",
+      "file": "vectors/valid/fhr-specification-alias-v0.6.0.fhgff3.gff3",
+      "method": "identity-rewrite",
+      "expected": "valid",
+      "note": "schemaVersion rewritten to 1.2 and checksum recomputed; the v0.6.0 FHR-Specification alias citation is kept, so the twin exercises the alias with 1.2",
+      "rules": [
+        "K1"
+      ],
+      "twin": {
+        "size": 998,
+        "sha256": "1b7a5076a78613645509e88d4f2b01623a654d277859911e10b4c83ac358264c",
+        "checksum": "H8n6SGytXYgImNoPidPSrUVmtQTgsgSdhKvIcjdsuog="
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "selectedBase": "v0.6.0 (1942be4cefc8b3a2...)",
+      "sameAsSealed": true
+    },
+    {
+      "id": "v0.6.0-citation-stating-1.1",
+      "file": "vectors/valid/v0.6.0-citation-stating-1.1.fhgff3.gff3",
+      "method": "identity-rewrite",
+      "expected": "valid",
+      "note": "schemaVersion rewritten to 1.2 and checksum recomputed; the v0.6.0 w3id citation is already the twin citation and is kept; every other byte is the sealed vector's",
+      "rules": [
+        "K1"
+      ],
+      "twin": {
+        "size": 958,
+        "sha256": "430b3b93431564faf7fffc3fe5d8038ad27cf9b5759cd9bd48d11374c689675e",
+        "checksum": "AQymhildbCoFfYVf7S5YmC+aWhTi+/0TEax5ZAADPvQ="
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "selectedBase": "v0.6.0 (1942be4cefc8b3a2...)",
+      "sameAsSealed": true
+    },
+    {
+      "id": "carrier-cites-raw-main",
+      "file": "vectors/invalid/carrier-cites-raw-main.fhgff3.gff3",
+      "method": "identity-rewrite",
+      "expected": "invalid",
+      "note": "schemaVersion rewritten to 1.2 and checksum recomputed; the raw-main citation is kept, so the twin is refused at selection for the same reason",
+      "rule": "K1",
+      "twin": {
+        "size": 1008,
+        "sha256": "fabd8382efd6e0e2b734a4a0a903e44e7efa10d5141d4d1c250bcc6fb2f326b4",
+        "checksum": "Nnim/04x9/jdR8yMxdlwPWurZVJriqosqrEI9IstVBA="
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "reason": "which no registered FHGFF3 base release answers to",
+      "selectedBase": "unknown",
+      "sameAsSealed": true
+    },
+    {
+      "id": "transport-1-0-under-v0.5.0-citation",
+      "file": "vectors/invalid/transport-1-0-under-v0.5.0-citation.fhgff3.gff3",
+      "method": "as-committed-1-0",
+      "expected": "invalid",
+      "note": "its stated FHGFF3 1.0 identity is the defect, so the 1.2 lane evaluates the committed bytes against the v0.6.0 base",
+      "rule": "B1",
+      "sharedRules": [
+        "R15"
+      ],
+      "twin": {
+        "size": 958,
+        "sha256": "cd73204b809f1a5d91f41e0e5175be8c50a04599e266c0332bf94e7808727d4b",
+        "checksum": "tOfX/QxGzffwFaDIFSy7AHdsSosUiCIzn9BPczwc8jU="
+      },
+      "layers": {
+        "base": "reject",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "reason": "'x-fhgm-models' should not be valid under",
+      "selectedBase": "v0.5.0 (20ce320f5d706f11...)",
       "sameAsSealed": true
     }
   ]

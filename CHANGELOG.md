@@ -1,5 +1,27 @@
 # FHGM changelog
 
+## Unreleased — base selection by cited schema URL (2026-11-18)
+
+- `validate_fhgm.py` now selects the FHGFF3 base release by the carrier's
+  `schema` URL, mapped through new `schemaUrls` lists in
+  `development/model/base-schemas.json`, instead of by `schemaVersion`. It
+  refuses a carrier whose URL names no registered release (a superseded release
+  such as v0.4.0, or raw `main`), states no URL, or cites a release whose bytes
+  were not supplied. The old fallback to the oldest supplied base, which
+  judged files by bytes they never cited, is gone.
+- Draft transport overlay change: the v0.6.0 identity branch of
+  `fhgm-draft.schema.json` gains the FHR-Specification alias URL and admits
+  `schemaVersion` `1.1` as well as `1.2`, matching the shared v0.6.0 release.
+- The conformance runner hands the checker both base files in both lanes (the
+  matrix lane passed only the v0.6.0 bytes before), requires both for any
+  non-offline run, and reads the header for its base layer with the toolkit's
+  strict reader. Twins keep any citation other than v0.5.0.
+- Four vectors (47: 16 valid, 31 invalid): `v0.6.0-citation-stating-1.1`,
+  `fhr-specification-alias-v0.6.0`, `carrier-cites-raw-main` and
+  `transport-1-0-under-v0.5.0-citation`. `transport-1-0-extension` keeps its
+  bytes and layers; its reason moves to the selection refusal. The matrix was
+  re-sealed: 0 verdict changes against the sealed lane, gap claim 28/31.
+
 ## Unreleased — inherited build hygiene (2026-11-18)
 
 - `requirements.txt` pins `linkml==1.9.6`, `linkml-runtime==1.9.5` and

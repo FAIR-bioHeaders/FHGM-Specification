@@ -175,10 +175,10 @@ def edit_fhgff3_12(metadata):
 # --------------------------------------------------------------------------
 
 def layer_base(candidates, path):
-    """The released base schema ALONE, chosen by the carrier's declared version."""
+    """The released base schema ALONE, chosen by the carrier's cited schema URL."""
     try:
         header = parse_header(path.read_bytes())
-        _, _, validator, _ = choose_base(header.get("schemaVersion"), candidates)
+        _, _, validator, _ = choose_base(header, candidates)
         validator.validate(header)
         return "accept"
     except Exception as exc:  # jsonschema.ValidationError and parse failures

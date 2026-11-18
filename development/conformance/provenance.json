@@ -4,7 +4,7 @@
   "retrieved": "2026-11-15",
   "baseRegistry": {
     "local": "development/model/base-schemas.json",
-    "role": "the checker's authority for which FHGFF3 base bytes may be supplied and how a carrier's declared schemaVersion selects among them",
+    "role": "the checker's authority for which FHGFF3 base bytes may be supplied and how a loaded file's cited schema URL selects among them",
     "note": "provenance.json mirrors the two base records below for the suite lanes; run_conformance.py cross-checks registry, provenance record, checker-supplied bytes and each file's actual digest on every run and refuses on any disagreement. Released material is recorded by tag with the tag->commit resolution; no floating branch is recorded for any release."
   },
   "baseSchema": {
@@ -46,7 +46,7 @@
     "sha256": "1942be4cefc8b3a2537942c2252b45fbcef87a5532486e4fd0f5d4c540e0fbf9",
     "retrieved": "2026-11-15",
     "verification": "Fetched by tag name and by resolved commit URL over HTTPS as full downloads; cmp-verified byte-equal to each other; sha256 equals the workspace guide's v0.6.0 release-tarball record (1942be4c...). A full JSON walk of both releases found the real delta: the schemaVersion enum gains '1.2'; Completeness.lineageDataset gains dotted BUSCO dataset versions (pattern ^[a-z0-9_]+_odb[0-9]+(\\.[0-9]+)*$) for carriers declaring 1.2; two new version-gated if/then clauses keep stating the old pattern for carriers declaring 1.0 or 1.1; description text updated. No FHGM vector or fixture byte carries a completeness object, so the delta touches no FHGM content, and the 1.0 extension floor (docs/FORMAT.md R15 clause) is byte-identical in both releases.",
-    "crossCheck": "base-schemas.json registers the same digest; validate_fhgm.py selects these bytes only for carriers declaring schemaVersion '1.2' (or judging a superseded declaration as the only supplied candidate); run_conformance.py compares this record, the registry and the supplied file's actual digest on every --matrix run.",
+    "crossCheck": "base-schemas.json registers the same digest; validate_fhgm.py selects these bytes only for a loaded file whose schema URL cites the v0.6.0 release (w3id or raw tag URL under either repository name) and refuses such a file when these bytes were not supplied; run_conformance.py compares this record, the registry and the supplied file's actual digest on every non-offline run.",
     "whyThisRelease": "Maintainer decision 2026-11-15: FHGM must be describable on both released FHGFF3 bases, because the released toolkit (fair-bioheaders 0.11.0) writes 1.2 headers today while the merged fixtures and the sealed manifest carry 1.1 bytes. The 1.2 lane is an added matrix, not a repoint: no sealed expectation moves."
   },
   "contractArtifacts": [
@@ -60,29 +60,30 @@
     {
       "local": "development/model/fhgm-draft.schema.json",
       "role": "transport-only overlay (K1)",
-      "size": 2613,
-      "sha256": "d1619cced91b4ef554853bf5512b5b4ad593b1dc571c2beacb5ee92466ea244a"
+      "size": 3191,
+      "sha256": "533b3120f4a86590f1b60a2175487597c99b646b3d092b7818b1f682c6cecf9b",
+      "note": "2026-11-18: the v0.6.0 branch gained the FHR-Specification alias URL and admits schemaVersion 1.1 as well as 1.2, matching the shared v0.6.0 release; its URI sets equal base-schemas.json schemaUrls (tests/test_fhgm_conformance.py checks that)."
     },
     {
       "local": "development/model/validate_fhgm.py",
       "role": "model-level checker (K3-K6) and base selector, the authority for every recorded outcome",
-      "size": 14310,
-      "sha256": "f14e60732d3de2c0633c7601f7e2847a4668c084b8ab7ff093f0c35b58a592f7",
-      "note": "Bytes include the Copilot-Autofix guard merged onto this branch 2026-11-15 (non-dict header -> clean ValueError instead of a traceback); reviewed, behavior-preserving for every sealed vector, re-recorded here against head 8b26102."
+      "size": 14545,
+      "sha256": "91acf595befeef0468fbb637528fafeab7b5990b0246d5b34b77da53f30117da",
+      "note": "Since 2026-11-18 the checker selects each loaded file's base by its cited schema URL (base-schemas.json schemaUrls) and refuses an unregistered citation or one whose bytes were not supplied, instead of selecting by schemaVersion with a fallback to other bytes; every sealed and matrix outcome was re-observed after that change. Earlier: the Copilot-Autofix guard merged 2026-11-15 (non-dict header -> clean ValueError instead of a traceback)."
     },
     {
       "local": "development/model/base-schemas.json",
       "role": "base-release registry consulted for every supplied --base-schema file",
-      "size": 5141,
-      "sha256": "33f3fd541fe6ad611376a559279a0f95a5b7901418a6e1e44aebc78f9a47370f"
+      "size": 6165,
+      "sha256": "8feb36c1957d151e22da9833b7a3421b339b5f18475d054ebe7e54cabcf72eac"
     }
   ],
   "vectorGenerators": [
     {
       "local": "development/conformance/make_vectors.py",
       "role": "generates the vectors under development/conformance/vectors/",
-      "size": 10262,
-      "sha256": "8ac1c6cde5abe428dc3150bb2868dc7498d655f98cd9f9ca69ae603918747215"
+      "size": 12472,
+      "sha256": "6607d48c514af4d0cff7fa0dcc533f59e178baa6c97c8060f1b9d437a047c097"
     },
     {
       "local": "development/examples/model/make_fixtures.py",
@@ -136,7 +137,7 @@
       "pointer": "/snapshots/fhgm",
       "tracks": "development/model/fhgm-model.schema.json",
       "field": "sha256",
-      "asOf": "2026-11-15: the pin still records commit 8b0ca0055b84d69bc24e5daf4ad1950e91d11d0e with sha256 9114780bfcc8b575fa660b2d38a7ad521d9b993d2544963cdad388daed045e27, which the 2026-11-14 description-only edits (merged in 52b07b7) made stale; the freshness lane reports that fact. The dual-base work leaves fhgm-model.schema.json unchanged, so it moves this pin no further. Refreshing it is a shared-repository action listed in the publication checklist, never an FHGM-side edit.",
+      "asOf": "2026-11-18, measured with --check-downstream-pins against FHGM main f0b3aee: fresh - the pin records sha256 bf1553cac04dc88d8afaff1d39bc50360342e1ebedac4b73dfe3dff570ff410f, the reviewed 2026-11-14 record-contract bytes this tree still holds. (The 2026-11-15 note that it recorded the older 8b0ca00 bytes 9114780b... is superseded: the shared repository refreshed it.) Base selection by cited URL leaves fhgm-model.schema.json unchanged and moves this pin no further; any later record-contract change makes it stale at merge, and refreshing it stays a shared-repository action, never an FHGM-side edit.",
       "checkedBy": "run_conformance.py --check-downstream-pins (network; scheduled and dispatch only, so PR lanes stay offline)"
     },
     {
@@ -147,7 +148,7 @@
       "pointer": "/drafts/FHGM/transportOverlay",
       "tracks": "development/model/fhgm-draft.schema.json",
       "field": "sha256",
-      "asOf": "2026-11-15, re-verified against the consumer's server main the same day: the pin records sha256 dd9f69274f26860bbfd71d0e8b2794420c5369fb5d40ce838fb6a9e6d5116e3d (the single-identity overlay, suiteCommit ac3d37b). The dual-base overlay changes these bytes, so the pin and the consumer's vendored copy fhgm-transport-draft.json go stale when this change merges; the consumer's src/fhgm.js already treats R15 as admitting 1.2 carriers, per its own note. The record-contract pin on the same main (sha256 bf1553ca...) tracks bytes this change leaves untouched and stays fresh. Scope of the same merge's staleness, reported not fixed here: JavaScript main does NOT yet field-pin our manifest - a suiteManifestSha256 pin for the original 31-vector manifest exists only on that repository's unmerged draft-lane branch and will move when that branch rebases onto the merged 43-vector bytes - and Tools-R main vendors byte copies of the suite (tests/draft/fhgm/: manifest 31f14f02..., provenance.json, the original vector files) checked by its own tools/check_vendoring.R; the vendored manifest and provenance move at merge, and the 12 promoted vector entries and their files need to be considered by the consumer's refresh. Every refresh is the consumer's action against the merged commit, never an FHGM-side edit.",
+      "asOf": "2026-11-18, measured with --check-downstream-pins against FHGM main f0b3aee: fresh - the pin records sha256 d1619cced91b4ef554853bf5512b5b4ad593b1dc571c2beacb5ee92466ea244a, the dual-base overlay. (The 2026-11-15 note that it recorded the single-identity overlay dd9f6927... is superseded.) Base selection by cited URL changes the overlay bytes - the v0.6.0 branch gains the FHR-Specification alias URL and admits schemaVersion 1.1 - so this pin and the consumer's vendored copy go stale when that change merges. The refresh is the consumer's action against the merged commit, never an FHGM-side edit.",
       "checkedBy": "run_conformance.py --check-downstream-pins (network; scheduled and dispatch only, so PR lanes stay offline)"
     }
   ]

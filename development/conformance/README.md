@@ -16,8 +16,8 @@ An FHGM model record lives under the FHGFF3 header's `x-fhgm-models` extension
 key, where the released FHGFF3 base schema cannot see inside it — on either
 released identity, 1.1 or 1.2. Every
 model-level rejection recorded here therefore **also passes the released base
-schema and its exact-byte checksum** — 27 of the 29 invalid vectors do; the two
-exceptions are named below. That gap is the reason FHGM has a separate
+schema and its exact-byte checksum** — 28 of the 31 invalid vectors do; the
+three exceptions are named below. That gap is the reason FHGM has a separate
 model-level checker, and it is why an FHGM conformance lane has to run the
 checker rather than evaluate a schema: schema-vector conformance cannot express
 FHGM acceptance.
@@ -26,7 +26,8 @@ FHGM acceptance.
 
 - `manifest.json` — the rule ids, the open-scope list and the expected outcome of
   every vector, including the prior snapshots each pointer check is handed. The
-  sealed lane runs all 43 vector entries against the FHGFF3 1.1 (v0.5.0) base.
+  sealed lane runs all 47 vector entries, with the FHGFF3 1.1 (v0.5.0) bytes as
+  its base layer.
 - `base_matrix.json` — the FHGFF3 1.2 matrix lane: for every sealed vector, the
   identity-rewritten twin's sealed digest and the layers observed against the
   v0.6.0 base, with an explicit agreement flag per vector (maintainer dual-base
@@ -76,13 +77,13 @@ reported separately and never collapsed into one "valid" boolean:
 
 | Layer | What ran | Authority |
 | --- | --- | --- |
-| `base` | the released `fhgff3.json` schema alone, over the parsed header | the shared specification's v0.5.0 bytes for the sealed lane (`provenance.json` `baseSchema`), v0.6.0 for the matrix twins (`matrixBaseSchema`); the checker prints the release it selected for every file |
+| `base` | the released `fhgff3.json` schema alone, over the header as the toolkit's strict reader parses it | the shared specification's v0.5.0 bytes for the sealed lane (`provenance.json` `baseSchema`), v0.6.0 for the matrix twins (`matrixBaseSchema`); separately, the checker selects the release each file cites and prints it |
 | `checksum` | `verify` or `stale`, recomputed with `hashlib` over every byte except the root checksum line | `docs/FORMAT.md` R1–R4 |
 | `gff3` | `gff3-validate --no-header`, when that separate tool is installed | gff3-validator, not this contract |
 | `model` | `validate_fhgm.py`: transport overlay, native record contract, rules K3–K6 and the pointer verdict | the reviewed draft contract |
 
 Every vector records `gff3: accept`: gff3-validator 0.1.0 reports zero errors and
-zero warnings on all 43 sealed files and all 43 matrix twins, including the
+zero warnings on all 47 sealed files and all 47 matrix twins, including the
 duplicate-gene-ID vector. The feature layer and the model layer are orthogonal,
 and no rejection in this suite can be attributed to GFF3 syntax.
 
@@ -117,11 +118,13 @@ pinned (`gap-skip-with-recorded-successor-supplied` against
 
 ## Vectors
 
-43 vectors: 14 valid, 29 invalid — the 31 sealed synthetic-plus-S6k census plus
-the 12-case real-data promotion batch (10 gap-proof rejections and 2 required
+47 vectors: 16 valid, 31 invalid — the 31 sealed synthetic-plus-S6k census, the
+12-case real-data promotion batch (10 gap-proof rejections and 2 required
 positive anchors, `dmel-*`, promoted from the dmel4 example lane as a DRAFT
 pending independent review; see
-[PROMOTION-2026-11-15.md](PROMOTION-2026-11-15.md) and its review conditions).
+[PROMOTION-2026-11-15.md](PROMOTION-2026-11-15.md) and its review conditions),
+and 4 base-selection vectors added on 2026-11-18 when the checker began
+selecting the base release by the carrier's cited `schema` URL.
 Layer outcomes are `base` / `checksum` / `gff3` / `model`.
 
 ### Valid
@@ -133,6 +136,7 @@ Layer outcomes are `base` / `checksum` / `gff3` / `model`.
 | `contract-rich-revision-chain` | K1,K6 | `accept` / `verify` / `accept` / `pass` | 1 | The PR #7 rich example resolved against the minimal example it names: pointer checksum, `modelId` and `modelVersion` all match. |
 | `dmel-snapshot-v1` | K1,K2,K4,K5 | `accept` / `verify` / `accept` / `pass` | 0 | Real chromosome-4 gene models (multi-isoform `Dmel_CG11076`, single-exon `Dmel_CG11077`) bound to both released genome-link forms with real values; the positive anchor the promoted pointer cases supply. |
 | `dmel-snapshot-v2-resolved` | K1,K2,K6 | `accept` / `verify` / `accept` / `pass` | 1 | The real revision snapshot resolved against the v1 anchor: checksum, own `modelId` and recorded version all match; `resolvable` states no curator acceptance. |
+| `fhr-specification-alias-v0.6.0` | K1 | `accept` / `verify` / `accept` / `pass` | 0 | The v0.6.0 raw tag URL under the FHR-Specification repository name, which the shared release recognises as the same release: the checker maps it to the v0.6.0 registry entry and the overlay admits it. The matrix twin keeps the alias and states `1.2`. |
 | `file-linked-by-fhr-parent` | K1,K5 | `accept` / `verify` / `accept` / `pass` | 0 | The other FHGFF3 genome-link branch at file scope — a `derivedFrom` FHR annotates link and no `genomeReference` — with the record bound the same way. No v0.1 fixture exercised this branch. |
 | `gap-pointer-without-recorded-successor` | K6 | `accept` / `verify` / `accept` / `pass` | 1 | The same bytes as `gap-skip-with-recorded-successor-supplied` with only the pointed snapshot supplied: `resolvable`. The pair is the point — the bound D3 adopted cuts both ways. |
 | `history-with-unresolved-own-pointer` | K6 | `accept` / `verify` / `accept` / `pass` | 2 | A supplied snapshot whose own pointer does not resolve still serves as history, because the checker resolves only the selected file's pointers. Raised as question Q7 on 2026-11-14; this pins current behavior, it rules nothing. |
@@ -142,12 +146,14 @@ Layer outcomes are `base` / `checksum` / `gff3` / `model`.
 | `single-record` | K1,K2,R15 | `accept` / `verify` / `accept` / `pass` | 0 | One record, no predecessor claim: base schema, transport overlay, record contract and the identity, target and agreement rules all hold. |
 | `supplied-external-model-id` | K2 | `accept` / `verify` / `accept` / `pass` | 0 | Review disposition Q2: file-local identity is the default, and a producer-supplied external identifier may occupy the same opaque field. The `urn:example:` value is documentation-only and claims no registry. |
 | `two-records-unique-ids` | K1,K2,K3,R15 | `accept` / `verify` / `accept` / `pass` | 0 | Two records with distinct `modelId`s in one snapshot, both targeting gene rows of a noncoding feature layer; the history the pointer vectors below supply. |
+| `v0.6.0-citation-stating-1.1` | K1 | `accept` / `verify` / `accept` / `pass` | 0 | Selection by citation: the v0.6.0 w3id URL with `schemaVersion` `1.1`. The checker selects the v0.6.0 bytes the URL cites, which accept a `1.1` record, and the overlay's v0.6.0 branch admits `1.1`. |
 
 ### Invalid
 
 | Vector | Rule | Layer outcomes | Histories supplied | What it pins |
 | --- | --- | --- | --- | --- |
 | `ambiguous-model-id-in-snapshot` | K3 | `accept` / `verify` / `accept` / `reject` | 0 | Deviation D4 as adopted: a duplicate `modelId` makes the identity a pointer needs unselectable, reported under the name `ambiguous` rather than as a generic invalid record, because the defect belongs to the snapshot. |
+| `carrier-cites-raw-main` | K1 | `accept` / `verify` / `accept` / `reject` | 0 | Selection by citation, refusal half: raw main is a moving contract link, not a release, so no registered base answers to it and the checker refuses instead of judging the carrier by bytes it never cited. The base schema's URL pattern accepts raw main. |
 | `dmel-duplicate-model-id` | K3 | `accept` / `verify` / `accept` / `reject` | 0 | Deviation D4 on real records: the unchanged neighbour appended a second time, two records share `gene-Dmel_CG11077`. |
 | `dmel-empty-model-array` | K1 | `accept` / `verify` / `accept` / `reject` | 0 | `x-fhgm-models` emptied on the real snapshot; the base schema accepts any extension value. |
 | `dmel-numeric-model-version` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | `modelVersion` set to the YAML integer `2` on the real CG record; the contract's `text` def takes non-empty strings. |
@@ -175,7 +181,8 @@ Layer outcomes are `base` / `checksum` / `gff3` / `model`.
 | `revision-without-supplied-history` | K6 | `accept` / `verify` / `accept` / `reject` | 0 | The resolvable chain run with an empty history set: `unresolvable`. An unsupplied chain is never assumed to hold. |
 | `stale-pointer-absent-history` | K6 | `accept` / `verify` / `accept` / `reject` | 1 | A pointer naming a digest no supplied snapshot carries: `unresolvable`. The reported reason covers the absent-snapshot and current-file cases together, which v0.1 does not distinguish. |
 | `tampered-record-bytes` | B1,R3 | `accept` / `stale` / `accept` / `reject` | 0 | Integrity, not a model rule: one line added after the header makes the file-bound checksum stop covering the bytes, so the checker refuses before any model verdict. Excluded from the gap claim because the released checks catch it too. |
-| `transport-1-0-extension` | B1,R15 | `reject` / `verify` / `accept` / `reject` | 0 | The R15 floor, and the one vector the released base schema itself rejects: a file stating FHGFF3 1.0 may not carry an extension key, so it never reaches a model verdict. Deliberately not gap-proof. |
+| `transport-1-0-extension` | B1,R15 | `reject` / `verify` / `accept` / `reject` | 0 | A v0.4.0 citation stating FHGFF3 1.0 with an extension key. The released base schema rejects it (the R15 floor); the checker refuses it at selection, because no registered base answers to a v0.4.0 citation. Deliberately not gap-proof. |
+| `transport-1-0-under-v0.5.0-citation` | B1,R15 | `reject` / `verify` / `accept` / `reject` | 0 | The R15 floor under a registered citation: the v0.5.0 URL stating `1.0`. The checker selects the v0.5.0 bytes it cites and they reject the extension key, so the floor stays observed at the model layer. Deliberately not gap-proof. |
 
 ## Promotion status of the `dmel-*` batch
 
@@ -225,31 +232,43 @@ Implementation — base **selection**, not base substitution:
 
 - `../model/base-schemas.json` registers the two releases by exact-byte digest,
   each resolved from its tag to its commit; the checker refuses any other bytes.
-- The carrier's declared `schemaVersion` selects the release that validates it.
-  A superseded declaration (`1.0`) is judged by the oldest supplied base that
-  states it in its enum; a declaration no supplied base states is refused with
-  a selection error, never evaluated against bytes the carrier never cited.
-  The selection is printed for every loaded file.
-- The transport overlay admits exactly two closed identity branches (v0.5.0 URI
-  set with `1.1`; v0.6.0 URI set with `1.2`), so a citation and a version that
-  contradict each other are rejected.
+- The carrier's cited `schema` URL selects the release that validates it: the
+  registry lists, per release, the w3id URL with and without the trailing slash
+  and the raw tag URL under both repository names (FAIR-bioHeaders-Specification
+  and the FHR-Specification alias). `schemaVersion` plays no part in the
+  selection; the cited release's own bytes judge it. A citation no registered
+  release answers to (a superseded release such as v0.4.0, or raw main), a
+  missing citation, and a citation whose release bytes were not supplied are
+  all refused with a selection error, never evaluated against bytes the carrier
+  never cited. The selection is printed for every loaded file. (Until
+  2026-11-18 the checker selected by `schemaVersion` and fell back to the
+  oldest supplied base; that fallback is gone.)
+- The transport overlay admits exactly two closed identity branches (the v0.5.0
+  URI set with `1.1`; the v0.6.0 URI set with `1.2` or `1.1`, since the v0.6.0
+  release accepts `1.1` records), so a citation and a version that contradict
+  each other, such as a v0.5.0 citation stating `1.2`, are rejected.
 - The original 31 `manifest.json` vector entries — bytes, layers, reasons,
   contexts — are **unchanged**; the 12 promoted entries are also evaluated in
-  both lanes. The sealed lane runs against v0.5.0 bytes alone, and its rule text
-  was updated only where K1's identity wording became false.
+  both lanes. The sealed lane's base layer is the v0.5.0 bytes, and its rule
+  text was updated only where K1's identity wording became false. The
+  base-selection change of 2026-11-18 moved one reason substring
+  (`transport-1-0-extension`, now refused at selection) and added four vectors.
 - `base_matrix.json` is the added lane. A twin replaces exactly two header
-  lines of its vector (`#~schema` to the v0.6.0 w3id citation, `#~schemaVersion`
-  to `1.2`, quoting style preserved) and the `#~checksum` line follows:
+  lines of its vector (a v0.5.0 `#~schema` citation moves to the v0.6.0 w3id
+  citation and any other citation is kept; `#~schemaVersion` moves to `1.2`;
+  quoting style preserved) and the `#~checksum` line follows:
   recomputed for `verify` vectors, kept stale for the `stale` one. The 1.0
   vector gets no rewrite — its stated identity IS the defect — so it is
   evaluated as committed under the 1.2 base. Predecessors stay the committed
-  files, making the lane a mixed-identity chain test as well (a 1.1 snapshot
-  entering a 1.2-only harness — the realistic toolkit scenario).
+  files, making the lane a mixed-identity chain test as well. Both lanes hand
+  the checker both base files, so a 1.1 predecessor of a 1.2 twin is judged by
+  the v0.5.0 bytes it cites; before 2026-11-18 the matrix lane passed only the
+  v0.6.0 bytes and the predecessor was judged by them.
 
-Measured result (2026-11-16 merged state, sealed by `--seal-matrix`): **43 twins,
-0 verdict changes** — every twin reproduces its sealed vector's four layers and
-reason substring under the v0.6.0 bytes, and the gap claim holds identically on
-both bases (27/29 rejections gap-proof). No contract finding came out of the
+Measured result (re-sealed 2026-11-18 by `--seal-matrix`): **47 twins, 0 verdict
+changes** — every twin reproduces its sealed vector's four layers and reason
+substring under the v0.6.0 bytes, and the gap claim holds identically on both
+bases (28/31 rejections gap-proof). No contract finding came out of the
 comparison; the reason is visible in the release diff itself: between v0.5.0
 and v0.6.0 `fhgff3.json` the schemaVersion enum gains `1.2`,
 `Completeness.lineageDataset` gains dotted BUSCO dataset versions for carriers
@@ -265,13 +284,15 @@ checker reuses the toolkit's header reader and checksum implementation):
 
 ```sh
 git -C /path/to/FAIR-bioHeaders-Specification show v0.5.0:fhgff3.json > /tmp/fhgff3-v0.5.0.json
-python3 development/conformance/run_conformance.py --base-schema /tmp/fhgff3-v0.5.0.json
+git -C /path/to/FAIR-bioHeaders-Specification show v0.6.0:fhgff3.json > /tmp/fhgff3-v0.6.0.json
+python3 development/conformance/run_conformance.py \
+  --base-schema /tmp/fhgff3-v0.5.0.json --base-schema /tmp/fhgff3-v0.6.0.json
 ```
 
-Add `--base-schema /tmp/fhgff3-v0.6.0.json --matrix` (with
-`git show v0.6.0:fhgff3.json > /tmp/fhgff3-v0.6.0.json`) to run the 1.2 twin
-lane against `base_matrix.json` as well; CI runs both lanes on every pull
-request. Add `--gff3-validate /path/to/gff3-validate` to include the feature
+Both base files are required for any run that reaches the model layer: vectors
+and their predecessors cite either release, and the checker refuses a citation
+whose bytes were not supplied. Add `--matrix` to run the 1.2 twin lane against
+`base_matrix.json` as well; CI runs both lanes on every pull request. Add `--gff3-validate /path/to/gff3-validate` to include the feature
 lane, and `--verbose` to list every vector of every lane, not just failures. `--offline` runs the byte,
 digest and checksum layer with the standard library alone and reports the model
 lanes as skipped, so a checkout can always be integrity-checked. Exit status is

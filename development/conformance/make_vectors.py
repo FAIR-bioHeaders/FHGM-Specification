@@ -151,6 +151,25 @@ def valid_vectors():
             metadata([record("model-a", "1")], "1"),
             feature_payload(30).replace(b"ID=toy-a\n", b"ID=toy%2Da\n"),
         ),
+        # Rule K1, base selection by citation: the v0.6.0 release accepts a
+        # record stating schemaVersion 1.1 (shared docs/SCHEMA-VERSIONS.md), so
+        # the checker selects the v0.6.0 bytes the URL cites and the overlay's
+        # v0.6.0 branch admits 1.1.
+        "v0.6.0-citation-stating-1.1": render(
+            dict(metadata([record("model-a", "1")], "1"),
+                 schema="https://w3id.org/fair-bioheaders/fhgff3/v0.6.0"),
+            feature_payload(30),
+        ),
+        # Rule K1: the raw tag URL under the FHR-Specification alias is the
+        # same v0.6.0 release (both repository names are recognised). Its 1.2
+        # twin keeps this citation, so the alias is exercised under both
+        # stated versions.
+        "fhr-specification-alias-v0.6.0": render(
+            dict(metadata([record("model-a", "1")], "1"),
+                 schema="https://raw.githubusercontent.com/FAIR-bioHeaders/"
+                        "FHR-Specification/v0.6.0/fhgff3.json"),
+            feature_payload(30),
+        ),
     }
 
 
@@ -214,6 +233,25 @@ def invalid_vectors():
         "feature-target-duplicate-rows": render(
             metadata([record("model-a", "1")], "1"),
             feature_payload(30) + b"toy\tpilot\tgene\t1\t5\t.\t+\t.\tID=toy-a\n",
+        ),
+        # The R15 floor under a registered citation: the v0.5.0 URL stating
+        # schemaVersion 1.0. The checker selects the v0.5.0 bytes the URL cites,
+        # and those bytes reject the extension key. transport-1-0-extension
+        # cites v0.4.0, which no registered base answers to, so it is refused
+        # at selection instead; this vector keeps the floor itself observed.
+        "transport-1-0-under-v0.5.0-citation": render(
+            dict(metadata([record("model-a", "1")], "1"), schemaVersion="1.0"),
+            feature_payload(30),
+        ),
+        # Rule K1, base selection by citation: raw main is a moving contract
+        # link, not a release, so no registered base answers to it and the
+        # checker refuses rather than evaluating the carrier against bytes it
+        # never cited. The released base schema's URL pattern accepts it.
+        "carrier-cites-raw-main": render(
+            dict(metadata([record("model-a", "1")], "1"),
+                 schema="https://raw.githubusercontent.com/FAIR-bioHeaders/"
+                        "FAIR-bioHeaders-Specification/main/fhgff3.json"),
+            feature_payload(30),
         ),
         # Integrity, not a model rule: one byte added after the header makes the
         # file-bound checksum stop covering the file, so the checker refuses
