@@ -229,7 +229,7 @@ in `tests/test_fhgm_conformance.py` (`CheckerGuards`, pointed at the copy via
 | K6 resolves when the snapshot lacks the model | `pointer-snapshot-lacks-model` |
 | K6 drops the current-file guard | `CheckerGuards` only |
 | K2 without the URI format checker | `record-evidence-uri-not-a-uri` |
-| K2 allows user information without a host | `record-evidence-uri-user-info-without-host`, `record-protocol-user-info-without-host`, `record-software-uri-user-info-without-host`; accepted control `record-links-user-info-before-host` |
+| K2 allows user information without a host | `record-evidence-uri-user-info-without-host`, `record-methods-protocol-ftp-user-info-without-host`, `record-software-uri-empty-user-info-and-host`; accepted control `record-links-user-info-before-host` |
 | K3 without NFC normalisation | `model-ids-equal-under-nfc` |
 | K3 run after the per-record checks | `duplicate-model-id-reported-before-record-checks` |
 
