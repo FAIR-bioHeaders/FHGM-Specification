@@ -163,7 +163,7 @@
       "description": "A URI whose scheme is one the shared docs/FORMAT.md R14 accepts: http, https or ftp with // and a host, or a urn:, doi: or info: identifier, the scheme compared without regard to letter case. The released header types only warn about other schemes; this draft record contract rejects them (for example javascript:, data:, vbscript: and file:), so a renderer can link every accepted value. format: uri still rejects whitespace and control characters anywhere.",
       "type": "string",
       "format": "uri",
-      "pattern": "^(?:(?:[Hh][Tt][Tt][Pp][Ss]?|[Ff][Tt][Pp])://[^/?#\\s]|(?:[Uu][Rr][Nn]|[Dd][Oo][Ii]|[Ii][Nn][Ff][Oo]):)"
+      "pattern": "^(?:(?:[Hh][Tt][Tt][Pp][Ss]?|[Ff][Tt][Pp])://(?:[^/?#\\s]*@)?(?:\\[[^\\]\\s]+\\]|[^/?#@:\\s]+)(?::[^/?#@\\s]*)?(?:[/?#]|$)|(?:[Uu][Rr][Nn]|[Dd][Oo][Ii]|[Ii][Nn][Ff][Oo]):)"
     },
     "checksum": {
       "type": "string",

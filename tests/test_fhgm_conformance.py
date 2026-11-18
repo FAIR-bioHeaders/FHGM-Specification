@@ -651,6 +651,22 @@ class CheckerGuards(unittest.TestCase):
     def setUp(self):
         self.checker = load_checker()
 
+    def test_link_authority_requires_a_host_after_user_info(self):
+        from jsonschema import Draft202012Validator
+        document = json.loads((MODEL / "fhgm-model.schema.json").read_text())
+        validator = Draft202012Validator(document["$defs"]["link"],
+                                        format_checker=self.checker.FORMAT_CHECKER)
+        for value in ("https://user@/", "https://@/", "ftp://user@/",
+                      "https://user@:443/", "https://:443/"):
+            with self.subTest(value=value):
+                self.assertFalse(validator.is_valid(value))
+        for value in ("https://example.org/", "https://user@example.org/",
+                      "https://user:password@example.org:443/",
+                      "https://[2001:db8::1]/", "ftp://user@example.org/",
+                      "urn:example:record", "doi:10.5555/example", "info:example"):
+            with self.subTest(value=value):
+                self.assertTrue(validator.is_valid(value))
+
     def test_a_pointer_naming_the_current_file_is_unresolvable(self):
         # A pointer can never honestly name the checksum of the file carrying
         # it (the pointer text is inside the bytes that checksum covers), so no
