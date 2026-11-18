@@ -65,8 +65,6 @@ files or resolve their upstream permissions.
 - graphql/README.md
 - graphql/gff.graphql
 - jsonschema/README.md
-- jsonschema/gff3-validator-webapp.html
-- jsonschema/gff3-validator-webapp.py
 - jsonschema/gff.schema.json
 - mkdocs.yml
 - owl/README.md

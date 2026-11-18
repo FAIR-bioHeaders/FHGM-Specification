@@ -1,2 +1,8 @@
-linkml
-mkdocs
+# Inherited feature-model generation (make gen). Pinned because linkml 1.10
+# removed gen-markdown, which the Makefile's docs target calls, and linkml
+# 1.9.6 needs a linkml-runtime from the same series. Verified 2026-11-18 with
+# `make gen` on Python 3.12 and 3.13. The committed artifacts predate this pin
+# (they were generated in 2021) and were not regenerated.
+linkml==1.9.6
+linkml-runtime==1.9.5
+mkdocs==1.6.1
