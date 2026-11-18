@@ -1,5 +1,26 @@
 # FHGM changelog
 
+## Unreleased — model-level checks every guard is tested by (2026-11-18)
+
+- Mutation testing showed several checker guards that no vector noticed. Eleven
+  vectors (58: 16 valid, 42 invalid) and a checker-function test now catch every
+  mutation listed in `development/conformance/README.md` ("Mutation check"):
+  the K6 assembly-link and record-reference matches, the missing prior model,
+  the current-file guard (function test, since no byte vector can reach it), K2
+  URI format, and K4 matching only decoded IDs (with a negative control naming
+  `toy%2Da` literally).
+- K4 now requires the target to be a **root** gene row (no `Parent`); K3 runs
+  before the per-record rules (deviation D4) and compares modelIds after NFC
+  normalisation.
+- Draft record-contract change (`fhgm-model.schema.json`): opaque text is
+  trimmed and free of control, zero-width and bidirectional formatting
+  characters; `reuseConditions`, `assemblyName` and `deposit` identifiers must
+  be non-blank; `evidence[].uri`, `software[].uri` and `methods.protocol` take
+  only FORMAT.md R14 schemes. No earlier vector or fixture changes outcome.
+- Documented: identity cases v0.1 does not rule on (#28), the attribute-tag
+  matching rule (`Name=x; ID=toy-a` does not resolve), and the structural
+  defects neither gff3-validator 0.1.0 nor FHGM catches (#27).
+
 ## Unreleased — base selection by cited schema URL (2026-11-18)
 
 - `validate_fhgm.py` now selects the FHGFF3 base release by the carrier's

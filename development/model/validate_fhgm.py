@@ -22,6 +22,7 @@ from io import BytesIO
 import json
 from pathlib import Path
 import re
+import unicodedata
 from urllib.parse import unquote_to_bytes, urlsplit
 
 from bioheaders import HEADER, header_text, load_yaml, sequence_parts
@@ -134,6 +135,13 @@ def describe(record, digest):
 
 
 def gene_targets(data):
+    """Map each percent-decoded feature ID to (type, has-Parent) per row carrying it.
+
+    Attribute keys are matched exactly as written: ``Name=x; ID=toy-a`` has the
+    key `` ID`` (leading space), which is not ``ID``, so that row carries no ID.
+    Only the decoded value is indexed; the raw percent-encoded spelling never
+    resolves.
+    """
     targets = defaultdict(list)
     for line in data.splitlines():
         if line == b"##FASTA":
@@ -143,10 +151,16 @@ def gene_targets(data):
         columns = line.split(b"\t")
         if len(columns) != 9:
             raise ValueError("Expected nine columns in each GFF3 feature row")
+        identifiers = []
+        has_parent = False
         for attribute in columns[8].split(b";"):
             key, _, value = attribute.partition(b"=")
             if key == b"ID":
-                targets[unquote_to_bytes(value)].append(columns[2])
+                identifiers.append(unquote_to_bytes(value))
+            elif key == b"Parent" and value:
+                has_parent = True
+        for identifier in identifiers:
+            targets[identifier].append((columns[2], has_parent))
     return targets
 
 
@@ -204,9 +218,8 @@ def validate_snapshot(data, candidates, transport, record_contract, label="carri
     if checksum(BytesIO(data), "gff3") != header["checksum"]:
         raise ValueError("File checksum mismatch")
 
-    targets = gene_targets(data)
-    models = defaultdict(list)
-    file_keys = assembly_keys(header)
+    # K2 first: every record must have the contract's shape before any rule
+    # reads its fields.
     for index, model in enumerate(header[MODELS]):
         try:
             record_contract.validate(model)
@@ -215,15 +228,40 @@ def validate_snapshot(data, candidates, transport, record_contract, label="carri
                 f"Model record {index} is invalid under draft contract v0.1: "
                 f"{exc.json_path}: {exc.message}"
             ) from exc
+
+    # K3 (deviation D4) before any per-record rule: a duplicate identity is a
+    # snapshot defect and is reported as ambiguous whatever else is wrong with
+    # the colliding records. IDs are compared after Unicode NFC normalisation,
+    # so canonically equivalent spellings of one ID collide too.
+    models = defaultdict(list)
+    for model in header[MODELS]:
+        models[unicodedata.normalize("NFC", model["modelId"])].append(model)
+    for key, records in models.items():
+        if len(records) > 1:
+            spellings = sorted({record["modelId"] for record in records})
+            detail = (f" ({len(spellings)} spellings equal under NFC normalisation)"
+                      if len(spellings) > 1 else "")
+            raise ModelCheckError(
+                f"Ambiguous model ID {spellings[0]!r}: {len(records)} records share it in "
+                f"one snapshot{detail}"
+            )
+
+    # K4 and K5 per record.
+    targets = gene_targets(data)
+    file_keys = assembly_keys(header)
+    for model in header[MODELS]:
         model_id = model["modelId"]
-        if model_id not in models:
-            feature_id = model["featureId"]
-            target_types = targets.get(feature_id.encode(), [])
-            if len(target_types) != 1 or target_types[0] not in (b"gene", b"SO:0000704"):
-                raise ModelCheckError(
-                    f"Model {model_id!r} must target one local gene row: {feature_id!r}"
-                )
-        models[model_id].append(model)
+        feature_id = model["featureId"]
+        rows = targets.get(feature_id.encode(), [])
+        if len(rows) != 1 or rows[0][0] not in (b"gene", b"SO:0000704"):
+            raise ModelCheckError(
+                f"Model {model_id!r} must target one local gene row: {feature_id!r}"
+            )
+        if rows[0][1]:
+            raise ModelCheckError(
+                f"Model {model_id!r} must target one local gene row: {feature_id!r} has a "
+                "Parent attribute, so it is not a root gene row"
+            )
         record_keys = reference_keys(model)
         if links_conflict(record_keys, file_keys):
             raise ModelCheckError(
@@ -233,12 +271,7 @@ def validate_snapshot(data, candidates, transport, record_contract, label="carri
             raise ModelCheckError(
                 f"Model {model_id!r} has no reference form comparable with the file genome link"
             )
-    for model_id, records in models.items():
-        if len(records) > 1:
-            raise ModelCheckError(
-                f"Ambiguous model ID {model_id!r}: {len(records)} records share it in one snapshot"
-            )
-    return header, {model_id: records[0] for model_id, records in models.items()}
+    return header, {model["modelId"]: model for model in header[MODELS]}
 
 
 def resolve_predecessor(model_id, model, header, predecessors):

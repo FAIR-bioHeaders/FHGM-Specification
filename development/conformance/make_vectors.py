@@ -176,7 +176,116 @@ def valid_vectors():
 def invalid_vectors():
     """Vectors the model-level checker rejects (or the base schema, where noted)."""
     ambiguous_checksum = header_checksum(AMBIGUOUS_SNAPSHOT.read_bytes())
+    valid = valid_vectors()
+    both_forms_checksum = header_checksum(valid["both-reference-forms"])
+    single_checksum = header_checksum((FIXTURES / "valid-single.fhgff3.gff3").read_bytes())
+    external_checksum = header_checksum(valid["supplied-external-model-id"])
     return {
+        # Rule K6, assembly-link half: the successor file is linked only by an
+        # FHR parent while the supplied predecessor (valid-single) is linked by
+        # accession plus SeqCol digest, so the two files share no comparable
+        # assembly form. The record reference still matches the prior
+        # record's, so only the file-level assembly comparison can refuse it.
+        "pointer-assembly-link-differs": render(
+            metadata(
+                [record("model-a", "2",
+                        reference={"genomeReference": REFERENCE,
+                                   "annotates": FHR_PARENT_CHECKSUM},
+                        predecessor=pointer(single_checksum, "model-a", "1"))],
+                "2",
+                genome_link=False,
+                **fhr_parent_link(),
+            ),
+            feature_payload(35),
+        ),
+        # Rule K6, record-reference half: both files carry both genome-link
+        # forms, so the assembly links match, but the predecessor record
+        # (both-reference-forms, model-a) is bound by the FHR parent checksum
+        # and this successor record by accession plus SeqCol digest only.
+        "pointer-record-reference-differs": render(
+            metadata(
+                [record("model-a", "2",
+                        predecessor=pointer(both_forms_checksum, "model-a", "1"))],
+                "2",
+                **fhr_parent_link(),
+            ),
+            feature_payload(35),
+        ),
+        # Rule K6: the supplied snapshot exists and passes every snapshot
+        # check, but holds no record with this modelId.
+        "pointer-snapshot-lacks-model": render(
+            metadata(
+                [record("model-a", "2",
+                        predecessor=pointer(external_checksum, "model-a", "1"))],
+                "2",
+            ),
+            feature_payload(35),
+        ),
+        # Rule K2: format uri is enforced, not only the scheme. The value has an
+        # accepted https scheme and host, and a space no URI may contain.
+        "record-evidence-uri-not-a-uri": render(
+            metadata([record("model-a", "1", evidence=[{
+                "description": "Synthetic evidence statement",
+                "uri": "https://example.org/synthetic evidence"}])], "1"),
+            feature_payload(30),
+        ),
+        # Rule K2: link fields accept only the schemes FORMAT.md R14 accepts;
+        # javascript: is a well-formed URI that a renderer must never link.
+        "record-evidence-uri-javascript-scheme": render(
+            metadata([record("model-a", "1", evidence=[{
+                "description": "Synthetic evidence statement",
+                "uri": "javascript:void(0)"}])], "1"),
+            feature_payload(30),
+        ),
+        # Rule K2: opaque text values carry no leading or trailing whitespace,
+        # so "model-a " cannot pass for a different identifier than "model-a".
+        "record-model-id-trailing-space": render(
+            metadata([record("model-a ", "1")], "1"),
+            feature_payload(30),
+        ),
+        # Rule K3 under Unicode normalisation: the two IDs are the NFC and NFD
+        # spellings of one string, which print identically.
+        "model-ids-equal-under-nfc": render(
+            metadata(
+                [record("model-caf\u00e9", "1"),
+                 record("model-cafe\u0301", "1", feature="toy-b")],
+                "1",
+            ),
+            feature_payload(30),
+        ),
+        # Rule K3 is checked before any per-record rule (deviation D4): the
+        # second record sharing model-a also contradicts the file genome link,
+        # and the snapshot is still reported as ambiguous, not as a K5 failure.
+        "duplicate-model-id-reported-before-record-checks": render(
+            metadata(
+                [record("model-a", "1"),
+                 record("model-a", "1", feature="toy-b", reference={"genomeReference": dict(
+                     REFERENCE, accession="SYNTHETIC_OTHER_ASSEMBLY.1")})],
+                "1",
+            ),
+            feature_payload(30),
+        ),
+        # Rule K4, the negative percent-decoding control: only decoded IDs are
+        # compared, so a record naming the raw spelling toy%2Da does not
+        # resolve to the row written ID=toy%2Da (whose ID is toy-a).
+        "feature-id-names-percent-encoding": render(
+            metadata([record("model-a", "1", feature="toy%2Da")], "1"),
+            feature_payload(30).replace(b"ID=toy-a\n", b"ID=toy%2Da\n"),
+        ),
+        # Rule K4's type half on a root row: toy-a is written as a root mRNA
+        # (no Parent), so only the gene-type requirement can refuse it. A v0.1
+        # scope statement, like feature-target-transcript-row: #204 Q6 leaves
+        # transcript-only contribution open.
+        "feature-target-root-transcript-row": render(
+            metadata([record("model-a", "1")], "1"),
+            feature_payload(30).replace(b"\tgene\t10\t30\t", b"\tmRNA\t10\t30\t"),
+        ),
+        # Rule K4: the target must be a root gene row. Here the gene row toy-a
+        # names the toy-b transcript as its Parent.
+        "feature-target-gene-with-parent": render(
+            metadata([record("model-a", "1")], "1"),
+            feature_payload(30).replace(b"ID=toy-a\n", b"ID=toy-a;Parent=toy-b-rna\n"),
+        ),
         # Rule K2: nested objects are closed. The base schema ignores record
         # contents, so only the record contract can reject this (FORMAT.md R15
         # grants top-level x- keys only, never keys inside a record).

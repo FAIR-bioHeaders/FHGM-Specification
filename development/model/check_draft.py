@@ -134,6 +134,15 @@ def contract_examples(bases, sealed, output):
         ("publication", {"article": None}),
         ("evidence", [{"description": "Synthetic evidence", "uri": "not a URI"}]),
         ("methods", {"protocol": "not a URI"}),
+        # Link fields take only the schemes FORMAT.md R14 accepts.
+        ("evidence", [{"description": "Synthetic evidence", "uri": "javascript:void(0)"}]),
+        ("methods", {"software": [{"name": "Synthetic software", "uri": "data:,x"}]}),
+        ("methods", {"protocol": "file:///synthetic/protocol"}),
+        # Opaque text is non-blank, trimmed and free of control characters.
+        ("reuseConditions", " "),
+        ("reuseConditions", "CC-BY-4.0\n"),
+        ("contributors", [{"name": "Example\u200b", "role": "curator"}]),
+        ("publication", {"deposit": ["doi: 10.0000/synthetic"]}),
     )
     for field, value in invalid_fields:
         invalid_metadata = copy.deepcopy(metadata)

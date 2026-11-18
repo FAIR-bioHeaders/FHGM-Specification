@@ -18,15 +18,15 @@
       "source": "../model/README.md#model-level-constraints-the-base-schema-cannot-enforce"
     },
     "K2": {
-      "summary": "Record shape: every record validates against the native record contract, whose required set is modelId, modelVersion, featureId and reference (deviation D1); nested objects are closed and their opaque values are non-empty strings.",
+      "summary": "Record shape: every record validates against the native record contract, whose required set is modelId, modelVersion, featureId and reference (deviation D1); nested objects are closed; opaque text values are non-empty, carry no leading or trailing whitespace and no control, zero-width or bidirectional formatting character; link fields (evidence uri, software uri, methods protocol) must be URIs with a scheme the shared FORMAT.md R14 accepts.",
       "source": "../model/fhgm-model.schema.json"
     },
     "K3": {
-      "summary": "modelId is unique within one annotation snapshot. A duplicate makes the identity a pointer needs unselectable, reported under the name ambiguous, and rejects that snapshot (checker rule 1, deviation D4).",
+      "summary": "modelId is unique within one annotation snapshot, compared after Unicode NFC normalisation, and checked before any per-record rule. A duplicate makes the identity a pointer needs unselectable, reported under the name ambiguous, and rejects that snapshot (checker rule 1, deviation D4).",
       "source": "../model/README.md#model-level-constraints-the-base-schema-cannot-enforce"
     },
     "K4": {
-      "summary": "featureId resolves, percent-decoded, to exactly one local gene row in the enclosing file (checker rule 2).",
+      "summary": "featureId resolves, percent-decoded, to exactly one local root gene row (type gene or SO:0000704, with no Parent attribute) in the enclosing file (checker rule 2).",
       "source": "../model/README.md#model-level-constraints-the-base-schema-cannot-enforce"
     },
     "K5": {
@@ -764,6 +764,27 @@
       }
     },
     {
+      "id": "duplicate-model-id-reported-before-record-checks",
+      "file": "vectors/invalid/duplicate-model-id-reported-before-record-checks.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K3",
+      "reason": "Ambiguous model ID 'model-a'",
+      "description": "Deviation D4 ordering: K3 runs before the per-record K4 and K5 checks, so a snapshot whose second model-a record also contradicts the file genome link is reported as ambiguous rather than as a K5 failure.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "1hGVf49AcVJeWeo0oNNonO+9QFipYjtb3K0MHbyApFY=",
+      "bytes": {
+        "size": 1141,
+        "sha256": "5aef25790488872ed8c5f44200a46a9fdaca187a51eb9d964c62f66a44f65d83"
+      }
+    },
+    {
       "id": "empty-model-array",
       "file": "vectors/invalid/empty-model-array.fhgff3.gff3",
       "generator": "make_vectors",
@@ -785,6 +806,27 @@
       "bytes": {
         "size": 782,
         "sha256": "2428eaaad84045477ce5e8063eab7cfca6a0369a4c628e0841e0a3054e15f6c3"
+      }
+    },
+    {
+      "id": "feature-id-names-percent-encoding",
+      "file": "vectors/invalid/feature-id-names-percent-encoding.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K4",
+      "reason": "must target one local gene row: 'toy%2Da'",
+      "description": "The negative control for percent-decoded-feature-target: only decoded IDs are compared, so a record naming the raw spelling toy%2Da does not resolve to the row written ID=toy%2Da, whose ID is toy-a.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "s15okzK4jLY7+sxjwsSVuIyfT913t3dMSGPKLB3L1to=",
+      "bytes": {
+        "size": 962,
+        "sha256": "5b861a3883157a547281bc5c56e80b2a5da5ce2bf83dd0e83e68d102207639dd"
       }
     },
     {
@@ -827,6 +869,48 @@
       "bytes": {
         "size": 992,
         "sha256": "20fe45ede108e9a504a86c4184cc5c1ccef8feb4e19fe73859bc3c4e02800d2f"
+      }
+    },
+    {
+      "id": "feature-target-gene-with-parent",
+      "file": "vectors/invalid/feature-target-gene-with-parent.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K4",
+      "reason": "has a Parent attribute, so it is not a root gene row",
+      "description": "K4 requires a root gene row: here the gene row toy-a names the toy-b transcript as its Parent. gff3-validator 0.1.0 accepts this file; FHGM rejects it because a gene model's target must head its own feature graph.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "2u3D4/3VInXMpgvoUGG4z2xRg03MhoH4OlkcWYG+OqM=",
+      "bytes": {
+        "size": 975,
+        "sha256": "ea8577e32a27c4a93a55f63610b2b8020c08eb2b6e962e205f245438ff105d21"
+      }
+    },
+    {
+      "id": "feature-target-root-transcript-row",
+      "file": "vectors/invalid/feature-target-root-transcript-row.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K4",
+      "reason": "must target one local gene row: 'toy-a'",
+      "description": "K4's type half on a root row: toy-a is written as a root mRNA with no Parent, so only the gene-type requirement can refuse it. A statement about v0.1 scope only, like feature-target-transcript-row; #204 Q6 leaves transcript-only contribution open.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "V8KyJfUk1hpMM/vYBA8Vyb+VW8JGPHMMl2B4cag9mno=",
+      "bytes": {
+        "size": 958,
+        "sha256": "81ebb96c9fe9384c269bd26b7bc4d94557ed35ed721c1ebc3faadadcf198b447"
       }
     },
     {
@@ -878,6 +962,53 @@
       }
     },
     {
+      "id": "model-ids-equal-under-nfc",
+      "file": "vectors/invalid/model-ids-equal-under-nfc.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K3",
+      "reason": "equal under NFC normalisation",
+      "description": "K3 compares modelIds after Unicode NFC normalisation: the two records' IDs are the NFC and NFD spellings of 'model-caf\u00e9', which print identically, so the snapshot is ambiguous.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "ZuFXtKOWIdQKEtR0cD7zxQ8ExxTuE9FJHFpn+IPX9MA=",
+      "bytes": {
+        "size": 1152,
+        "sha256": "36548892beaf89d0e5cd3ebc4c9dfd5f355a7c30fd2fd9ac5d0d4ae3507eb92b"
+      }
+    },
+    {
+      "id": "pointer-assembly-link-differs",
+      "file": "vectors/invalid/pointer-assembly-link-differs.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "no matching assembly link with the predecessor snapshot",
+      "description": "K6's assembly-link half: the successor file is linked only by an FHR parent, the supplied predecessor (valid-single) by accession plus SeqCol digest, so the two files share no comparable assembly form. The record references still match, so only the file-level comparison refuses the pointer.",
+      "context": {
+        "predecessors": [
+          "../examples/model/valid-single.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "HU3e5QkZC4r0xuaT8VdwQ1hdWJz76sIsIKJaVfOvAX4=",
+      "bytes": {
+        "size": 1160,
+        "sha256": "15094807d2cb4e33e15b596419a19cb5e5082386041f7d88b6df656c4c7b26de"
+      }
+    },
+    {
       "id": "pointer-into-ambiguous-history",
       "file": "vectors/invalid/pointer-into-ambiguous-history.fhgff3.gff3",
       "generator": "make_vectors",
@@ -901,6 +1032,58 @@
       "bytes": {
         "size": 1081,
         "sha256": "e3a839642ff428b75040d7438a0684b5a0f402dd41adac016a782ae99fbb9e62"
+      }
+    },
+    {
+      "id": "pointer-record-reference-differs",
+      "file": "vectors/invalid/pointer-record-reference-differs.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "no matching record reference with the predecessor record",
+      "description": "K6's record-reference half: both files carry both genome-link forms, so the assembly links match, but the predecessor record (both-reference-forms, model-a) is bound by the FHR parent checksum and the successor record by accession plus SeqCol digest only.",
+      "context": {
+        "predecessors": [
+          "vectors/valid/both-reference-forms.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "+VSPJLhptKj4JfaBxlXRmZ27th+pa05UJGNchgHQhRc=",
+      "bytes": {
+        "size": 1204,
+        "sha256": "81b02d5c3002e5f34ab8df48bc37a4268685218f0851d8e071810d44858333cb"
+      }
+    },
+    {
+      "id": "pointer-snapshot-lacks-model",
+      "file": "vectors/invalid/pointer-snapshot-lacks-model.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K6",
+      "reason": "the predecessor snapshot has no model",
+      "description": "K6: the pointed snapshot is supplied and passes every snapshot check, but holds no record with this modelId, so there is no prior record to resolve to.",
+      "context": {
+        "predecessors": [
+          "vectors/valid/supplied-external-model-id.fhgff3.gff3"
+        ]
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "OiAghBaJmKbER8AmYaA9FKF45c/h1mG8D20NOw5tnNg=",
+      "bytes": {
+        "size": 1081,
+        "sha256": "8e66f08708e0ad545b7a68e7183ca1601d68390555c67864d219afa61ae18af0"
       }
     },
     {
@@ -979,6 +1162,69 @@
       "bytes": {
         "size": 1223,
         "sha256": "82763b0480533203ed7d51536b969cee05b7ff9dc187a53a087e93e157eb972f"
+      }
+    },
+    {
+      "id": "record-evidence-uri-javascript-scheme",
+      "file": "vectors/invalid/record-evidence-uri-javascript-scheme.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "does not match '^(?:(?:[Hh][Tt][Tt][Pp][Ss]?",
+      "description": "K2 link fields (evidence uri, software uri, methods protocol) accept only the schemes the shared FORMAT.md R14 accepts: http, https or ftp with a host, or urn:, doi: or info:. javascript:void(0) is a well-formed URI that no renderer should link, so this draft record contract rejects it where the released header types only warn.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "9IQDgu75EKiLKaHAlX5C1xYisDyk3BNTOCGVsc0gq0o=",
+      "bytes": {
+        "size": 1045,
+        "sha256": "5d5e29534270739a778f030d656d491752301a9eb3e08f7052bff78e06c4f370"
+      }
+    },
+    {
+      "id": "record-evidence-uri-not-a-uri",
+      "file": "vectors/invalid/record-evidence-uri-not-a-uri.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is not a 'uri'",
+      "description": "K2 enforces format: uri, not only the accepted scheme: the evidence URI has an https scheme and host but contains a space, which no URI may contain.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "fLdGOsg+bPA9FbNEICvSfmnqyo7+NW5wyp2/MmYjI/8=",
+      "bytes": {
+        "size": 1065,
+        "sha256": "757f931e69549461c7064893f1c72119e56aff05940a88e6467572b66bdd25dd"
+      }
+    },
+    {
+      "id": "record-model-id-trailing-space",
+      "file": "vectors/invalid/record-model-id-trailing-space.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "'model-a ' should not be valid under",
+      "description": "K2 opaque text values carry no leading or trailing whitespace and no control, zero-width or bidirectional formatting character, so 'model-a ' cannot pass as an identifier distinct from 'model-a'.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "BOylt1/Zq+8f7MnQ5GjIogp8wKWN4Ld+uiZ/vvRmcgc=",
+      "bytes": {
+        "size": 959,
+        "sha256": "6130a639341f129e6e2e51a37295767547a1383291c2bd881dcdbdf27ad6514c"
       }
     },
     {
