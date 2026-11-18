@@ -6,16 +6,16 @@ inherited biodatamodels/gff-schema feature model in this repository.
 
 - **Repository:** `FAIR-bioHeaders/FAIR-bioHeaders-Specification`
 - **URL:** <https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification>
-- **Ref:** `main`
-- **Commit:** `bdcaecf759b5b2be5fd61bf8f39368a7e3963315`
-- **Commit date:** 2026-10-21 17:57:27 -0400
-- **Commit subject:** `Merge remote-tracking branch 'security-patch/security/v0.4.1'`
+- **Ref:** `v0.6.0`
+- **Commit:** `0ae18b00ee4bd71ab2dc28bae706b0f9d195076b`
+- **Commit date:** 2026-11-13 17:51:21 -0600
+- **Commit subject:** `Release v0.6.0 (dotted BUSCO dataset versions: FHP and FHGFF3 1.2, FHR 2.1 unchanged) (#229)`
 
 The machine-readable record is [`provenance.json`](provenance.json). It gives the
 pinned commit and the size and SHA-256 digest of every copied file and of every
-shared file the copy imports but does not vendor. The commit above is the current
-`main` commit of the shared repository at the time of import; it is recorded, not
-invented.
+shared file the copy imports but does not vendor. The commit above is the
+`v0.6.0` release tag of the shared repository, the current shared release; it is
+recorded, not invented.
 
 ## Files copied
 
@@ -36,10 +36,12 @@ Each row is `upstream path` → `local path`, byte-for-byte.
 | `examples/fhgff3/stale-parent.fhgff3.gff3` | `header/examples/fhgff3/stale-parent.fhgff3.gff3` |
 | `conformance/valid/fhgff3-bgzf.fhgff3.gff3.gz` | `header/conformance/valid/fhgff3-bgzf.fhgff3.gff3.gz` |
 | `conformance/valid/fhgff3-both-links.fhgff3.gff3` | `header/conformance/valid/fhgff3-both-links.fhgff3.gff3` |
+| `conformance/valid/fhgff3-busco-lineage-dotted.fhgff3.gff3` | `header/conformance/valid/fhgff3-busco-lineage-dotted.fhgff3.gff3` |
 | `conformance/valid/fhgff3-crlf.fhgff3.gff3` | `header/conformance/valid/fhgff3-crlf.fhgff3.gff3` |
 | `conformance/valid/fhgff3-directives-after-header.fhgff3.gff3` | `header/conformance/valid/fhgff3-directives-after-header.fhgff3.gff3` |
 | `conformance/valid/fhgff3-directives-interleaved.fhgff3.gff3` | `header/conformance/valid/fhgff3-directives-interleaved.fhgff3.gff3` |
 | `conformance/valid/fhgff3-embedded-fasta.fhgff3.gff3` | `header/conformance/valid/fhgff3-embedded-fasta.fhgff3.gff3` |
+| `conformance/valid/fhgff3-extension-fields.fhgff3.gff3` | `header/conformance/valid/fhgff3-extension-fields.fhgff3.gff3` |
 | `conformance/valid/fhgff3-gzip.fhgff3.gff3.gz` | `header/conformance/valid/fhgff3-gzip.fhgff3.gff3.gz` |
 | `conformance/valid/fhgff3-header-only.fhgff3.gff3` | `header/conformance/valid/fhgff3-header-only.fhgff3.gff3` |
 | `conformance/valid/fhgff3-minimal-checksum-link.fhgff3.gff3` | `header/conformance/valid/fhgff3-minimal-checksum-link.fhgff3.gff3` |
@@ -49,9 +51,14 @@ Each row is `upstream path` → `local path`, byte-for-byte.
 | `conformance/valid/fhgff3-schema-raw-main.fhgff3.gff3` | `header/conformance/valid/fhgff3-schema-raw-main.fhgff3.gff3` |
 | `conformance/valid/fhgff3-triple-hash-before-features.fhgff3.gff3` | `header/conformance/valid/fhgff3-triple-hash-before-features.fhgff3.gff3` |
 | `conformance/valid/fhgff3-version-3-1-26.fhgff3.gff3` | `header/conformance/valid/fhgff3-version-3-1-26.fhgff3.gff3` |
+| `conformance/valid/fhgff3-version-3-trailing-whitespace.fhgff3.gff3` | `header/conformance/valid/fhgff3-version-3-trailing-whitespace.fhgff3.gff3` |
 | `conformance/invalid/fhgff3-annotates-fhp.fhgff3.gff3` | `header/conformance/invalid/fhgff3-annotates-fhp.fhgff3.gff3` |
+| `conformance/invalid/fhgff3-busco-lineage-trailing-dot.fhgff3.gff3` | `header/conformance/invalid/fhgff3-busco-lineage-trailing-dot.fhgff3.gff3` |
 | `conformance/invalid/fhgff3-cites-fhr-schema.fhgff3.gff3` | `header/conformance/invalid/fhgff3-cites-fhr-schema.fhgff3.gff3` |
 | `conformance/invalid/fhgff3-concatenated.fhgff3.gff3` | `header/conformance/invalid/fhgff3-concatenated.fhgff3.gff3` |
+| `conformance/invalid/fhgff3-extension-nested.fhgff3.gff3` | `header/conformance/invalid/fhgff3-extension-nested.fhgff3.gff3` |
+| `conformance/invalid/fhgff3-extension-older-release.fhgff3.gff3` | `header/conformance/invalid/fhgff3-extension-older-release.fhgff3.gff3` |
+| `conformance/invalid/fhgff3-extension-older-version.fhgff3.gff3` | `header/conformance/invalid/fhgff3-extension-older-version.fhgff3.gff3` |
 | `conformance/invalid/fhgff3-fasta-tampered.fhgff3.gff3` | `header/conformance/invalid/fhgff3-fasta-tampered.fhgff3.gff3` |
 | `conformance/invalid/fhgff3-fhr-only-key.fhgff3.gff3` | `header/conformance/invalid/fhgff3-fhr-only-key.fhgff3.gff3` |
 | `conformance/invalid/fhgff3-half-reference.fhgff3.gff3` | `header/conformance/invalid/fhgff3-half-reference.fhgff3.gff3` |
@@ -62,6 +69,9 @@ Each row is `upstream path` → `local path`, byte-for-byte.
 | `conformance/invalid/fhgff3-schema-unknown-release.fhgff3.gff3` | `header/conformance/invalid/fhgff3-schema-unknown-release.fhgff3.gff3` |
 | `conformance/invalid/fhgff3-two-annotates.fhgff3.gff3` | `header/conformance/invalid/fhgff3-two-annotates.fhgff3.gff3` |
 | `conformance/invalid/fhgff3-two-checksum-lines.fhgff3.gff3` | `header/conformance/invalid/fhgff3-two-checksum-lines.fhgff3.gff3` |
+| `conformance/invalid/fhgff3-version-3-1.fhgff3.gff3` | `header/conformance/invalid/fhgff3-version-3-1.fhgff3.gff3` |
+| `conformance/invalid/fhgff3-version-30.fhgff3.gff3` | `header/conformance/invalid/fhgff3-version-30.fhgff3.gff3` |
+| `conformance/invalid/fhgff3-version-3x.fhgff3.gff3` | `header/conformance/invalid/fhgff3-version-3x.fhgff3.gff3` |
 
 ## Imported shared files (recorded, not vendored)
 
@@ -87,7 +97,8 @@ python3 scripts/check_header_parity.py --upstream /path/to/FAIR-bioHeaders-Speci
 The check fails on any changed, missing or unlisted file. To move the pin
 deliberately:
 
-1. Choose the new `FAIR-bioHeaders-Specification` `main` commit.
+1. Choose the new `FAIR-bioHeaders-Specification` commit — the commit of the
+   current release tag, or a reviewed `main` commit between releases.
 2. Re-copy the upstream paths above byte-for-byte (do not edit them in place).
 3. Recompute every size and SHA-256 digest in `header/provenance.json`.
 4. Run `scripts/check_header_parity.py --upstream <checkout>` until it passes.

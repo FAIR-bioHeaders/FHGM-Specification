@@ -12,23 +12,23 @@ still lived in the shared publication tree** (`docs/FHGFF3.md` there). Some of
 those paths do not exist under `header/`. Use the table below to reach the
 canonical upstream file, and the list after it to navigate the local copy. The
 upstream URLs are pinned to commit
-[`bdcaecf7`](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/tree/bdcaecf759b5b2be5fd61bf8f39368a7e3963315);
+[`0ae18b0`](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/tree/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b);
 replace the commit with `main` for the current version.
 
 ## Where each link in `FHGFF3.md` goes
 
 | Link target as written in the copy | Local destination | Canonical upstream |
 | --- | --- | --- |
-| `../specs/007-gff3-header/spec.md` | not present locally | [spec.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/specs/007-gff3-header/spec.md) |
-| `../fhgff3_linkml.yml` | [`../model/fhgff3_linkml.yml`](../model/fhgff3_linkml.yml) | [fhgff3_linkml.yml](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/fhgff3_linkml.yml) |
-| `../schemas/core.yaml` | recorded import, not vendored | [schemas/core.yaml](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/schemas/core.yaml) |
-| `../schemas/shared.yaml` | recorded import, not vendored | [schemas/shared.yaml](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/schemas/shared.yaml) |
-| `../fhgff3.json` | not copied; generated upstream | [fhgff3.json](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/fhgff3.json) |
-| `../examples/fhgff3/` | [`../examples/fhgff3/`](../examples/fhgff3/) | [examples/fhgff3/](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/tree/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/examples/fhgff3) |
-| `../conformance/README.md` | [`../conformance/README.md`](../conformance/README.md) | [conformance/README.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/conformance/README.md) |
-| `SCHEMA-VERSIONS.md` | not present locally | [SCHEMA-VERSIONS.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/docs/SCHEMA-VERSIONS.md) |
-| `FORMAT.md` | not present locally | [FORMAT.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/docs/FORMAT.md) |
-| `../specs/007-gff3-header/plan.md` | not present locally | [plan.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/bdcaecf759b5b2be5fd61bf8f39368a7e3963315/specs/007-gff3-header/plan.md) |
+| `../specs/007-gff3-header/spec.md` | not present locally | [spec.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/specs/007-gff3-header/spec.md) |
+| `../fhgff3_linkml.yml` | [`../model/fhgff3_linkml.yml`](../model/fhgff3_linkml.yml) | [fhgff3_linkml.yml](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/fhgff3_linkml.yml) |
+| `../schemas/core.yaml` | recorded import, not vendored | [schemas/core.yaml](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/schemas/core.yaml) |
+| `../schemas/shared.yaml` | recorded import, not vendored | [schemas/shared.yaml](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/schemas/shared.yaml) |
+| `../fhgff3.json` | not copied; generated upstream | [fhgff3.json](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/fhgff3.json) |
+| `../examples/fhgff3/` | [`../examples/fhgff3/`](../examples/fhgff3/) | [examples/fhgff3/](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/tree/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/examples/fhgff3) |
+| `../conformance/README.md` | [`../conformance/README.md`](../conformance/README.md) | [conformance/README.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/conformance/README.md) |
+| `SCHEMA-VERSIONS.md` | not present locally | [SCHEMA-VERSIONS.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/docs/SCHEMA-VERSIONS.md) |
+| `FORMAT.md` | not present locally | [FORMAT.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/docs/FORMAT.md) |
+| `../specs/007-gff3-header/plan.md` | not present locally | [plan.md](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/0ae18b00ee4bd71ab2dc28bae706b0f9d195076b/specs/007-gff3-header/plan.md) |
 
 The header rules also rely on the shared format rules (R1–R12) in the publication
 repository's `docs/FORMAT.md`, linked above.

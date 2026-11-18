@@ -4,10 +4,10 @@
   "source": {
     "repository": "FAIR-bioHeaders/FAIR-bioHeaders-Specification",
     "url": "https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification",
-    "commit": "bdcaecf759b5b2be5fd61bf8f39368a7e3963315",
-    "commitDate": "2026-10-21 17:57:27 -0400",
-    "commitSubject": "Merge remote-tracking branch 'security-patch/security/v0.4.1'",
-    "ref": "main"
+    "commit": "0ae18b00ee4bd71ab2dc28bae706b0f9d195076b",
+    "commitDate": "2026-11-13 17:51:21 -0600",
+    "commitSubject": "Release v0.6.0 (dotted BUSCO dataset versions: FHP and FHGFF3 1.2, FHR 2.1 unchanged) (#229)",
+    "ref": "v0.6.0"
   },
   "licensing": {
     "headerTree": "The files under header/ are FAIR BioHeaders contributions, MPL-2.0 under this repository's LICENSE and the shared publication repository's LICENSE. They are the independently authored FAIR FHGFF3 header contract, not the inherited biodatamodels/gff-schema feature model.",
@@ -17,50 +17,50 @@
     {
       "local": "header/model/fhgff3_linkml.yml",
       "upstream": "fhgff3_linkml.yml",
-      "size": 5391,
-      "sha256": "cc71178b8c6a61b1c9947a496e0af2a100ea62585e6807bbfe762f217af8fe1a"
+      "size": 5527,
+      "sha256": "f09249cfd2f422edb57f393aafc8a3e610219ed40914508883bc9cb178afc1fc"
     },
     {
       "local": "header/docs/FHGFF3.md",
       "upstream": "docs/FHGFF3.md",
-      "size": 10131,
-      "sha256": "cedd13cd74aa566605c73d6f4057024778ada3433851a1810f0b9d926b26517b"
+      "size": 13544,
+      "sha256": "243c2cff85d5b62721555f32c530a855238a541932b9e6acdd921d744c62c032"
     },
     {
       "local": "header/examples/fhgff3/annotation.fhgff3.gff3",
       "upstream": "examples/fhgff3/annotation.fhgff3.gff3",
       "size": 943,
-      "sha256": "e8dab46b7d94b0f04408a2fcec776ba690a69ac79c19113f6d7e37aa058affd8"
+      "sha256": "7754357bd2280306b45cdbc804850fc59a52e79487483f2f9e2e7f0dda9fb437"
     },
     {
       "local": "header/examples/fhgff3/annotation.fhgff3.yaml",
       "upstream": "examples/fhgff3/annotation.fhgff3.yaml",
       "size": 551,
-      "sha256": "751eeb18585fc7a64f84ad6f959266207e11cac2e50c48a2c52071374db11428"
+      "sha256": "417fd8b9f831b05041bfa1d3d216ea9199697212195c0990873ab6e6884b20d7"
     },
     {
       "local": "header/examples/fhgff3/embedded-fasta.fhgff3.gff3",
       "upstream": "examples/fhgff3/embedded-fasta.fhgff3.gff3",
       "size": 995,
-      "sha256": "99d3357b48fffc256d5424b357f7cd4503a9eaf14cd436328d3fdc143a476341"
+      "sha256": "3bacaa2e918e7fd428abb7ba10d31fe86849ebdcf5e86422b4bbc0facb953988"
     },
     {
       "local": "header/examples/fhgff3/genome.fhr.fasta",
       "upstream": "examples/fhgff3/genome.fhr.fasta",
       "size": 582,
-      "sha256": "860070c7113b86146657241af3992a8a155052dd7f4d41833aca642afdcd41f6"
+      "sha256": "baebcb6a0c9af0b31d8bfe8ac9964864cd7a9bb7341edb922a2b32d14d1b7763"
     },
     {
       "local": "header/examples/fhgff3/header-invalid.fhgff3.gff3",
       "upstream": "examples/fhgff3/header-invalid.fhgff3.gff3",
       "size": 812,
-      "sha256": "e9d1792cd78d4b4a69339d9a73587ef4c4d6b68a3221fe27d2c84591f707cf42"
+      "sha256": "940fadf04c49e2e31d44b55c2a06a2845186bcdc4fbf619fef133df21a2f68fe"
     },
     {
       "local": "header/examples/fhgff3/minimal-reference.fhgff3.json",
       "upstream": "examples/fhgff3/minimal-reference.fhgff3.json",
       "size": 684,
-      "sha256": "3805652b537ac72acce017e5d12f91754627590883331031f133e91d74c9ec43"
+      "sha256": "01fc3332c3dd070062c36a82d0498fea6dd1ae1283e8e90403086eaf19c7aa9d"
     },
     {
       "local": "header/examples/fhgff3/no-header.gff3",
@@ -72,13 +72,13 @@
       "local": "header/examples/fhgff3/rich.fhgff3.yaml",
       "upstream": "examples/fhgff3/rich.fhgff3.yaml",
       "size": 1393,
-      "sha256": "43115e7aded6c49610f98e0862264f9589f4308cb8750ead540ef1a6ec3fc0ae"
+      "sha256": "f25682136de1485e1f12f22010612647dcf47681b018cf5347ea9f52ef7a90bf"
     },
     {
       "local": "header/examples/fhgff3/stale-parent.fhgff3.gff3",
       "upstream": "examples/fhgff3/stale-parent.fhgff3.gff3",
       "size": 979,
-      "sha256": "a2f394a5a9ddfbe1f773ef58894e4ad1d53a3e8013ac3d099448fa043dafe94e"
+      "sha256": "810d99d62f232c1aad41b5e9d6a474d813343a8903b1f3757da267a2ee925971"
     },
     {
       "local": "header/conformance/valid/fhgff3-bgzf.fhgff3.gff3.gz",
@@ -91,6 +91,12 @@
       "upstream": "conformance/valid/fhgff3-both-links.fhgff3.gff3",
       "size": 902,
       "sha256": "ed49e9830867e2765ea4136d5a0426dbd796f342714807a40f5aa661c4b1ab34"
+    },
+    {
+      "local": "header/conformance/valid/fhgff3-busco-lineage-dotted.fhgff3.gff3",
+      "upstream": "conformance/valid/fhgff3-busco-lineage-dotted.fhgff3.gff3",
+      "size": 917,
+      "sha256": "c974a33fc871b98eaed97ba3633626c3fd6d3bbcdbec918644adce874d264885"
     },
     {
       "local": "header/conformance/valid/fhgff3-crlf.fhgff3.gff3",
@@ -115,6 +121,12 @@
       "upstream": "conformance/valid/fhgff3-embedded-fasta.fhgff3.gff3",
       "size": 797,
       "sha256": "e8f4ecae009eb234cbfd934bda9adbf7cead54ba032a5acfdc199037845980be"
+    },
+    {
+      "local": "header/conformance/valid/fhgff3-extension-fields.fhgff3.gff3",
+      "upstream": "conformance/valid/fhgff3-extension-fields.fhgff3.gff3",
+      "size": 826,
+      "sha256": "c0ad11a7c7affde537116ff24deb22b02d888fc478947c72ae14daab23bfa673"
     },
     {
       "local": "header/conformance/valid/fhgff3-gzip.fhgff3.gff3.gz",
@@ -171,10 +183,22 @@
       "sha256": "68df80a9aa1c5181d76fb1fae17e70dddf2a0cd9ed3efcdbccd710c08372b22b"
     },
     {
+      "local": "header/conformance/valid/fhgff3-version-3-trailing-whitespace.fhgff3.gff3",
+      "upstream": "conformance/valid/fhgff3-version-3-trailing-whitespace.fhgff3.gff3",
+      "size": 764,
+      "sha256": "d0e2a4c01a3e152d23fdae8d2aa45e15f45f4ad39716a7e059df080c41b6be2f"
+    },
+    {
       "local": "header/conformance/invalid/fhgff3-annotates-fhp.fhgff3.gff3",
       "upstream": "conformance/invalid/fhgff3-annotates-fhp.fhgff3.gff3",
       "size": 762,
       "sha256": "ce7b42f31f448002c510f7e11889fe379ed6bcd9c2e67e89b45c7b3f5b0f7fcd"
+    },
+    {
+      "local": "header/conformance/invalid/fhgff3-busco-lineage-trailing-dot.fhgff3.gff3",
+      "upstream": "conformance/invalid/fhgff3-busco-lineage-trailing-dot.fhgff3.gff3",
+      "size": 910,
+      "sha256": "9e548865096a5f26b0d4e7388732108e84d56483880f5a2d78b1a2f8d30e8ce8"
     },
     {
       "local": "header/conformance/invalid/fhgff3-cites-fhr-schema.fhgff3.gff3",
@@ -187,6 +211,24 @@
       "upstream": "conformance/invalid/fhgff3-concatenated.fhgff3.gff3",
       "size": 1524,
       "sha256": "d893fc28cc46c689f326acc569a308ef4137f22f042442cb724f61c2ab0517a0"
+    },
+    {
+      "local": "header/conformance/invalid/fhgff3-extension-nested.fhgff3.gff3",
+      "upstream": "conformance/invalid/fhgff3-extension-nested.fhgff3.gff3",
+      "size": 794,
+      "sha256": "2d0635a3a43b0e1ad7b4f68391a9b717d3d373ea0496abc9ed72bfcfb21be46e"
+    },
+    {
+      "local": "header/conformance/invalid/fhgff3-extension-older-release.fhgff3.gff3",
+      "upstream": "conformance/invalid/fhgff3-extension-older-release.fhgff3.gff3",
+      "size": 792,
+      "sha256": "2ab737389d8e3158d29a73d425ae42dd4adb0b112605aedef409981107aad7bd"
+    },
+    {
+      "local": "header/conformance/invalid/fhgff3-extension-older-version.fhgff3.gff3",
+      "upstream": "conformance/invalid/fhgff3-extension-older-version.fhgff3.gff3",
+      "size": 792,
+      "sha256": "62ea8ede4386a89c39e7208a0372c6e6d8eea99dc8e8d8bbd5e0c3bde95a787c"
     },
     {
       "local": "header/conformance/invalid/fhgff3-fasta-tampered.fhgff3.gff3",
@@ -247,6 +289,24 @@
       "upstream": "conformance/invalid/fhgff3-two-checksum-lines.fhgff3.gff3",
       "size": 819,
       "sha256": "b6b101590136910eccb3014ff32a24c89ef7e891fed7c8a8d669851096307ff1"
+    },
+    {
+      "local": "header/conformance/invalid/fhgff3-version-3-1.fhgff3.gff3",
+      "upstream": "conformance/invalid/fhgff3-version-3-1.fhgff3.gff3",
+      "size": 764,
+      "sha256": "40953e229fcc266f19a44f29df8171f5d0a71d1d59d6498e3019feff4c84e3e3"
+    },
+    {
+      "local": "header/conformance/invalid/fhgff3-version-30.fhgff3.gff3",
+      "upstream": "conformance/invalid/fhgff3-version-30.fhgff3.gff3",
+      "size": 763,
+      "sha256": "3b08c2920e190ef88dc8718bf61dedd9cc09802badaa163f13fd76d710d9e13a"
+    },
+    {
+      "local": "header/conformance/invalid/fhgff3-version-3x.fhgff3.gff3",
+      "upstream": "conformance/invalid/fhgff3-version-3x.fhgff3.gff3",
+      "size": 763,
+      "sha256": "03ef1dbce07455decf467f96f50218f9fadb1f419518ded1717d60bd5784ad60"
     }
   ],
   "imports": [
@@ -257,18 +317,18 @@
     },
     {
       "upstream": "schemas/shared.yaml",
-      "size": 3730,
-      "sha256": "0e7e08d52c739cf245ed76093f22b6f37d6d6e4c4db76b1007619d60ef6a1043"
+      "size": 3925,
+      "sha256": "19afd1d83a6728f5ca9084878adca80a00d61399e2f5854854053eed8cf1d209"
     },
     {
       "upstream": "conformance/manifest.json",
-      "size": 142652,
-      "sha256": "d4909fd3cbf9312ccb9466fbf856138b8e121980b560e71a4db4647b0e352239"
+      "size": 188312,
+      "sha256": "cdbb79b1fbfda52b27a9f54b73d3bae1efb662efcbb4c41ba02b9e3be40a51e1"
     },
     {
       "upstream": "docs/FORMAT.md",
-      "size": 11369,
-      "sha256": "997c06a14af33f8e812880933e6adc8f35be603f75fc1023994ad46e9448ee70"
+      "size": 16237,
+      "sha256": "482f3553963ca707c1ac2313df167abfc3f6cd100c09582c313ec9b3c5eea5e8"
     }
   ]
 }

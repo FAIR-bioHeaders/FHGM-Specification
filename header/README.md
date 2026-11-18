@@ -27,8 +27,10 @@ The final, authoritative artifacts publish in the shared repository
 - Docs: `docs/FHGFF3.md`; format rules: `docs/FORMAT.md`; versions:
   `docs/SCHEMA-VERSIONS.md`
 - Examples: `examples/fhgff3/`; vectors: `conformance/`
-- Released schema URL:
-  <https://w3id.org/fair-bioheaders/fhgff3/v0.4.0> (`schemaVersion` `"1.0"`)
+- Current released schema URL, the release this copy is pinned to:
+  <https://w3id.org/fair-bioheaders/fhgff3/v0.6.0> (`schemaVersion` `"1.2"`).
+  Earlier releases keep their own URLs (`v0.5.0` for `"1.1"`, `v0.4.0` for
+  `"1.0"`); `docs/SCHEMA-VERSIONS.md` in the shared repository lists them all
 
 This tree publishes nothing and has no generator, schema build or release
 machinery. Generate, validate and release in the shared repository.
