@@ -160,6 +160,20 @@ def valid_vectors():
                  schema="https://w3id.org/fair-bioheaders/fhgff3/v0.6.0"),
             feature_payload(30),
         ),
+        # Rule K2, positive control for the link host check: user information
+        # before a real host, a port, and a bracketed IPv6 host are all
+        # accepted in every link field (evidence uri, software uri, protocol).
+        "record-links-user-info-before-host": render(
+            metadata([record("model-a", "1",
+                             evidence=[{"description": "Synthetic evidence statement",
+                                        "uri": "https://reader@example.org/evidence"}],
+                             methods={
+                                 "software": [{"name": "Synthetic curation tool",
+                                               "uri": "https://[2001:db8::1]:8443/tool"}],
+                                 "protocol": "ftp://anonymous@ftp.example.org/protocol.txt",
+                             })], "1"),
+            feature_payload(30),
+        ),
         # Rule K1: the raw tag URL under the FHR-Specification alias is the
         # same v0.6.0 release (both repository names are recognised). Its 1.2
         # twin keeps this citation, so the alias is exercised under both
@@ -235,6 +249,27 @@ def invalid_vectors():
             metadata([record("model-a", "1", evidence=[{
                 "description": "Synthetic evidence statement",
                 "uri": "javascript:void(0)"}])], "1"),
+            feature_payload(30),
+        ),
+        # Rule K2: an http, https or ftp link needs a host. User information
+        # followed directly by the path leaves the host empty
+        # (urlsplit("https://user@/").hostname is None), so each link field
+        # rejects it even though format uri accepts the value.
+        "record-evidence-uri-user-info-without-host": render(
+            metadata([record("model-a", "1", evidence=[{
+                "description": "Synthetic evidence statement",
+                "uri": "https://user@/"}])], "1"),
+            feature_payload(30),
+        ),
+        "record-software-uri-empty-user-info-and-host": render(
+            metadata([record("model-a", "1", methods={"software": [{
+                "name": "Synthetic curation tool",
+                "uri": "https://@/"}]})], "1"),
+            feature_payload(30),
+        ),
+        "record-methods-protocol-ftp-user-info-without-host": render(
+            metadata([record("model-a", "1", methods={
+                "protocol": "ftp://user@/"})], "1"),
             feature_payload(30),
         ),
         # Rule K2: opaque text values carry no leading or trailing whitespace,

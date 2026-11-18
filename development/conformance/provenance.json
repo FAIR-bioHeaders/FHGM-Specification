@@ -53,9 +53,9 @@
     {
       "local": "development/model/fhgm-model.schema.json",
       "role": "native record contract (K2)",
-      "size": 11144,
-      "sha256": "808e07a636015c9b0a3db63a26fe645d585e788447416b1303e0a7c654cc7e93",
-      "note": "Reviewed in place on 2026-11-14: the 2026-11-12 proposal bytes (commit 8b0ca00, sha256 9114780bfcc8b575fa660b2d38a7ad521d9b993d2544963cdad388daed045e27) carry the same title, field names, requiredness and keywords; only description text changed to record the review's positions, so no validation outcome moved and the draft label stays v0.1. The dual-base work of 2026-11-15 leaves these bytes unchanged: the record contract carries no file identity, which is exactly the transport framing (FHGM is not a header type; records ride inside an FHGFF3 header and model records carry no schema field). 2026-11-18, a draft contract change made at review: the text definition now rejects leading or trailing whitespace and control, zero-width and bidirectional formatting characters; reuseConditions, assemblyName and deposit identifiers take the same non-blank text constraints; evidence uri, software uri and methods protocol take only FORMAT.md R14 schemes. Every earlier vector and fixture keeps its outcome under the new bytes (re-observed); the eleven vectors added that day pin the new constraints. Review follow-through: hierarchical link authorities now require a nonempty host after optional user information; empty-host/user-info controls reject while host, port and bracketed IPv6 controls remain accepted."
+      "size": 11522,
+      "sha256": "b7075e5872e0a5ffce5ae61c590ce182f1f219fa269413cad3b1a966753cfeae",
+      "note": "Reviewed in place on 2026-11-14: the 2026-11-12 proposal bytes (commit 8b0ca00, sha256 9114780bfcc8b575fa660b2d38a7ad521d9b993d2544963cdad388daed045e27) carry the same title, field names, requiredness and keywords; only description text changed to record the review's positions, so no validation outcome moved and the draft label stays v0.1. The dual-base work of 2026-11-15 leaves these bytes unchanged: the record contract carries no file identity, which is exactly the transport framing (FHGM is not a header type; records ride inside an FHGFF3 header and model records carry no schema field). 2026-11-18, a draft contract change made at review: the text definition now rejects leading or trailing whitespace and control, zero-width and bidirectional formatting characters; reuseConditions, assemblyName and deposit identifiers take the same non-blank text constraints; evidence uri, software uri and methods protocol take only FORMAT.md R14 schemes. Every earlier vector and fixture keeps its outcome under the new bytes (re-observed); the eleven vectors added that day pin the new constraints. Review follow-through: hierarchical link authorities now require a nonempty host after optional user information; empty-host/user-info controls reject while host, port and bracketed IPv6 controls remain accepted. A second follow-through makes that link pattern portable across Python and ECMA-262 regex dialects: an explicit whitespace class instead of \\s, end of string written (?![\\s\\S]) instead of a $ that Python also matches before a final line feed, no '@' in user information and no bracket in a registered-name host. Four vectors pin the host check in each link field (three empty-host/user-info rejections and one accepted user-info/IPv6 control); every earlier vector keeps its outcome."
     },
     {
       "local": "development/model/fhgm-draft.schema.json",
@@ -82,8 +82,8 @@
     {
       "local": "development/conformance/make_vectors.py",
       "role": "generates the vectors under development/conformance/vectors/",
-      "size": 18063,
-      "sha256": "e2586fe73101c9940d745235b639728aa9648874f944d313990f094fe14185cb"
+      "size": 20008,
+      "sha256": "49e5a5517839b45ded1e18188f4185add211dafd48dfe1d85767d4bff50ce641"
     },
     {
       "local": "development/examples/model/make_fixtures.py",

@@ -7,14 +7,14 @@
   "base": "provenance.json matrixBaseSchema records the v0.6.0 bytes; base-schemas.json registers them for the checker.",
   "method": "A twin replaces exactly two header lines of its sealed vector - a v0.5.0 #~schema citation moves to https://w3id.org/fair-bioheaders/fhgff3/v0.6.0 (any other citation, such as the v0.6.0 FHR-Specification alias or raw main, is kept) and #~schemaVersion to 1.2, both in the source's quoting style - and the #~checksum line follows: recomputed when the sealed record says verify, preserved when it says stale so the twin remains a stale-checksum case. Records, pointers and every feature byte are unchanged. A vector declaring FHGFF3 1.0 is evaluated as committed (method as-committed-1-0): its stated identity is the defect and there is no 1.2 form of the claim being tested. The checker is handed both registered base files and the same committed predecessors as the sealed lane, and selects the release each loaded file cites by its schema URL: a 1.2 twin is judged by the v0.6.0 bytes and its 1.1 predecessor by the v0.5.0 bytes it cites, which makes the lane a mixed-identity chain test. The base layer is the v0.6.0 release alone.",
   "summary": {
-    "twins": 58,
-    "valid": 16,
-    "invalid": 42,
-    "identityRewritten": 56,
+    "twins": 62,
+    "valid": 17,
+    "invalid": 45,
+    "identityRewritten": 60,
     "asCommitted10": 2,
     "verdictChangesAgainstSealed": 0,
     "changedVectors": [],
-    "gapProofUnder12": 39
+    "gapProofUnder12": 42
   },
   "findings": [],
   "vectors": [
@@ -1348,6 +1348,95 @@
         "model": "reject"
       },
       "reason": "must target one local gene row: 'toy-a'",
+      "selectedBase": "v0.6.0 (1942be4cefc8b3a2...)",
+      "sameAsSealed": true
+    },
+    {
+      "id": "record-links-user-info-before-host",
+      "file": "vectors/valid/record-links-user-info-before-host.fhgff3.gff3",
+      "method": "identity-rewrite",
+      "expected": "valid",
+      "note": "identity lines rewritten to the v0.6.0 citation, checksum recomputed; every other byte and the supplied history are the sealed vector's",
+      "rules": [
+        "K2"
+      ],
+      "twin": {
+        "size": 1220,
+        "sha256": "5a75bee3d5c092e24e15b30e03d317933cfb46b04fd55be4597c4682beeeb718",
+        "checksum": "QzUQlJiRHEu9SVm/jxwXZJ1MXjvhpo5TQYo3nca6Muw="
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "selectedBase": "v0.6.0 (1942be4cefc8b3a2...)",
+      "sameAsSealed": true
+    },
+    {
+      "id": "record-evidence-uri-user-info-without-host",
+      "file": "vectors/invalid/record-evidence-uri-user-info-without-host.fhgff3.gff3",
+      "method": "identity-rewrite",
+      "expected": "invalid",
+      "note": "identity lines rewritten to the v0.6.0 citation, checksum recomputed; every other byte and the supplied history are the sealed vector's",
+      "rule": "K2",
+      "twin": {
+        "size": 1041,
+        "sha256": "054effc85fbebe2a5ea78708acd3efe156c0efb78ea65684646a7187d796140e",
+        "checksum": "M0loODcwwzIxPHBczEVeU5JgrACJO7d2c8TTJ49PaQc="
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "reason": "'https://user@/' does not match",
+      "selectedBase": "v0.6.0 (1942be4cefc8b3a2...)",
+      "sameAsSealed": true
+    },
+    {
+      "id": "record-software-uri-empty-user-info-and-host",
+      "file": "vectors/invalid/record-software-uri-empty-user-info-and-host.fhgff3.gff3",
+      "method": "identity-rewrite",
+      "expected": "invalid",
+      "note": "identity lines rewritten to the v0.6.0 citation, checksum recomputed; every other byte and the supplied history are the sealed vector's",
+      "rule": "K2",
+      "twin": {
+        "size": 1037,
+        "sha256": "25c512b114c64f3f509a6553e3fdb84b6c3e5d73c18ecb1db02e16d1d45844a0",
+        "checksum": "04SOsxIryTP0zGF4EtW9O3/JFYQQ9ZqtACYuUHjG/5I="
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "reason": "'https://@/' does not match",
+      "selectedBase": "v0.6.0 (1942be4cefc8b3a2...)",
+      "sameAsSealed": true
+    },
+    {
+      "id": "record-methods-protocol-ftp-user-info-without-host",
+      "file": "vectors/invalid/record-methods-protocol-ftp-user-info-without-host.fhgff3.gff3",
+      "method": "identity-rewrite",
+      "expected": "invalid",
+      "note": "identity lines rewritten to the v0.6.0 citation, checksum recomputed; every other byte and the supplied history are the sealed vector's",
+      "rule": "K2",
+      "twin": {
+        "size": 996,
+        "sha256": "4e87e651125dc0f327e4ef5b353c056a236ec062c47b7678edeef7f456051a76",
+        "checksum": "T21R5VyKTA6b9HWoWW1UnqE+0aOYGbrzoqkvc0fhhsY="
+      },
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "reason": "'ftp://user@/' does not match",
       "selectedBase": "v0.6.0 (1942be4cefc8b3a2...)",
       "sameAsSealed": true
     }

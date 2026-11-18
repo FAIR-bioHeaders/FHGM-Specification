@@ -667,6 +667,25 @@ class CheckerGuards(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertTrue(validator.is_valid(value))
 
+    def test_link_pattern_alone_is_dialect_portable(self):
+        # The pattern must give the same answer without format checking and in
+        # ECMA-262: no "$" (Python also matches it before a final line feed) and
+        # no "\s" (whose members differ between Python and ECMA-262).
+        import re
+        document = json.loads((MODEL / "fhgm-model.schema.json").read_text())
+        pattern = document["$defs"]["link"]["pattern"]
+        self.assertNotIn("$", pattern)
+        self.assertNotIn("\\s]", pattern.replace("[\\s\\S]", ""))
+        for value in ("https://user@/", "https://@/", "ftp://user@/",
+                      "https://example.org\n", "https://﻿/", "https://\x85/",
+                      "https://\x1c/", "https://a@b@c/", "https://[]/"):
+            with self.subTest(value=value):
+                self.assertIsNone(re.search(pattern, value))
+        for value in ("https://example.org", "https://user@example.org/",
+                      "https://[2001:db8::1]:8443/tool", "HTTP://Example.org?q"):
+            with self.subTest(value=value):
+                self.assertIsNotNone(re.search(pattern, value))
+
     def test_a_pointer_naming_the_current_file_is_unresolvable(self):
         # A pointer can never honestly name the checksum of the file carrying
         # it (the pointer text is inside the bytes that checksum covers), so no

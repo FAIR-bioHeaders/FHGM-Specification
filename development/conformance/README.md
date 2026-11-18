@@ -16,7 +16,7 @@ An FHGM model record lives under the FHGFF3 header's `x-fhgm-models` extension
 key, where the released FHGFF3 base schema cannot see inside it — on either
 released identity, 1.1 or 1.2. Every
 model-level rejection recorded here therefore **also passes the released base
-schema and its exact-byte checksum** — 39 of the 42 invalid vectors do; the
+schema and its exact-byte checksum** — 42 of the 45 invalid vectors do; the
 three exceptions are named below. That gap is the reason FHGM has a separate
 model-level checker, and it is why an FHGM conformance lane has to run the
 checker rather than evaluate a schema: schema-vector conformance cannot express
@@ -26,7 +26,7 @@ FHGM acceptance.
 
 - `manifest.json` — the rule ids, the open-scope list and the expected outcome of
   every vector, including the prior snapshots each pointer check is handed. The
-  sealed lane runs all 58 vector entries, with the FHGFF3 1.1 (v0.5.0) bytes as
+  sealed lane runs all 62 vector entries, with the FHGFF3 1.1 (v0.5.0) bytes as
   its base layer.
 - `base_matrix.json` — the FHGFF3 1.2 matrix lane: for every sealed vector, the
   identity-rewritten twin's sealed digest and the layers observed against the
@@ -83,7 +83,7 @@ reported separately and never collapsed into one "valid" boolean:
 | `model` | `validate_fhgm.py`: transport overlay, native record contract, rules K3–K6 and the pointer verdict | the reviewed draft contract |
 
 Every vector records `gff3: accept`: gff3-validator 0.1.0 reports zero errors and
-zero warnings on all 58 sealed files and all 58 matrix twins, including the
+zero warnings on all 62 sealed files and all 62 matrix twins, including the
 duplicate-gene-ID vector. The feature layer and the model layer are orthogonal,
 and no rejection in this suite can be attributed to GFF3 syntax.
 
@@ -118,7 +118,7 @@ pinned (`gap-skip-with-recorded-successor-supplied` against
 
 ## Vectors
 
-58 vectors: 16 valid, 42 invalid — the 31 sealed synthetic-plus-S6k census, the
+62 vectors: 17 valid, 45 invalid — the 31 sealed synthetic-plus-S6k census, the
 12-case real-data promotion batch (10 gap-proof rejections and 2 required
 positive anchors, `dmel-*`, promoted from the dmel4 example lane as a DRAFT
 pending independent review; see
@@ -126,7 +126,9 @@ pending independent review; see
 4 base-selection vectors added on 2026-11-18 when the checker began selecting
 the base release by the carrier's cited `schema` URL, and 11 vectors added the
 same day so that every guard in the checker is noticed by at least one vector
-(see "Mutation check" below).
+(see "Mutation check" below), and 4 link-host vectors added at review the same
+day (three empty-host/user-info rejections, one in each link field, and one
+accepted user-info and IPv6 control).
 Layer outcomes are `base` / `checksum` / `gff3` / `model`.
 
 ### Valid
@@ -143,6 +145,7 @@ Layer outcomes are `base` / `checksum` / `gff3` / `model`.
 | `gap-pointer-without-recorded-successor` | K6 | `accept` / `verify` / `accept` / `pass` | 1 | The same bytes as `gap-skip-with-recorded-successor-supplied` with only the pointed snapshot supplied: `resolvable`. The pair is the point — the bound D3 adopted cuts both ways. |
 | `history-with-unresolved-own-pointer` | K6 | `accept` / `verify` / `accept` / `pass` | 2 | A supplied snapshot whose own pointer does not resolve still serves as history, because the checker resolves only the selected file's pointers. Raised as question Q7 on 2026-11-14; this pins current behavior, it rules nothing. |
 | `percent-decoded-feature-target` | K4 | `accept` / `verify` / `accept` / `pass` | 0 | Rule K4 compares decoded identifiers: the record names `toy-a` while the gene row is written `ID=toy%2Da`. |
+| `record-links-user-info-before-host` | K2 | `accept` / `verify` / `accept` / `pass` | 0 | Control for the link host check: user information before a real host (`https://reader@example.org/evidence`, `ftp://anonymous@ftp.example.org/protocol.txt`) and a bracketed IPv6 host with a port (`https://[2001:db8::1]:8443/tool`) are accepted in all three link fields. |
 | `revision-resolves-supplied-history` | K1,K2,K3,K6 | `accept` / `verify` / `accept` / `pass` | 1 | A single-predecessor, same-assembly revision resolved against one explicitly supplied snapshot: verdict `resolvable`, which states only that the pointer identifies its predecessor record. |
 | `s6k-derived-record-fixture` | K1,K2,K4 | `accept` / `verify` / `accept` / `pass` | 0 | The only non-synthetic content in the suite: one draft record wrapping the attributed, reference-verified S6k deposit fixture, re-derived by `embed_models.py` rather than copied. |
 | `single-record` | K1,K2,R15 | `accept` / `verify` / `accept` / `pass` | 0 | One record, no predecessor claim: base schema, transport overlay, record contract and the identity, target and agreement rules all hold. |
@@ -185,9 +188,12 @@ Layer outcomes are `base` / `checksum` / `gff3` / `model`.
 | `predecessor-version-reused` | K6 | `accept` / `verify` / `accept` / `reject` | 1 | The only version rule v0.1 states: an immediate revision must differ from its predecessor. Opaque equality is the whole of the semantics (disposition Q3). |
 | `record-evidence-uri-javascript-scheme` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | Link fields take only FORMAT.md R14 schemes: `javascript:void(0)` is a well-formed URI no renderer should link, so the draft record contract rejects it where released header types only warn. |
 | `record-evidence-uri-not-a-uri` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | `format: uri` is enforced, not only the scheme: an https URI with a space in it. |
+| `record-evidence-uri-user-info-without-host` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | An http, https or ftp link needs a host: `https://user@/` is user information and an empty host (`urlsplit(...).hostname` is `None`). `format: uri` accepts it; the link pattern does not. |
+| `record-methods-protocol-ftp-user-info-without-host` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | The host check on `methods.protocol`, ftp scheme: `ftp://user@/` names a user and no host. |
 | `record-model-id-trailing-space` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | Opaque text is trimmed: `model-a` followed by a space cannot pass as an identifier distinct from `model-a`. |
 | `record-numeric-model-version` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | `modelVersion` is an opaque string, not a number: the YAML value `2` is not the string `"2"`. |
 | `record-reference-contradicts-file` | K5 | `accept` / `verify` / `accept` / `reject` | 0 | Rule K5's contradiction half: the record binds a different accession than the enclosing file's genome link. No checksum can reveal it, because both byte streams are internally consistent. |
+| `record-software-uri-empty-user-info-and-host` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | The host check on a software `uri`: `https://@/` has empty user information and an empty host. |
 | `record-unknown-key` | K2,R15 | `accept` / `verify` / `accept` / `reject` | 0 | The record object is closed: an unknown key inside a record is invalid even though R15 admits top-level `x-` keys and the base schema never looks inside the array. |
 | `record-without-reference` | K2 | `accept` / `verify` / `accept` / `reject` | 0 | Deviation D1, kept at the review: a record must carry its own reference binding, so an extracted record cannot silently lose its assembly. The base schema ignores record contents entirely. |
 | `reference-forms-not-comparable` | K5 | `accept` / `verify` / `accept` / `reject` | 0 | The half of rule K5 the adoption packet's D1 summary does not mention: nothing contradicts here, and the record is still rejected for sharing no comparable form. Whether v0.1 should be this strict is put to the maintainers. |
@@ -334,10 +340,10 @@ Implementation — base **selection**, not base substitution:
   the v0.5.0 bytes it cites; before 2026-11-18 the matrix lane passed only the
   v0.6.0 bytes and the predecessor was judged by them.
 
-Measured result (re-sealed 2026-11-18 by `--seal-matrix`): **58 twins, 0 verdict
+Measured result (re-sealed 2026-11-18 by `--seal-matrix`): **62 twins, 0 verdict
 changes** — every twin reproduces its sealed vector's four layers and reason
 substring under the v0.6.0 bytes, and the gap claim holds identically on both
-bases (39/42 rejections gap-proof). No contract finding came out of the
+bases (42/45 rejections gap-proof). No contract finding came out of the
 comparison; the reason is visible in the release diff itself: between v0.5.0
 and v0.6.0 `fhgff3.json` the schemaVersion enum gains `1.2`,
 `Completeness.lineageDataset` gains dotted BUSCO dataset versions for carriers

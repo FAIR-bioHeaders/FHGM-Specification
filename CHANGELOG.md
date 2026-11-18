@@ -17,6 +17,15 @@
   characters; `reuseConditions`, `assemblyName` and `deposit` identifiers must
   be non-blank; `evidence[].uri`, `software[].uri` and `methods.protocol` take
   only FORMAT.md R14 schemes. No earlier vector or fixture changes outcome.
+- Review follow-through (link host): an http, https or ftp link must name a
+  host after optional user information, so `https://user@/`, `https://@/` and
+  `ftp://user@/` are rejected although `format: uri` accepts them. The link
+  pattern is portable across Python and ECMA-262 regex dialects: an explicit
+  whitespace class instead of `\s`, end of string as `(?![\s\S])` rather than
+  `$`, no `@` in user information and no bracket in a registered-name host.
+  Four vectors (62: 17 valid, 45 invalid) pin it, one rejection per link field
+  and one accepted user-info/IPv6 control; matrix re-sealed, 0 verdict changes,
+  gap claim 42/45.
 - Documented: identity cases v0.1 does not rule on (#28), the attribute-tag
   matching rule (`Name=x; ID=toy-a` does not resolve), and the structural
   defects neither gff3-validator 0.1.0 nor FHGM catches (#27).
