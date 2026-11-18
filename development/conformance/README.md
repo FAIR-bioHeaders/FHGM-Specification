@@ -84,8 +84,10 @@ reported separately and never collapsed into one "valid" boolean:
 
 Every vector records `gff3: accept`: gff3-validator 0.1.0 reports zero errors and
 zero warnings on all 62 sealed files and all 62 matrix twins, including the
-duplicate-gene-ID vector. The feature layer and the model layer are orthogonal,
-and no rejection in this suite can be attributed to GFF3 syntax.
+duplicate-gene-ID vector. External GFF3 syntax validation and the model verdict
+are reported separately. The model checker also reads local feature IDs, types
+and `Parent` values to resolve K4 targets; an external GFF3 pass does not establish
+a model pass. No rejection in this suite is attributed to external GFF3 syntax.
 
 The unresolved distinction between local feature-ID resolution and the external
 GFF3 executor is addressed in the
@@ -208,7 +210,8 @@ Layer outcomes are `base` / `checksum` / `gff3` / `model`.
 Every guard in `validate_fhgm.py` must be noticed by at least one vector, so
 that deleting or weakening it turns the suite red. On 2026-11-18 each of the
 following was applied to a copy of the checker, and the copy was run over all
-58 vectors (with their recorded histories) and over the checker-function tests
+vectors listed in `manifest.json` (with their recorded histories) and over the
+checker-function tests
 in `tests/test_fhgm_conformance.py` (`CheckerGuards`, pointed at the copy via
 `FHGM_CHECKER`). Every mutation was caught:
 
@@ -226,6 +229,7 @@ in `tests/test_fhgm_conformance.py` (`CheckerGuards`, pointed at the copy via
 | K6 resolves when the snapshot lacks the model | `pointer-snapshot-lacks-model` |
 | K6 drops the current-file guard | `CheckerGuards` only |
 | K2 without the URI format checker | `record-evidence-uri-not-a-uri` |
+| K2 allows user information without a host | `record-evidence-uri-user-info-without-host`, `record-protocol-user-info-without-host`, `record-software-uri-user-info-without-host`; accepted control `record-links-user-info-before-host` |
 | K3 without NFC normalisation | `model-ids-equal-under-nfc` |
 | K3 run after the per-record checks | `duplicate-model-id-reported-before-record-checks` |
 
@@ -447,3 +451,8 @@ the 12 promoted vectors are included in both lanes. The manifest's rules,
 open-scope and status text are preserved; the added vector entries and dual-base
 descriptors change the manifest digest, so consumers holding byte-pins refresh
 against the merged commit as their own action.
+
+The contract-only acceptance matrix in `development/model/check_draft.py` also
+checks leading whitespace in `modelId`, blank `assemblyName` and trailing or
+invisible text in deposit identifiers. Those are contract-case controls, not
+additional vectors or curator-reviewed model expectations.

@@ -139,10 +139,19 @@ def contract_examples(bases, sealed, output):
         ("methods", {"software": [{"name": "Synthetic software", "uri": "data:,x"}]}),
         ("methods", {"protocol": "file:///synthetic/protocol"}),
         # Opaque text is non-blank, trimmed and free of control characters.
+        ("modelId", " model-a"),
+        ("modelId", "\u00a0model-a"),
+        ("reference", {"genomeReference": dict(
+            models[0]["reference"]["genomeReference"], assemblyName="")}),
+        ("reference", {"genomeReference": dict(
+            models[0]["reference"]["genomeReference"], assemblyName=" ")}),
         ("reuseConditions", " "),
         ("reuseConditions", "CC-BY-4.0\n"),
         ("contributors", [{"name": "Example\u200b", "role": "curator"}]),
         ("publication", {"deposit": ["doi: 10.0000/synthetic"]}),
+        # The curie text composition forbids trailing space and invisible text.
+        ("publication", {"deposit": ["doi:10.0000/synthetic "]}),
+        ("publication", {"deposit": ["doi:10.0000/synthetic\u200b"]}),
     )
     for field, value in invalid_fields:
         invalid_metadata = copy.deepcopy(metadata)
