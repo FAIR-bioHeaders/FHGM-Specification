@@ -1,5 +1,16 @@
 # FHGM changelog
 
+## Unreleased — inherited build hygiene (2026-11-18)
+
+- `requirements.txt` pins `linkml==1.9.6`, `linkml-runtime==1.9.5` and
+  `mkdocs==1.6.1`: linkml 1.10 dropped `gen-markdown`, which `make gen` calls.
+- The Makefile's JSON Schema target names the real top class (`gff document`)
+  instead of the nonexistent `transaction`, which produced a schema with no
+  root properties. Committed generated artifacts are not regenerated.
+- Removed the unused `jsonschema/gff3-validator-webapp.py` and its template:
+  it imported a module that does not exist, hardcoded a Flask `secret_key`
+  and ran with `debug=True`. GFF3 validation lives in gff3-validator.
+
 ## Unreleased — header copy re-pinned to the shared v0.6.0 release (2026-11-18)
 
 - `header/` now mirrors FAIR-bioHeaders-Specification at the `v0.6.0` release
