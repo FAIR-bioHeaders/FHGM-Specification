@@ -1,5 +1,20 @@
 # FHGM changelog
 
+## Unreleased — header copy re-pinned to the shared v0.6.0 release (2026-11-18)
+
+- `header/` now mirrors FAIR-bioHeaders-Specification at the `v0.6.0` release
+  tag (commit `0ae18b00`) instead of an untagged 2026-10-21 `main` commit
+  (`bdcaecf7`), matching FHGFF3 #19. Every copied file was re-extracted
+  byte-for-byte at the tag: 49 copied files (29 unchanged, 10 changed, 10 new
+  v0.5.0/v0.6.0 conformance vectors), 4 recorded import digests.
+- `header/provenance.json`, `header/PROVENANCE.md`, `header/docs/README.md`
+  and `header/conformance/README.md` follow the pin; `header/README.md` now
+  names the v0.6.0 schema URL and `schemaVersion` `"1.2"` instead of v0.4.0.
+- The shared-conformance CI job moves its toolkit baseline from
+  `fair-bioheaders` 0.8.1 to 0.11.0, the release that bundles the v0.6.0
+  schemas; 0.8.1 cannot run the v0.6.0 suite.
+- The `development/` FHGM draft tree is not touched by this re-pin.
+
 ## Unreleased — real-data promotion batch, draft (2026-11-15)
 
 - Per the maintainer promotion decision of 2026-11-15, add the 12 `dmel-*`

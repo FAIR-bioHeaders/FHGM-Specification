@@ -60,9 +60,14 @@ jobs:
           path: .upstream/FAIR-bioHeaders-Specification
           persist-credentials: false
       - name: Install the shared suite's released toolkit baseline
+        # fair-bioheaders 0.11.0 is the release that bundles the v0.6.0 schemas
+        # pinned by header/provenance.json. The suite at this revision also runs
+        # vectors citing v0.5.0 (R15, J9, M5), so the baseline must be 0.9.0 or
+        # later; 0.11.0 matches the pin used by the shared repository itself for
+        # released-schema bundles.
         run: |
           python3 -m venv "$RUNNER_TEMP/fhr-converter"
-          "$RUNNER_TEMP/fhr-converter/bin/python" -m pip install 'fair-bioheaders[jsonld]==0.8.1'
+          "$RUNNER_TEMP/fhr-converter/bin/python" -m pip install 'fair-bioheaders[jsonld]==0.11.0'
       - name: Check shared fixture generation and independent checksums
         working-directory: .upstream/FAIR-bioHeaders-Specification
         run: python3 scripts/check_conformance.py
