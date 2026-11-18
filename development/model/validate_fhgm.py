@@ -5,10 +5,9 @@ Runs three passes over an explicit selection: the released FHGFF3 base schema
 (transport and file identity only), the draft transport overlay
 (fhgm-draft.schema.json) and the native record contract (fhgm-model.schema.json)
 per embedded record. Base selection, not base substitution: each loaded file
-declares a released FHGFF3 identity through its schemaVersion, and the checker
-validates it against the registered bytes of THAT release
-(base-schemas.json), refusing any file whose declared version no supplied base
-states. The selected base is printed for every loaded file, so each verdict
+cites a released FHGFF3 schema URL, and the checker validates it against the
+registered bytes of THAT release (base-schemas.json), refusing any file whose
+cited release is unregistered or was not supplied. The selected base is printed for every loaded file, so each verdict
 carries the release bytes that produced it. Pointer resolution then reports one
 verdict per revision claim: resolvable, unresolvable or ambiguous. A resolvable
 pointer only identifies a predecessor record; curator acceptance is never
@@ -97,33 +96,36 @@ def load_bases(paths):
     return candidates
 
 
-def choose_base(declared, candidates):
-    """Pick the candidate that validates a carrier declaring `declared`.
+def choose_base(header, candidates, registry=None):
+    """Pick the supplied base release the carrier's ``schema`` URL cites.
 
-    Returns (digest, record, validator, basis). Exact version match first; a
-    declared version with no base of its own among the candidates (a superseded
-    version such as 1.0) is judged by the oldest candidate whose enum states it,
-    because the R15 extension floor rides on that clause; a version no candidate
-    states at all is refused rather than evaluated against bytes the carrier
-    never cited.
+    Returns (digest, record, validator, basis). The cited URL is mapped to
+    exactly one registered release through its ``schemaUrls``; schemaVersion
+    plays no part in the choice and is judged afterwards by the selected bytes.
+    The run is refused - never evaluated against other bytes - when the carrier
+    states no schema URL, cites a release the registry does not hold (a
+    superseded release, or raw main, which is not a release), or cites a
+    registered release whose bytes were not supplied with --base-schema.
     """
-    if isinstance(declared, str) and re.fullmatch(r"[0-9]+\.[0-9]+", declared):
-        for digest, record, validator in candidates:
-            if record["schemaVersion"] == declared:
-                return (digest, record, validator,
-                        "exact match on the declared schemaVersion")
-        for digest, record, validator in candidates:
-            if declared in record["acceptsSchemaVersions"]:
-                return digest, record, validator, (
-                    f"no supplied base states {declared!r} as its own release; the "
-                    f"oldest supplied candidate whose enum includes it")
+    cited = header.get("schema") if isinstance(header, dict) else None
+    if not isinstance(cited, str):
         raise ValueError(
-            f"No supplied FHGFF3 base release states schemaVersion {declared!r}; "
-            "supply the release the carrier cites (see base-schemas.json)")
-    digest, record, validator = candidates[0]
-    return digest, record, validator, (
-        "carrier declares no usable schemaVersion string; probed with the oldest "
-        "supplied base, whose requiredness report is the verdict")
+            "The carrier states no schema URL, so no FHGFF3 base release can be selected; "
+            "a carrier must cite the released fhgff3.json it follows")
+    registry = load_registry() if registry is None else registry
+    matches = [record for record in registry.values() if cited in record["schemaUrls"]]
+    if len(matches) != 1:
+        raise ValueError(
+            f"The carrier cites schema {cited!r}, which no registered FHGFF3 base release "
+            f"answers to; {BASE_REGISTRY.name} registers "
+            f"{', '.join(sorted(record['ref'] for record in registry.values()))}")
+    wanted = matches[0]
+    for digest, record, validator in candidates:
+        if digest == wanted["sha256"]:
+            return digest, record, validator, f"the cited schema URL names {wanted['ref']}"
+    raise ValueError(
+        f"The carrier cites the FHGFF3 {wanted['ref']} release, whose bytes were not supplied; "
+        f"pass that release's fhgff3.json with --base-schema (see {BASE_REGISTRY.name})")
 
 
 def describe(record, digest):
@@ -193,9 +195,10 @@ def validate_snapshot(data, candidates, transport, record_contract, label="carri
     header = parse_snapshot(data)
     if not isinstance(header, dict):
         raise ValueError("FHGFF3 header metadata must be an object")
-    digest, record, base, basis = choose_base(header.get("schemaVersion"), candidates)
-    print(f"Base selection: {label} declares schemaVersion "
-          f"{header.get('schemaVersion')!r} -> {describe(record, digest)} ({basis})")
+    digest, record, base, basis = choose_base(header, candidates)
+    print(f"Base selection: {label} cites schema {header.get('schema')!r} "
+          f"(schemaVersion {header.get('schemaVersion')!r}) -> "
+          f"{describe(record, digest)} ({basis})")
     base.validate(header)
     transport.validate(header)
     if checksum(BytesIO(data), "gff3") != header["checksum"]:

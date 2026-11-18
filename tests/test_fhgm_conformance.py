@@ -336,6 +336,43 @@ class Provenance(unittest.TestCase):
                 self.assertIn(entry["schemaVersion"], entry["acceptsSchemaVersions"],
                               "a base must state its own schemaVersion")
 
+    def test_registry_schema_urls_select_one_release_each(self):
+        """The checker selects a base by the carrier's cited schema URL."""
+        seen = {}
+        for entry in registry()["bases"]:
+            with self.subTest(base=entry["ref"]):
+                self.assertTrue(entry["schemaUrls"], "a base must list the URLs that cite it")
+                for url in entry["schemaUrls"]:
+                    self.assertNotIn(url, seen, f"{url} would select two releases")
+                    seen[url] = entry["ref"]
+                    self.assertIn(f"/{entry['ref']}", url, "a URL must name its own release")
+                    self.assertNotIn("/main/", url, "raw main is not a release")
+                for repository in ("FAIR-bioHeaders-Specification", "FHR-Specification"):
+                    self.assertIn(f"https://raw.githubusercontent.com/FAIR-bioHeaders/"
+                                  f"{repository}/{entry['ref']}/fhgff3.json",
+                                  entry["schemaUrls"],
+                                  "both repository names are recognised for a release")
+
+    def test_transport_overlay_admits_exactly_the_registered_citations(self):
+        overlay = json.loads((MODEL / "fhgm-draft.schema.json").read_text())
+        branches = {}
+        for branch in overlay["anyOf"]:
+            urls = branch["properties"]["schema"]["enum"]
+            version = branch["properties"]["schemaVersion"]
+            versions = version.get("enum", [version.get("const")])
+            refs = {re.search(r"/(v\d+\.\d+\.\d+)", url).group(1) for url in urls}
+            self.assertEqual(1, len(refs), "one overlay branch per release")
+            branches[refs.pop()] = (sorted(urls), versions)
+        for entry in registry()["bases"]:
+            with self.subTest(base=entry["ref"]):
+                urls, versions = branches[entry["ref"]]
+                self.assertEqual(sorted(entry["schemaUrls"]), urls)
+                self.assertIn(entry["schemaVersion"], versions)
+                for version in versions:
+                    self.assertIn(version, entry["acceptsSchemaVersions"],
+                                  "the overlay admits a version its release rejects")
+                    self.assertNotEqual("1.0", version, "1.0 carries no extension fields")
+
     def test_base_schema_digests_are_distinct(self):
         digests = [self.provenance[k]["sha256"] for k in
                    ("baseSchema", "matrixBaseSchema")]
@@ -509,10 +546,14 @@ class Twins(unittest.TestCase):
                     if old != new
                 ]
                 self.assertEqual(len(data.splitlines()), len(derived.splitlines()))
-                expected_lines = 3 if vector["layers"]["checksum"] == "verify" else 2
+                # Only a v0.5.0 citation moves; any other citation is kept.
+                cites_v050 = any(line.startswith(b"#~schema: ") and b"/v0.5.0" in line
+                                 for line in data.splitlines())
+                expected_lines = (2 if cites_v050 else 1) + (
+                    1 if vector["layers"]["checksum"] == "verify" else 0)
                 self.assertEqual(expected_lines, len(changed),
-                                 "expected schema, schemaVersion and (unless stale) "
-                                 "checksum lines to move")
+                                 "expected a v0.5.0 schema line, schemaVersion and (unless "
+                                 "stale) checksum lines to move")
                 for old, new in changed:
                     self.assertTrue(old.startswith(b"#~schema: ")
                                     or old.startswith(b"#~schemaVersion: ")
@@ -542,8 +583,8 @@ class Twins(unittest.TestCase):
 
     def test_verified_twin_carries_a_fresh_correct_digest(self):
         for vector in self.manifest["vectors"]:
-            if vector["id"] == "transport-1-0-extension":
-                continue
+            if runner.stated_schema_version(runner.path_of(vector).read_bytes()) == "1.0":
+                continue  # as-committed: a 1.0 identity is its own defect, no rewrite
             if vector["layers"]["checksum"] != "verify":
                 continue
             data = runner.path_of(vector).read_bytes()

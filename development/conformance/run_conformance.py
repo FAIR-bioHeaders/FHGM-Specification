@@ -29,15 +29,20 @@ Two lanes run over one suite:
                  lines move to the v0.6.0 citation, and the checksum line is
                  recomputed - except where the sealed record says ``stale``,
                  where the old stated digest is preserved so the vector stays a
-                 stale-checksum case. A file declaring FHGFF3 1.0 has no twin
-                 to write (its stated identity IS the defect), so it is
-                 evaluated as committed under the 1.2 bytes. The 1.2 lane runs
-                 the checker with ONLY the v0.6.0 base file, which is also the
-                 realistic toolkit-reader scenario: a 1.1 predecessor supplied
-                 to a 1.2-only harness is judged by the oldest supplied base
-                 that states the declared version. Expectations live in
-                 base_matrix.json, sealed by observation under the same
-                 discipline as the manifest.
+                 stale-checksum case. Only a v0.5.0 citation moves; a vector
+                 citing anything else keeps its schema URL and only its
+                 schemaVersion moves.
+                 A file declaring FHGFF3 1.0 has no twin to write (its stated
+                 identity IS the defect), so it is evaluated as committed.
+                 Expectations live in base_matrix.json, sealed by observation
+                 under the same discipline as the manifest.
+
+Both lanes hand the checker BOTH registered base files: the checker selects the
+release each loaded file cites by its ``schema`` URL and refuses a citation
+whose bytes were not supplied, so a 1.1 predecessor in the matrix lane is
+judged by the v0.5.0 bytes it cites, never by the 1.2 bytes. The ``base``
+layer is the lane's own release (v0.5.0 for the sealed lane, v0.6.0 for the
+matrix lane) over the header read by the toolkit's strict reader.
 
 Nothing is imported from ``check_draft.py`` or from the generators. Vector
 outcomes are only ever read from a run of the committed checker:
@@ -50,7 +55,7 @@ Exit status: 0 when every vector matched what the manifest (and, with
 cannot run (missing base schema, unreadable manifest). Skipped lanes are
 printed, never hidden.
 
-    python3 run_conformance.py --base-schema /path/to/fhgff3-v0.5.0.json
+    python3 run_conformance.py --base-schema ...v0.5.0.json --base-schema ...v0.6.0.json
     python3 run_conformance.py --base-schema ...v0.5.0... --base-schema ...v0.6.0.json --matrix
     python3 run_conformance.py --offline              # bytes, digests, checksums
     python3 run_conformance.py --base-schema ... --verbose
@@ -233,7 +238,8 @@ def twin_bytes(data, checksum_outcome):
     """Derive the FHGFF3 1.2 twin of a committed vector, by bytes alone.
 
     Exactly three things may change: the ``#~schema`` line moves to the v0.6.0
-    citation, the ``#~schemaVersion`` line moves to ``1.2``, and the
+    citation (only a v0.5.0 citation moves; any other citation is kept), the
+    ``#~schemaVersion`` line moves to ``1.2``, and the
     ``#~checksum`` line follows (recomputed when the sealed record says the
     checksum verifies, preserved verbatim when it says ``stale`` so the twin
     stays a stale-checksum case). A file declaring FHGFF3 1.0 gets no rewrite:
@@ -260,7 +266,12 @@ def twin_bytes(data, checksum_outcome):
     quote = value[:1] if value[:1] in (b'"', b"'") else b""
     if quote and not value.rstrip(b"\r\n").endswith(quote):
         raise Failure(f"unbalanced quoting on the schema line: {value.decode().strip()!r}")
-    new_lines[i] = SCHEMA_PREFIX + quote + TWIN_SCHEMA_URL.encode() + quote + b"\n"
+    if b"/v0.5.0" in value:
+        # Only a v0.5.0 citation moves. A vector that cites anything else - the
+        # v0.6.0 release already (for example through the FHR-Specification
+        # alias), or a citation the checker refuses, such as raw main - keeps
+        # it, so the twin tests the same claim; only the stated version moves.
+        new_lines[i] = SCHEMA_PREFIX + quote + TWIN_SCHEMA_URL.encode() + quote + b"\n"
     new_lines[j] = re.sub(rb"(?<=['\"])1\.1(?=['\"])", b"1.2", old_version)
     if new_lines[j] == old_version:
         new_lines[j] = VERSION_PREFIX + quote + TWIN_SCHEMA_VERSION.encode() + quote + b"\n"
@@ -342,11 +353,19 @@ class Lanes:
     def base(self, data):
         if self.offline:
             return "skipped", ""
-        import yaml
+        # The toolkit's strict reader, the same one the checker uses: it reads
+        # only the leading header block (a later #~ line is an error, not more
+        # header), refuses YAML-only line breaks and applies the FORMAT.md R12
+        # scalar typing, where yaml.safe_load over every #~ line would not.
+        from bioheaders import HEADER, header_text, load_yaml, sequence_parts
 
-        header = yaml.safe_load(b"".join(
-            line[2:] for line in data.splitlines(keepends=True)
-            if line.startswith(b"#~")))
+        try:
+            header = load_yaml("\n".join(
+                header_text(line, b"#~")
+                for kind, line in sequence_parts([data], b"#~", gff3=True)
+                if kind is HEADER))
+        except Exception as error:  # noqa: BLE001 - any reader refusal is a base reject
+            return "reject", f"header unreadable by the strict reader: {error}"
         errors = sorted(self.base_validator.iter_errors(header), key=str)
         if not errors:
             return "accept", ""
@@ -365,12 +384,19 @@ class Lanes:
         return ("accept" if result.returncode == 0 else "reject"), text
 
 
-def model_lane(vector, data, base_schema):
-    """The committed model-level checker over these exact bytes, one lane base."""
+def model_lane(vector, data, base_schemas):
+    """The committed model-level checker over these exact bytes, every supplied base.
+
+    The checker selects, per loaded file, the release that file's schema URL
+    cites, so handing it every registered base is what lets a 1.2 carrier and
+    its 1.1 predecessor each be judged by its own release.
+    """
     with tempfile.TemporaryDirectory() as directory:
         current = Path(directory) / "current.fhgff3.gff3"
         current.write_bytes(data)
-        command = [sys.executable, str(CHECKER), "--base-schema", str(base_schema)]
+        command = [sys.executable, str(CHECKER)]
+        for base_schema in base_schemas:
+            command += ["--base-schema", str(base_schema)]
         for predecessor in predecessors_of(vector):
             command += ["--predecessor", str(predecessor)]
         command.append(str(current))
@@ -380,7 +406,7 @@ def model_lane(vector, data, base_schema):
 
 
 SELECTION_LINE = re.compile(
-    r"Base selection: carrier declares schemaVersion '[^']*' -> "
+    r"Base selection: carrier cites schema .*? -> "
     r"(\S+)@(\S+) (\S+) \(sha256 ([0-9a-f]{16})")
 
 
@@ -396,7 +422,7 @@ def selected_base(model_text):
 
 # --- verification -----------------------------------------------------------
 
-def check_vector(vector, lanes, base_schema, data=None, recorded=None, expected_layers=None,
+def check_vector(vector, lanes, base_schemas, data=None, recorded=None, expected_layers=None,
                  reason_expected=None):
     """Verify one vector (or one twin) and observe its layers.
 
@@ -436,7 +462,7 @@ def check_vector(vector, lanes, base_schema, data=None, recorded=None, expected_
     if lanes.offline:
         return problems, None
     base, base_text = lanes.base(data)
-    model, model_text = model_lane(vector, data, base_schema)
+    model, model_text = model_lane(vector, data, base_schemas)
     gff3, gff3_text = lanes.gff3(data)
     if layers["base"] is not None and base != layers["base"]:
         problems.append(f"base layer {base} ({base_text}) != recorded {layers['base']}")
@@ -550,19 +576,22 @@ def skeleton_matrix(manifest):
         "base": "provenance.json matrixBaseSchema records the v0.6.0 bytes; base-schemas.json "
                 "registers them for the checker.",
         "method": ("A twin replaces exactly two header lines of its sealed vector - "
-                   "#~schema moves to https://w3id.org/fair-bioheaders/fhgff3/v0.6.0 and "
-                   "#~schemaVersion to 1.2, both in the source's quoting style - and the "
-                   "#~checksum line follows: recomputed when the sealed record says verify, "
-                   "preserved when it says stale so the twin remains a stale-checksum case. "
-                   "Records, pointers and every feature byte are unchanged. A vector "
-                   "declaring FHGFF3 1.0 is evaluated as committed (method "
-                   "as-committed-1-0): its stated identity is the defect and there is no 1.2 "
-                   "form of the claim being tested. The 1.2 lane hands the checker ONLY the "
-                   "v0.6.0 base file and the same committed predecessors as the sealed lane, "
-                   "which is both the realistic toolkit scenario (0.11.0 bundles the 1.2 "
-                   "bytes alone) and a mixed-identity chain test: a 1.1 predecessor entering "
-                   "a 1.2-only harness is judged by the oldest base that states its declared "
-                   "version."),
+                   "a v0.5.0 #~schema citation moves to "
+                   "https://w3id.org/fair-bioheaders/fhgff3/v0.6.0 (any other citation, "
+                   "such as the v0.6.0 FHR-Specification alias or raw main, is kept) and "
+                   "#~schemaVersion to "
+                   "1.2, both in the source's quoting style - and the #~checksum line "
+                   "follows: recomputed when the sealed record says verify, preserved when "
+                   "it says stale so the twin remains a stale-checksum case. Records, "
+                   "pointers and every feature byte are unchanged. A vector declaring "
+                   "FHGFF3 1.0 is evaluated as committed (method as-committed-1-0): its "
+                   "stated identity is the defect and there is no 1.2 form of the claim "
+                   "being tested. The checker is handed both registered base files and the "
+                   "same committed predecessors as the sealed lane, and selects the "
+                   "release each loaded file cites by its schema URL: a 1.2 twin is judged "
+                   "by the v0.6.0 bytes and its 1.1 predecessor by the v0.5.0 bytes it "
+                   "cites, which makes the lane a mixed-identity chain test. The base "
+                   "layer is the v0.6.0 release alone."),
         "summary": {},
         "findings": [],
         "vectors": entries,
@@ -793,7 +822,7 @@ def verify_twins(matrix, manifest):
 
 # --- per-lane driver -----------------------------------------------------------
 
-def run_lane(vectors, matrix_entries, lanes, base_path, offline, verbose, lane):
+def run_lane(vectors, matrix_entries, lanes, base_paths, offline, verbose, lane):
     """Check every vector (sealed bytes) or twin (matrix lane); return results."""
     results = []
     failed = []
@@ -822,7 +851,7 @@ def run_lane(vectors, matrix_entries, lanes, base_path, offline, verbose, lane):
             recorded = None
             layers_expected = None
             reason_expected = None
-        problems, outcome = check_vector(vector, lanes, base_path, data=data,
+        problems, outcome = check_vector(vector, lanes, base_paths, data=data,
                                          recorded=recorded,
                                          expected_layers=layers_expected,
                                          reason_expected=reason_expected)
@@ -862,7 +891,7 @@ def main():
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--base-schema", type=Path, action="append", default=[],
                         help="bytes of a released fhgff3.json named in base-schemas.json; "
-                             "repeat per base (the sealed lane needs v0.5.0, --matrix needs "
+                             "repeat per base (every non-offline run needs both v0.5.0 and "
                              "v0.6.0)")
     parser.add_argument("--matrix", action="store_true",
                         help="also evaluate the FHGFF3 1.2 twins of every vector against "
@@ -923,12 +952,13 @@ def main():
               f"{matrix_base['repository']}@{matrix_base['ref']} base records cross-checked "
               "against base-schemas.json; base/model/GFF3 layers not run).")
     else:
-        if sealed_base["sha256"] not in supplied:
-            raise Failure("the sealed lane requires the v0.5.0 base bytes named by "
-                          "provenance.json baseSchema")
-        if args.matrix and matrix_base["sha256"] not in supplied:
-            raise Failure("--matrix requires the v0.6.0 base bytes named by provenance.json "
-                          "matrixBaseSchema")
+        # Both lanes need both releases: vectors and their predecessors cite
+        # either one, and the checker refuses a citation whose bytes it lacks.
+        if sealed_base["sha256"] not in supplied or matrix_base["sha256"] not in supplied:
+            raise Failure("a non-offline run requires both registered base releases - the "
+                          "v0.5.0 bytes named by provenance.json baseSchema and the v0.6.0 "
+                          "bytes named by matrixBaseSchema - because the checker selects the "
+                          "release each loaded file cites")
         artifacts = len(provenance["contractArtifacts"]) + len(provenance["vectorGenerators"])
         print("Base schemas supplied: " + "; ".join(
             f"{registry[digest]['schemaVersion']} {registry[digest]['ref']} "
@@ -973,8 +1003,9 @@ def main():
         seal(manifest)
 
     sealed_lanes = Lanes(supplied.get(sealed_base["sha256"]), args.offline, gff3_tool)
+    all_bases = [supplied[digest] for digest in sorted(supplied)]
     lane_results, lane_failed = run_lane(
-        vectors, None, sealed_lanes, supplied.get(sealed_base["sha256"]),
+        vectors, None, sealed_lanes, all_bases,
         args.offline, args.verbose, "sealed")
     results = list(lane_results)
     failed = list(lane_failed)
@@ -986,7 +1017,7 @@ def main():
             matrix = skeleton_matrix(manifest)
         entries = {entry["id"]: entry for entry in matrix["vectors"]}
         matrix_results, matrix_failed = run_lane(
-            vectors, entries, matrix_lanes, supplied.get(matrix_base["sha256"]),
+            vectors, entries, matrix_lanes, all_bases,
             args.offline, args.verbose, "matrix")
         results.extend(matrix_results)
         failed.extend(matrix_failed)

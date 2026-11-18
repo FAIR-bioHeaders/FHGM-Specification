@@ -56,10 +56,11 @@ checker enforces through the JSON Schema files.
 
 - **K1 — transport.** A file the checker accepts keeps a released FHGFF3
   identity — the `v0.5.0` citation with `schemaVersion` `"1.1"` or the `v0.6.0`
-  citation with `schemaVersion` `"1.2"` (maintainer dual-base decision of
-  2026-11-15; FORMAT.md R15 admits extension fields from `"1.1"`, so both
-  qualify and a citation and stated version that contradict each other are
-  rejected) — and carries one or more records under the single top-level
+  citation with `schemaVersion` `"1.2"` or `"1.1"` (maintainer dual-base
+  decision of 2026-11-15; FORMAT.md R15 admits extension fields from `"1.1"`,
+  the v0.6.0 release accepts `"1.1"` records, and a citation and stated version
+  that contradict each other are rejected; either citation may use the w3id
+  URL or the raw tag URL under either repository name) — and carries one or more records under the single top-level
   `x-fhgm-models` key. A file stating FHGFF3 `1.0` cannot carry the extension
   at all: the base schema rejects it on either release, from byte-identical
   clause text.
@@ -85,11 +86,15 @@ checker enforces through the JSON Schema files.
 
 Base selection is part of the checker: `base-schemas.json` registers the released
 FHGFF3 bytes the checker accepts (v0.5.0 and v0.6.0, each resolved from its tag to
-its commit), the carrier's declared `schemaVersion` chooses which registered bytes
-validate it, a superseded declaration such as `1.0` is judged by the oldest
-supplied base that states it, and a declaration no supplied base states is refused
-with a selection error. The selected release is printed for every loaded file, so
-no verdict is silent about the bytes that produced it. This is selection, not
+its commit) together with the `schema` URLs that cite each release (w3id with and
+without the trailing slash, and the raw tag URL under both repository names). The
+carrier's cited `schema` URL chooses which registered bytes validate it;
+`schemaVersion` plays no part in the choice and is judged by the cited release's
+own enum. A citation no registered release answers to (a superseded release such
+as v0.4.0, or raw main), a missing citation, and a citation whose release bytes
+were not supplied with `--base-schema` are refused with a selection error, never
+evaluated against other bytes. The selected release is printed for every loaded
+file, so no verdict is silent about the bytes that produced it. This is selection, not
 substitution: the sealed conformance vectors keep their 1.1 bytes and their
 evidence trail, and the matrix lane re-observes 1.2 twins separately.
 
@@ -107,8 +112,8 @@ grants nothing and changes no released contract.
 
 - An FHGM-carrying file **must** be a valid FHGFF3 file of an admitted identity
   — the released `v0.5.0` citation with `schemaVersion` `"1.1"` or the released
-  `v0.6.0` citation with `schemaVersion` `"1.2"`, per the maintainer dual-base
-  decision of 2026-11-15 — and **must** keep that released FHGFF3 `schema` URI
+  `v0.6.0` citation with `schemaVersion` `"1.2"` or `"1.1"`, per the
+  maintainer dual-base decision of 2026-11-15 — and **must** keep that released FHGFF3 `schema` URI
   and `schemaVersion` together, unaltered. FHGM adds no
   file-type identity at v0.1; selection happens by explicitly running the
   model-level checker, per the recorded decision. Review disposition Q4 keeps
@@ -189,8 +194,8 @@ verdict states only that the pointer identifies its predecessor record.
 Use Python with `fair-bioheaders` (the checker reuses its GFF3 header reader
 and checksum implementation) and `jsonschema`. From the FHGM repository root,
 with the released base schemas registered in `base-schemas.json` — the sealed
-fixtures declare FHGFF3 1.1 and need the v0.5.0 bytes; passing both releases
-lets the checker select per carrier:
+fixtures cite the v0.5.0 release and need its bytes; passing both releases lets
+the checker select per loaded file, by the release that file cites:
 
 ```sh
 git -C /path/to/FAIR-bioHeaders-Specification show v0.5.0:fhgff3.json > /tmp/fhgff3-v0.5.0.json

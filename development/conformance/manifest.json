@@ -11,10 +11,10 @@
   "baseMatrix": "base_matrix.json",
   "ruleVocabulary": "K1-K6 are the FHGM model-level rules and B1 the boundary above them; they are drafted in this repository and are not registered in the shared conformance manifest, whose R1-R15, M, J, P, G and V namespaces keep their meanings. Vectors may also cite shared rules (sharedRules) where the shared text is the authority. The shared suite enumerates released types only, so this manifest is the seed the #204 publication PR either absorbs into conformance/manifest.json under ids it chooses, or mirrors with a cross-repository digest check - see README.md.",
   "contextVocabulary": "Pointer resolution is context-dependent: `context.predecessors` names the prior snapshots handed to the checker, in addition to the vector's own bytes. Two entries may therefore share one file and differ only in the history supplied - that pair is how deviation D3's bound is pinned.",
-  "layers": "Each vector records what four independent checks report: base (the released fhgff3.json schema alone, over the parsed header), checksum (verify when the file-bound SHA-512/256 covers the bytes, stale when the header states a digest the bytes no longer produce), gff3 (gff3-validate --no-header over the feature layer, a separate tool: every vector here is recorded as accept, so no rejection in this suite can be attributed to GFF3 syntax) and model (the draft checker's outcome). These observations bind to the v0.5.0 base bytes; the checker prints, for every run, the registered base release it selected from the carrier's declared schemaVersion, so no verdict is silent about which bytes produced it. The checksum field always holds the value the file states, stale or not, so a tampered vector pins which digest it kept. An invalid vector records the reason substring the checker must print. A reader without gff3-validate reports that layer as skipped; no FHGM rule depends on it.",
+  "layers": "Each vector records what four independent checks report: base (the released fhgff3.json schema alone, over the parsed header), checksum (verify when the file-bound SHA-512/256 covers the bytes, stale when the header states a digest the bytes no longer produce), gff3 (gff3-validate --no-header over the feature layer, a separate tool: every vector here is recorded as accept, so no rejection in this suite can be attributed to GFF3 syntax) and model (the draft checker's outcome). These observations bind to the v0.5.0 base bytes; the checker is handed both registered base releases and prints, for every loaded file, the release it selected from that file's cited schema URL, so no verdict is silent about which bytes produced it. The checksum field always holds the value the file states, stale or not, so a tampered vector pins which digest it kept. An invalid vector records the reason substring the checker must print. A reader without gff3-validate reports that layer as skipped; no FHGM rule depends on it.",
   "rules": {
     "K1": {
-      "summary": "Transport: an FHGM-carrying file keeps a released FHGFF3 identity - the v0.5.0 citation with schemaVersion 1.1 or the v0.6.0 citation with schemaVersion 1.2 (maintainer dual-base decision 2026-11-15; the sealed vectors in this manifest carry 1.1 bytes, base_matrix.json re-observes them under 1.2) - and carries one or more records under the single top-level x-fhgm-models key (docs/FORMAT.md R15). A file stating FHGFF3 1.0 cannot carry the extension at all.",
+      "summary": "Transport: an FHGM-carrying file keeps a released FHGFF3 identity - the v0.5.0 citation with schemaVersion 1.1, or the v0.6.0 citation with schemaVersion 1.2 or 1.1 (maintainer dual-base decision 2026-11-15; each citation may use the w3id URL or the raw tag URL under either repository name) - and carries one or more records under the single top-level x-fhgm-models key (docs/FORMAT.md R15). The checker validates the file against the registered base release its schema URL cites and refuses a citation no registered release answers to (raw main, superseded releases) or whose bytes were not supplied. A file stating FHGFF3 1.0 cannot carry the extension at all.",
       "source": "../model/README.md#model-level-constraints-the-base-schema-cannot-enforce"
     },
     "K2": {
@@ -226,6 +226,28 @@
         "predecessors": [
           "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3"
         ]
+      }
+    },
+    {
+      "id": "fhr-specification-alias-v0.6.0",
+      "file": "vectors/valid/fhr-specification-alias-v0.6.0.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1"
+      ],
+      "description": "The v0.6.0 raw tag URL under the FHR-Specification repository name, which the shared release recognises as the same release. The checker maps it to the v0.6.0 registry entry and the overlay admits it; the matrix twin keeps this citation and states 1.2, so the alias is exercised under both stated versions.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "gb3xLMhNl2iDXkpKp5xzGahByDsSCIYm6XL9uQQMhEg=",
+      "bytes": {
+        "size": 998,
+        "sha256": "34b128c338626cd24f91a392b19211d4b40914281af25c252e793d462652b3b3"
       }
     },
     {
@@ -458,6 +480,28 @@
       }
     },
     {
+      "id": "v0.6.0-citation-stating-1.1",
+      "file": "vectors/valid/v0.6.0-citation-stating-1.1.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1"
+      ],
+      "description": "Base selection by citation: the v0.6.0 w3id URL with schemaVersion 1.1. The checker selects the v0.6.0 bytes the URL cites (not the release schemaVersion 1.1 first appeared in), those bytes accept a 1.1 record per the shared SCHEMA-VERSIONS.md, and the overlay's v0.6.0 branch admits 1.1. The base layer of the sealed lane (v0.5.0 bytes) accepts it too.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "checksum": "0aOAngctNOM1v0O9ZjUaFQ8GVBbBjInNTN6dEbdv8Eo=",
+      "bytes": {
+        "size": 958,
+        "sha256": "34c668b5f6661ad2cbb177d44001960141c5362b56ee8775f9ef70026c82264a"
+      }
+    },
+    {
       "id": "ambiguous-model-id-in-snapshot",
       "file": "../examples/model/ambiguous-model-id.fhgff3.gff3",
       "generator": "make_fixtures",
@@ -476,6 +520,27 @@
       "bytes": {
         "size": 1100,
         "sha256": "da09d10bc4da0c6ba9c94b2180372ec1b9b3469996c4dd44e676481048e180e4"
+      }
+    },
+    {
+      "id": "carrier-cites-raw-main",
+      "file": "vectors/invalid/carrier-cites-raw-main.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K1",
+      "reason": "which no registered FHGFF3 base release answers to",
+      "description": "Base selection by citation, refusal half: the carrier cites raw main, a moving contract link rather than a release. No registered base answers to it, so the checker refuses instead of evaluating the carrier against bytes it never cited. The released base schema's URL pattern accepts raw main, so the rejection is gap-proof.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "FDyi18SE48FE1z2ejZgPN+qsKZ/Q9jZSwxxxfbc2v70=",
+      "bytes": {
+        "size": 1008,
+        "sha256": "57e50f31cc89c968144101000e99b1694babfc2033b229e84ac4a926ff8749d2"
       }
     },
     {
@@ -1102,8 +1167,8 @@
       "format": "fhgff3",
       "expected": "invalid",
       "rule": "B1",
-      "reason": "'x-fhgm-models' should not be valid under",
-      "description": "The FORMAT.md R15 floor, and the one vector the released base schema itself rejects: a file stating FHGFF3 1.0 may not carry an extension key, so it never reaches a model verdict and is deliberately not gap-proof.",
+      "reason": "which no registered FHGFF3 base release answers to",
+      "description": "A file citing the v0.4.0 schema and stating FHGFF3 1.0 with an extension key. The released base schema rejects it (the FORMAT.md R15 floor), and the checker refuses it at base selection: no registered base release answers to a v0.4.0 citation, and the checker never judges a carrier by bytes it did not cite. Deliberately not gap-proof; transport-1-0-under-v0.5.0-citation keeps the floor observed at the model layer.",
       "sharedRules": [
         "R15"
       ],
@@ -1117,6 +1182,30 @@
       "bytes": {
         "size": 958,
         "sha256": "787afca3c013253f68a8bbfea1d5947749cd3a5281abe4eac730b8dfb5c930a3"
+      }
+    },
+    {
+      "id": "transport-1-0-under-v0.5.0-citation",
+      "file": "vectors/invalid/transport-1-0-under-v0.5.0-citation.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "B1",
+      "reason": "'x-fhgm-models' should not be valid under",
+      "description": "The FORMAT.md R15 floor under a registered citation: the v0.5.0 URL stating schemaVersion 1.0. The checker selects the v0.5.0 bytes the URL cites and those bytes reject the extension key, so this vector keeps the floor observed at the model layer now that transport-1-0-extension (a v0.4.0 citation) is refused at selection. Deliberately not gap-proof.",
+      "sharedRules": [
+        "R15"
+      ],
+      "layers": {
+        "base": "reject",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "checksum": "tOfX/QxGzffwFaDIFSy7AHdsSosUiCIzn9BPczwc8jU=",
+      "bytes": {
+        "size": 958,
+        "sha256": "cd73204b809f1a5d91f41e0e5175be8c50a04599e266c0332bf94e7808727d4b"
       }
     }
   ],

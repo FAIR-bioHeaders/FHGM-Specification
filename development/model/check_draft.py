@@ -9,16 +9,19 @@ rejects them. Requires fair-bioheaders and jsonschema. The model-conformance
 workflow runs this matrix, and the manifest-driven runner in
 ``development/conformance/``, on every pull request and push to ``main``.
 
-Since the dual-base decision of 2026-11-15 the matrix runs once per supplied
-released FHGFF3 base (v0.5.0 and v0.6.0 bytes): every fixture keeps its verdict
-under each base alone. With both bases supplied the checker's selection itself
-is additionally exercised - each carrier must be routed to its declared release,
-a superseded declaration judged by the oldest candidate that states it, and a
-declaration no supplied base states refused with a selection error rather than
-an enum accident.
+Since the dual-base decision of 2026-11-15 the checker selects, per loaded
+file, the registered release that file's ``schema`` URL cites. The matrix runs
+once with every supplied base handed to the checker; the fixtures cite v0.5.0,
+so those bytes are required. With both bases supplied the selection itself is
+additionally exercised - each carrier must be routed to the release it cites,
+a citation no registered release answers to and a citation whose bytes were
+not supplied must both be refused, and schemaVersion must be judged by the
+cited release's own bytes rather than steer the selection.
 """
 
 import copy
+import hashlib
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -34,6 +37,16 @@ MODEL_FIXTURES = ROOT / "examples" / "model"
 CONFORMANCE_VECTORS = ROOT / "conformance" / "vectors"
 S6K = ROOT / "examples" / "s6k"
 FHGFF3_12_SCHEMA = "https://w3id.org/fair-bioheaders/fhgff3/v0.6.0"
+REGISTRY = ROOT / "model" / "base-schemas.json"
+
+
+def registered_ref(path):
+    """The registry ref (v0.5.0 or v0.6.0) of one supplied base file, or None."""
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    for record in json.loads(REGISTRY.read_bytes())["bases"]:
+        if record["sha256"] == digest:
+            return record["ref"]
+    return None
 
 
 def expect(base, file, error=None, predecessor=None, *extra_bases):
@@ -82,15 +95,16 @@ def twin_12(source, output, name):
     return candidate
 
 
-def contract_examples(base, output):
+def contract_examples(bases, sealed, output):
     minimal = FIXTURES / "minimal.fhgff3.gff3"
     rich = FIXTURES / "rich.fhgff3.gff3"
+    base = bases
     expect(base, minimal)
     expect(base, rich, predecessor=minimal)
     expect(base, rich, "predecessor snapshot is the current file or was not supplied")
 
     pilot = ROOT / "examples" / "revision" / "check_revision.py"
-    subprocess.run([sys.executable, str(pilot), str(base), str(output)], check=True)
+    subprocess.run([sys.executable, str(pilot), str(sealed), str(output)], check=True)
     original = output / "original.gff3"
     expect(base, original)
     expect(base, output / "revised.gff3", predecessor=original)
@@ -149,72 +163,90 @@ def contract_examples(base, output):
 
 
 def selection_checks(bases, output):
-    """Base selection is exercised only when more than one release is supplied."""
-    if len(bases) < 2:
-        print("Single base supplied: selection cross-checks skipped "
+    """Base selection by citation is exercised only when both releases are supplied."""
+    refs = {registered_ref(path): path for path in bases}
+    if not {"v0.5.0", "v0.6.0"} <= set(refs):
+        print("Both registered bases were not supplied: selection cross-checks skipped "
               "(supply v0.5.0 and v0.6.0 bytes to run them).")
         return
+    first, second = refs["v0.5.0"], refs["v0.6.0"]
     minimal = FIXTURES / "minimal.fhgff3.gff3"
     rich = FIXTURES / "rich.fhgff3.gff3"
-    first, second = bases[0], bases[1]
-    # A 1.1 carrier routes to the v0.5.0 bytes even when the 1.2 bytes are also
-    # supplied, and a mixed chain (1.1 carrier naming a 1.1 predecessor with
-    # both candidates available) resolves.
+
+    def run(*arguments):
+        return subprocess.run([sys.executable, str(VALIDATOR), *map(str, arguments)],
+                              capture_output=True, text=True)
+
+    def refused(result, text):
+        assert result.returncode == 1 and text in result.stderr, (result.stdout, result.stderr)
+
+    routed_11 = ("cites schema 'https://w3id.org/fair-bioheaders/fhgff3/v0.5.0' "
+                 "(schemaVersion '1.1') -> FAIR-bioHeaders/FAIR-bioHeaders-Specification@v0.5.0")
+    # A v0.5.0 carrier routes to the v0.5.0 bytes even when the v0.6.0 bytes
+    # are also supplied, and its chain resolves.
     routing = expect(first, rich, None, minimal, second)
-    assert "schemaVersion '1.1' -> FAIR-bioHeaders/FAIR-bioHeaders-Specification@v0.5.0" \
-        in routing.stdout, routing.stdout
-    twin = twin_12(minimal, output, "twin-minimal.fhgff3.gff3")
-    # A 1.2 carrier with a 1.1 predecessor under both candidates: each file is
-    # judged by its own declared release.
+    assert routed_11 in routing.stdout, routing.stdout
+    # A v0.6.0 carrier with a v0.5.0 predecessor: each file is judged by the
+    # release it cites.
     twin_rich = twin_12(rich, output, "twin-rich.fhgff3.gff3")
-    result = subprocess.run(
-        [sys.executable, str(VALIDATOR), "--base-schema", str(first),
-         "--base-schema", str(second), "--predecessor", str(minimal),
-         str(twin_rich)],
-        capture_output=True, text=True)
+    result = run("--base-schema", first, "--base-schema", second,
+                 "--predecessor", minimal, twin_rich)
     assert result.returncode == 0, (result.stdout, result.stderr)
-    assert "schemaVersion '1.2' -> FAIR-bioHeaders/FAIR-bioHeaders-Specification@v0.6.0" \
-        in result.stdout, result.stdout
-    assert "schemaVersion '1.1' -> FAIR-bioHeaders/FAIR-bioHeaders-Specification@v0.5.0" \
-        in result.stdout, result.stdout
-    # A superseded 1.0 carrier with both candidates is judged by the oldest
-    # base that states 1.0 in its enum - the sealed v0.5.0 routing.
-    carrier_10 = CONFORMANCE_VECTORS / "invalid" / "transport-1-0-extension.fhgff3.gff3"
-    result = subprocess.run(
-        [sys.executable, str(VALIDATOR), "--base-schema", str(first),
-         "--base-schema", str(second), str(carrier_10)],
-        capture_output=True, text=True)
-    assert result.returncode == 1, result
-    assert "oldest supplied candidate" in result.stdout, result.stdout
-    assert "'x-fhgm-models' should not be valid under" in result.stderr, result.stderr
-    # A carrier declaring a version NO supplied base states at all is refused
-    # with a selection error, not an enum accident. Construct one: the 1.2 twin
-    # with its schemaVersion moved to 9.9.
-    metadata = parse_header(twin.read_bytes().splitlines(keepends=True))
+    assert ("(schemaVersion '1.2') -> FAIR-bioHeaders/FAIR-bioHeaders-Specification@v0.6.0"
+            in result.stdout), result.stdout
+    assert routed_11 in result.stdout, result.stdout
+    # No substitution: the same chain with only the v0.6.0 bytes refuses the
+    # v0.5.0 predecessor rather than judging it by the newer release, and a
+    # v0.6.0 carrier with only the v0.5.0 bytes is refused likewise.
+    refused(run("--base-schema", second, "--predecessor", minimal, twin_rich),
+            "The carrier cites the FHGFF3 v0.5.0 release, whose bytes were not supplied")
+    refused(run("--base-schema", first, twin_rich),
+            "The carrier cites the FHGFF3 v0.6.0 release, whose bytes were not supplied")
+    # schemaVersion does not steer selection: the cited release's own enum
+    # judges it. A v0.5.0 citation stating 1.2 is rejected by the v0.5.0 bytes,
+    # and a v0.6.0 citation stating a version no release states is rejected by
+    # the v0.6.0 bytes.
+    for schema, version, error in (
+        ("https://w3id.org/fair-bioheaders/fhgff3/v0.5.0", "1.2", "'1.2' is not one of"),
+        (FHGFF3_12_SCHEMA, "9.9", "'9.9' is not one of"),
+    ):
+        candidate = rerender(minimal, output, "identity.fhgff3.gff3",
+                             schema=schema, schemaVersion=version)
+        refused(run("--base-schema", first, "--base-schema", second, candidate), error)
+    # A citation no registered release answers to - a superseded release or
+    # raw main - and a missing citation are refused at selection.
+    refused(run("--base-schema", first, "--base-schema", second,
+                CONFORMANCE_VECTORS / "invalid" / "transport-1-0-extension.fhgff3.gff3"),
+            "which no registered FHGFF3 base release answers to")
+    candidate = rerender(minimal, output, "raw-main.fhgff3.gff3", schema=(
+        "https://raw.githubusercontent.com/FAIR-bioHeaders/"
+        "FAIR-bioHeaders-Specification/main/fhgff3.json"))
+    refused(run("--base-schema", first, "--base-schema", second, candidate),
+            "which no registered FHGFF3 base release answers to")
+    candidate = rerender(minimal, output, "no-schema.fhgff3.gff3", schema=None)
+    refused(run("--base-schema", first, "--base-schema", second, candidate),
+            "The carrier states no schema URL")
+    print("Base selection checks passed: routing by cited URL, no substitution when the "
+          "cited bytes are missing, schemaVersion judged by the cited release, and "
+          "refusal of unregistered or absent citations.")
+
+
+def rerender(source, output, name, **changes):
+    """Re-render a fixture with header fields changed (None deletes one)."""
+    metadata = parse_header(source.read_bytes().splitlines(keepends=True))
     del metadata["checksum"]
-    metadata["schemaVersion"] = "9.9"
-    future = output / "future-version.fhgff3.gff3"
-    future_payload = b"".join(
-        line for line in twin.read_bytes().splitlines(keepends=True)
+    for key, value in changes.items():
+        if value is None:
+            metadata.pop(key, None)
+        else:
+            metadata[key] = value
+    payload = b"".join(
+        line for line in source.read_bytes().splitlines(keepends=True)
         if not line.startswith(b"#")
     )
-    future.write_bytes(render(metadata, future_payload))
-    result = subprocess.run(
-        [sys.executable, str(VALIDATOR), "--base-schema", str(first),
-         "--base-schema", str(second), str(future)],
-        capture_output=True, text=True)
-    assert result.returncode == 1 and \
-        "No supplied FHGFF3 base release states schemaVersion '9.9'" in result.stderr, \
-        (result.stdout, result.stderr)
-    # The same 9.9 carrier against a single-base harness refuses identically.
-    result = subprocess.run(
-        [sys.executable, str(VALIDATOR), "--base-schema", str(second), str(future)],
-        capture_output=True, text=True)
-    assert result.returncode == 1 and \
-        "No supplied FHGFF3 base release states schemaVersion '9.9'" in result.stderr, \
-        (result.stdout, result.stderr)
-    print("Base selection checks passed: exact routing, oldest-stating fallback for "
-          "superseded 1.0, and refusal of a version no supplied base states.")
+    candidate = output / name
+    candidate.write_bytes(render(metadata, payload))
+    return candidate
 
 
 def s6k_fixture(base):
@@ -228,7 +260,7 @@ def s6k_fixture(base):
     expect(base, derived)
 
 
-def model_fixtures(base, output):
+def model_fixtures(bases, sealed, output):
     generated = output / "regenerated"
     generated.mkdir(exist_ok=True)
     subprocess.run(
@@ -239,6 +271,7 @@ def model_fixtures(base, output):
         assert (generated / fixture.name).read_bytes() == fixture.read_bytes(), \
             f"{fixture.name} is not byte-reproducible"
 
+    base = bases
     v1 = MODEL_FIXTURES / "snapshot-v1.fhgff3.gff3"
     v2 = MODEL_FIXTURES / "snapshot-v2.fhgff3.gff3"
     predecessor_name_mismatch = MODEL_FIXTURES / "predecessor-name-mismatch.fhgff3.gff3"
@@ -270,24 +303,31 @@ def model_fixtures(base, output):
             continue
         data = fixture.read_bytes()
         if validator is None:
-            import json
-
             from jsonschema import Draft202012Validator
 
             validator = Draft202012Validator(
-                json.loads(base.read_bytes()),
+                json.loads(sealed.read_bytes()),
                 format_checker=Draft202012Validator.FORMAT_CHECKER,
             )
         validate_file(data, validator)
     print("Base schema and checksum accept every rejection fixture.")
 
 
-def run(base, output):
-    contract_examples(base, output)
-    s6k_fixture(base)
-    model_fixtures(base, output)
-    print(f"Draft FHGM contract v0.1 acceptance and rejection cases passed "
-          f"against base {base.name}.")
+def run(bases, output):
+    """Every fixture, with every supplied base handed to the checker.
+
+    The fixtures cite v0.5.0, so those bytes are required; the checker selects
+    them by citation, and the gap demonstration uses them directly.
+    """
+    sealed = next((path for path in bases if registered_ref(path) == "v0.5.0"), None)
+    if sealed is None:
+        raise SystemExit("check_draft.py needs the registered v0.5.0 base bytes: every "
+                         "fixture cites that release")
+    contract_examples(bases, sealed, output)
+    s6k_fixture(bases)
+    model_fixtures(bases, sealed, output)
+    print("Draft FHGM contract v0.1 acceptance and rejection cases passed with bases "
+          + ", ".join(path.name for path in bases) + ".")
 
 
 if __name__ == "__main__":
@@ -297,6 +337,5 @@ if __name__ == "__main__":
                          "(released fhgff3.json bytes registered in base-schemas.json)")
     with TemporaryDirectory() as directory:
         output = Path(directory)
-        for base in bases:
-            run(base, output)
+        run(bases, output)
         selection_checks(bases, output)

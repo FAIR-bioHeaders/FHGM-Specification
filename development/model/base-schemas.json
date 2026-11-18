@@ -1,11 +1,20 @@
 {
   "registryVersion": 1,
-  "description": "The released FHGFF3 base-schema releases that development/model/validate_fhgm.py accepts as --base-schema candidates. One entry per release, keyed by the SHA-256 of the exact release bytes; every entry resolves a TAG to a commit - a floating branch is never recorded for released material. This file is the checker's single authority for base selection: the carrier's declared schemaVersion chooses which registered bytes validate it, and no other bytes are accepted. It states no FHGM contract identity of its own: FHGM remains a draft with no schemaVersion, no schema URL, no registry row and no release form (selection rule V7).",
-  "selectionRule": "A carrier declares which FHGFF3 base it was written against through its released file identity (schema URI plus schemaVersion). The checker resolves the declared schemaVersion against this registry: the base release whose schemaVersion equals the declared one is selected; when the declared version has no base of its own among the supplied candidates (a superseded version such as 1.0), the oldest supplied candidate whose enum states the declared version is selected, so the R15 extension floor is enforced by release bytes that carry it; when no supplied candidate states the declared version at all, the run is refused rather than evaluated against bytes the carrier never cited. The selected base is printed for every loaded file, so no verdict is ever silent about which release produced it.",
+  "description": "The released FHGFF3 base-schema releases that development/model/validate_fhgm.py accepts as --base-schema candidates. One entry per release, keyed by the SHA-256 of the exact release bytes; every entry resolves a TAG to a commit - a floating branch is never recorded for released material. This file is the checker's single authority for base selection: the carrier's cited schema URL chooses which registered bytes validate it, and no other bytes are accepted. It states no FHGM contract identity of its own: FHGM remains a draft with no schemaVersion, no schema URL, no registry row and no release form (selection rule V7).",
+  "selectionRule": "A carrier names the FHGFF3 base it was written against through its `schema` URL. The checker maps that URL to exactly one entry below through the entry's schemaUrls list - the release's w3id URL with and without the trailing slash, and its raw tag URL under both repository names (FAIR-bioHeaders-Specification and the FHR-Specification alias) - and validates the carrier against those registered bytes. schemaVersion plays no part in the selection; the selected release's own enum then judges it, so a v0.6.0 citation stating 1.1 is accepted where the release accepts it and a v0.5.0 citation stating 1.2 is rejected by the bytes it cites. The run is refused, never evaluated against other bytes, when the URL is absent or not a string, when it names no registered release (a superseded release such as v0.4.0, or raw main, which is a moving contract rather than a release), or when the cited release's bytes were not supplied with --base-schema. The selected base is printed for every loaded file, so no verdict is ever silent about which release produced it.",
   "bases": [
     {
       "schemaVersion": "1.1",
-      "acceptsSchemaVersions": ["1.0", "1.1"],
+      "acceptsSchemaVersions": [
+        "1.0",
+        "1.1"
+      ],
+      "schemaUrls": [
+        "https://w3id.org/fair-bioheaders/fhgff3/v0.5.0",
+        "https://w3id.org/fair-bioheaders/fhgff3/v0.5.0/",
+        "https://raw.githubusercontent.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/v0.5.0/fhgff3.json",
+        "https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/v0.5.0/fhgff3.json"
+      ],
       "repository": "FAIR-bioHeaders/FAIR-bioHeaders-Specification",
       "url": "https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification",
       "ref": "v0.5.0",
@@ -24,7 +33,17 @@
     },
     {
       "schemaVersion": "1.2",
-      "acceptsSchemaVersions": ["1.0", "1.1", "1.2"],
+      "acceptsSchemaVersions": [
+        "1.0",
+        "1.1",
+        "1.2"
+      ],
+      "schemaUrls": [
+        "https://w3id.org/fair-bioheaders/fhgff3/v0.6.0",
+        "https://w3id.org/fair-bioheaders/fhgff3/v0.6.0/",
+        "https://raw.githubusercontent.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/v0.6.0/fhgff3.json",
+        "https://raw.githubusercontent.com/FAIR-bioHeaders/FHR-Specification/v0.6.0/fhgff3.json"
+      ],
       "repository": "FAIR-bioHeaders/FAIR-bioHeaders-Specification",
       "url": "https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification",
       "ref": "v0.6.0",

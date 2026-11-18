@@ -75,7 +75,7 @@ jobs:
             --base-schema .upstream/spec-fhgff3-v0.6.0/fhgff3.json \
             --matrix \
             --gff3-validate "$RUNNER_TEMP/fhgm-model/bin/gff3-validate" --verbose
-      - name: Run the v0.1 draft self-test on the same bytes, once per base
+      - name: Run the v0.1 draft self-test with both bases (selection by cited release)
         run: |
           "$RUNNER_TEMP/fhgm-model/bin/python" development/model/check_draft.py \
             .upstream/spec-fhgff3-v0.5.0/fhgff3.json \
