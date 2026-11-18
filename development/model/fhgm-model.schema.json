@@ -15,7 +15,7 @@
       "$ref": "#/$defs/text"
     },
     "featureId": {
-      "description": "Draft (#204: model identity and scope; reviewed 2026-11-14). Exact decoded local GFF3 feature ID targeted by this record. The v0.1 default resolves one gene row; transcript-only scope stays open (#204 Q6, curator decision). Resolution is a model-level check, not a schema constraint.",
+      "description": "Draft (#204: model identity and scope; reviewed 2026-11-14). Exact decoded local GFF3 feature ID targeted by this record. The v0.1 default resolves one root gene row (no Parent); transcript-only scope stays open (#204 Q6, curator decision). Resolution is a model-level check, not a schema constraint.",
       "$ref": "#/$defs/text"
     },
     "reference": {
@@ -90,8 +90,7 @@
           "description": {"$ref": "#/$defs/text"},
           "uri": {
             "description": "Location of the cited evidence, when one was supplied",
-            "type": "string",
-            "format": "uri"
+            "$ref": "#/$defs/link"
           }
         }
       }
@@ -112,14 +111,13 @@
             "properties": {
               "name": {"$ref": "#/$defs/text"},
               "version": {"$ref": "#/$defs/text"},
-              "uri": {"type": "string", "format": "uri"}
+              "uri": {"$ref": "#/$defs/link"}
             }
           }
         },
         "protocol": {
           "description": "Curation protocol or workflow reference URI, mirroring the FHGFF3 annotationProtocol role",
-          "type": "string",
-          "format": "uri"
+          "$ref": "#/$defs/link"
         },
         "limitations": {
           "description": "Supplied limitations or uncertainty statements",
@@ -150,21 +148,36 @@
     },
     "reuseConditions": {
       "description": "Draft (#204: packaging and integrity). Reuse conditions supplied for this model record; not inferred from the article or file license.",
-      "type": "string",
-      "minLength": 1
+      "$ref": "#/$defs/text"
     }
   },
   "$defs": {
-    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "text": {
+      "description": "A non-empty opaque string with no leading or trailing whitespace (Unicode whitespace included) and no control, zero-width or bidirectional formatting character anywhere (C0, DEL, C1, U+200B-U+200F, U+202A-U+202E, U+2060-U+2064, U+FEFF), so two values that print alike cannot differ invisibly. Identifier uniqueness is additionally compared after Unicode NFC normalisation by the model-level checker.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S",
+      "not": {"pattern": "\\s$|[\\u0000-\\u001f\\u007f-\\u009f\\u200b-\\u200f\\u202a-\\u202e\\u2060-\\u2064\\ufeff]"}
+    },
+    "link": {
+      "description": "A URI whose scheme is one the shared docs/FORMAT.md R14 accepts: http, https or ftp with // and a host, or a urn:, doi: or info: identifier, the scheme compared without regard to letter case. The released header types only warn about other schemes; this draft record contract rejects them (for example javascript:, data:, vbscript: and file:), so a renderer can link every accepted value. format: uri still rejects whitespace and control characters anywhere.",
+      "type": "string",
+      "format": "uri",
+      "pattern": "^(?:(?:[Hh][Tt][Tt][Pp][Ss]?|[Ff][Tt][Pp])://(?:[^/?#@\\t-\\r \\x1c-\\x1f\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]*@)?(?:\\[[^\\]\\t-\\r \\x1c-\\x1f\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+\\]|[^/?#@:\\[\\]\\t-\\r \\x1c-\\x1f\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+)(?::[^/?#@\\t-\\r \\x1c-\\x1f\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]*)?(?:[/?#]|(?![\\s\\S]))|(?:[Uu][Rr][Nn]|[Dd][Oo][Ii]|[Ii][Nn][Ff][Oo]):)"
+    },
     "checksum": {
       "type": "string",
       "pattern": "^[A-Za-z0-9+/]{43}=$",
       "minLength": 44,
       "maxLength": 44
     },
-    "curie": {"type": "string", "pattern": "^[A-Za-z0-9._-]+:.+$"},
+    "curie": {
+      "description": "prefix:local identifier, mirroring the FHGFF3 identifier curie pattern, with the text constraints applied: the local part starts with a non-whitespace character and the value has no trailing whitespace or control character",
+      "allOf": [{"$ref": "#/$defs/text"}],
+      "pattern": "^[A-Za-z0-9._-]+:\\S"
+    },
     "genomeReference": {
-      "description": "Mirrors the FHGFF3 1.1 GenomeReference object: accession and supplied SeqCol digest are required; assemblyName is optional",
+      "description": "Mirrors the FHGFF3 1.1 GenomeReference object: accession and supplied SeqCol digest are required; assemblyName is optional and, when present, non-blank text",
       "type": "object",
       "additionalProperties": false,
       "required": ["accession", "seqcol_id"],
@@ -176,7 +189,7 @@
           "minLength": 32,
           "maxLength": 32
         },
-        "assemblyName": {"type": "string"}
+        "assemblyName": {"$ref": "#/$defs/text"}
       }
     }
   }

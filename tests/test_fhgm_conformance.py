@@ -627,5 +627,101 @@ class Twins(unittest.TestCase):
                 self.assertTrue(problems, "the runner accepted a broken matrix")
 
 
+def load_checker():
+    """Import validate_fhgm.py, or None where the toolkit is not installed.
+
+    FHGM_CHECKER may name another copy of the checker (a mutation-testing
+    harness points it at a neutered copy to confirm these tests notice).
+    """
+    if not (importlib.util.find_spec("bioheaders") and importlib.util.find_spec("jsonschema")):
+        return None
+    import os
+
+    path = Path(os.environ.get("FHGM_CHECKER", MODEL / "validate_fhgm.py"))
+    spec = importlib.util.spec_from_file_location("fhgm_validate_under_test", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@unittest.skipIf(load_checker() is None, "fair-bioheaders and jsonschema are not installed")
+class CheckerGuards(unittest.TestCase):
+    """Guards no byte vector can reach, exercised on the checker's functions."""
+
+    def setUp(self):
+        self.checker = load_checker()
+
+    def test_link_authority_requires_a_host_after_user_info(self):
+        from jsonschema import Draft202012Validator
+        document = json.loads((MODEL / "fhgm-model.schema.json").read_text())
+        validator = Draft202012Validator(document["$defs"]["link"],
+                                        format_checker=self.checker.FORMAT_CHECKER)
+        for value in ("https://user@/", "https://@/", "ftp://user@/",
+                      "https://user@:443/", "https://:443/"):
+            with self.subTest(value=value):
+                self.assertFalse(validator.is_valid(value))
+        for value in ("https://example.org/", "https://user@example.org/",
+                      "https://user:password@example.org:443/",
+                      "https://[2001:db8::1]/", "ftp://user@example.org/",
+                      "urn:example:record", "doi:10.5555/example", "info:example"):
+            with self.subTest(value=value):
+                self.assertTrue(validator.is_valid(value))
+
+    def test_link_pattern_alone_is_dialect_portable(self):
+        # The pattern must give the same answer without format checking and in
+        # ECMA-262: no "$" (Python also matches it before a final line feed) and
+        # no "\s" (whose members differ between Python and ECMA-262).
+        import re
+        document = json.loads((MODEL / "fhgm-model.schema.json").read_text())
+        pattern = document["$defs"]["link"]["pattern"]
+        self.assertNotIn("$", pattern)
+        self.assertNotIn("\\s]", pattern.replace("[\\s\\S]", ""))
+        for value in ("https://user@/", "https://@/", "ftp://user@/",
+                      "https://example.org\n", "https://﻿/", "https://\x85/",
+                      "https://\x1c/", "https://a@b@c/", "https://[]/"):
+            with self.subTest(value=value):
+                self.assertIsNone(re.search(pattern, value))
+        for value in ("https://example.org", "https://user@example.org/",
+                      "https://[2001:db8::1]:8443/tool", "HTTP://Example.org?q"):
+            with self.subTest(value=value):
+                self.assertIsNotNone(re.search(pattern, value))
+
+    def test_a_pointer_naming_the_current_file_is_unresolvable(self):
+        # A pointer can never honestly name the checksum of the file carrying
+        # it (the pointer text is inside the bytes that checksum covers), so no
+        # vector can exercise this guard. Feed resolve_predecessor a header whose
+        # checksum equals the pointer, with that snapshot also supplied as
+        # history and every other condition for "resolvable" met.
+        reference = {"genomeReference": {"accession": "SYNTHETIC_ASSEMBLY.1",
+                                         "seqcol_id": "A" * 32}}
+        current = "C" * 43 + "="
+        prior = {"modelId": "model-a", "modelVersion": "1", "featureId": "toy-a",
+                 "reference": reference}
+        model = dict(prior, modelVersion="2", predecessor={
+            "annotationChecksum": current, "modelId": "model-a", "modelVersion": "1"})
+        header = {"checksum": current, "genomeReference": reference["genomeReference"]}
+        verdict, detail = self.checker.resolve_predecessor(
+            "model-a", model, header, {current: (header, {"model-a": prior})})
+        self.assertEqual(self.checker.UNRESOLVABLE, verdict)
+        self.assertIn("is the current file", detail)
+        # Control: the same pointer into a different supplied snapshot resolves.
+        other = "D" * 43 + "="
+        moved = dict(model, predecessor=dict(model["predecessor"], annotationChecksum=other))
+        verdict, _ = self.checker.resolve_predecessor(
+            "model-a", moved, header,
+            {other: (dict(header, checksum=other), {"model-a": prior})})
+        self.assertEqual(self.checker.RESOLVABLE, verdict)
+
+    def test_attribute_keys_match_exactly(self):
+        # GFF3 attribute tags are case-sensitive and whitespace is not trimmed:
+        # "Name=x; ID=toy-a" carries the tag " ID", not "ID", so that row has no
+        # ID, and only the percent-decoded value is indexed.
+        rows = (b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tName=x; ID=toy-a\n"
+                b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tid=toy-b\n"
+                b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tID=toy%2Dc\n")
+        targets = self.checker.gene_targets(rows)
+        self.assertEqual({b"toy-c"}, set(targets))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -34,8 +34,8 @@ they are draft rationales, not adopted semantics.
 | `reference` | Required; `genomeReference` (accession + supplied SeqCol digest) and/or `annotates` (FHR parent checksum) | Reference coordinates | Mirrors the FHGFF3 genome-link alternative so the record survives extraction from its file; requiredness is adopted as deviation D1. Checker rule 3 is stronger than "does not contradict": the record reference must **share at least one comparable form** with the file genome link **and** never contradict it. Never inferred; values are producer-supplied assertions. |
 | `predecessor` | Optional; then `annotationChecksum` + `modelId` + `modelVersion` all required | New and revised models | The revision pointer proven necessary in the pilots: prior annotation snapshot checksum, model ID and version. Absent means no revision claim. Its `modelId` **must equal the record's own** `modelId` (deviation D2, adopted), which is what makes a rename impossible inside v0.x. Single-predecessor, same-assembly revision only; split, merge and assembly migration stay open. |
 | `contributors` | Optional nonempty list of `{name, role, nameType?, uri?}` | Credit and publication | Supplied model contributors and roles; author objects mirror the shared FHGFF3 `Author`. File metadata authors stay in `metadataAuthor`; article authorship, journal review and curator acceptance stay outside the record. |
-| `evidence` | Optional nonempty list of `{description, uri?}` | Evidence and methods | Supplied evidence assertions. An assertion is not a validation result; feature and biology checks belong to gff3-validator and reference matching to its own inputs. |
-| `methods` | Optional object: `software[] {name, version?, uri?}`, `protocol` URI, `limitations[]` | Evidence and methods | Tools with versions, a curation protocol reference and supplied limitations or uncertainty. Software objects mirror the FHGFF3 `Software` role. |
+| `evidence` | Optional nonempty list of `{description, uri?}` | Evidence and methods | Supplied evidence assertions; `uri` takes an R14-accepted scheme (K2). An assertion is not a validation result; feature and biology checks belong to gff3-validator and reference matching to its own inputs. |
+| `methods` | Optional object: `software[] {name, version?, uri?}`, `protocol` URI, `limitations[]` | Evidence and methods | URIs take an R14-accepted scheme (K2). Tools with versions, a curation protocol reference and supplied limitations or uncertainty. Software objects mirror the FHGFF3 `Software` role. |
 | `publication` | Optional object: `article` DOI, `deposit` curie list | Credit and publication | Article and deposited model data keep separate, independently resolvable identities; assembly identity stays in `reference`. Patterns mirror the FHGFF3 `scholarlyArticle` and `identifier` fields. |
 | `reuseConditions` | Optional string | Packaging and integrity | Reuse terms supplied for the record; never inferred from the article or file license. |
 
@@ -67,12 +67,39 @@ checker enforces through the JSON Schema files.
 - **K2 — record shape.** Each record validates against
   `fhgm-model.schema.json`, whose required set is `modelId`, `modelVersion`,
   `featureId` and `reference` (deviation D1: `reference` stays required, so an
-  extracted record keeps its own assembly binding).
-- **K3** (rule 1 in the draft) — `modelId` is unique within one snapshot; a
-  collision makes the identity `ambiguous` and rejects the snapshot (deviation
-  D4).
-- **K4** (rule 2) — `featureId` resolves to exactly one local `gene` row
-  (percent-decoded).
+  extracted record keeps its own assembly binding). Opaque text values
+  (identifiers, versions, names, roles, descriptions, `reuseConditions`,
+  `assemblyName`) are non-empty, have no leading or trailing whitespace and no
+  control, zero-width or bidirectional formatting character anywhere; `deposit`
+  identifiers are `prefix:local` with a non-blank local part. The link fields
+  (`evidence[].uri`, `methods.software[].uri`, `methods.protocol`) must be URIs
+  with a scheme the shared FORMAT.md R14 accepts — `http`, `https` or `ftp` with
+  a host, or a `urn:`, `doi:` or `info:` identifier — so `javascript:`, `data:`,
+  `file:` and the like are rejected rather than only warned about as in the
+  released header types.
+- **K3** (rule 1 in the draft) — `modelId` is unique within one snapshot,
+  compared after Unicode NFC normalisation so canonically equivalent spellings
+  collide; a collision makes the identity `ambiguous` and rejects the snapshot
+  (deviation D4). K3 runs after K2 and before every per-record rule, so a
+  duplicate is reported as `ambiguous` even when a colliding record is also
+  wrong in some other way.
+- **K4** (rule 2) — `featureId` resolves to exactly one local **root** gene
+  row: a row of type `gene` or `SO:0000704` with no `Parent` attribute.
+  Matching rules, all pinned by vectors:
+  - only the percent-decoded ID is compared: `ID=toy%2Da` is `toy-a`, and a
+    record naming the raw spelling `toy%2Da` does not resolve;
+  - the checker matches attribute tags exactly as written, case-sensitive and
+    without trimming whitespace: in `Name=x; ID=toy-a` the second tag is `ID`
+    with a leading space, so that row carries no ID and does not resolve, and
+    `id=toy-a` is not `ID` either. Some GFF3 readers trim that space; a
+    producer that wants the target to resolve writes `Name=x;ID=toy-a`;
+  - exactly one row may carry the ID. GFF3 also allows a discontinuous feature
+    written as several rows sharing one ID; v0.1 rejects that, and whether to
+    group such rows is open on
+    [#22](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/22);
+  - other gene-like types (`ncRNA_gene`, `pseudogene`, …) are not accepted
+    yet; which types count, and how much gene-model structure FHGM checks, is
+    open on [#27](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/27).
 - **K5** (rule 3) — a record `reference` shares at least one comparable form with
   the file genome link and never contradicts it. Both halves are enforced: an
   accession-plus-digest file and an FHR-checksum record reject each other even
@@ -83,6 +110,21 @@ checker enforces through the JSON Schema files.
   must name its own `modelId` (deviation D2), and when the supplied set contains
   a recorded successor of the pointed record the pointer must name that successor
   rather than skip it (version-gap misuse).
+
+### Identity cases v0.1 does not rule on
+
+The checker accepts the following, and the draft contract neither permits nor
+forbids them. They are listed so silence is not read as a ruling; the options
+are on [#28](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/28).
+
+- Two records with different `modelId`s targeting the same gene row in one
+  snapshot.
+- A revision whose `featureId` differs from its resolved predecessor's: K6
+  compares model ID, version, assembly link and record reference, not the
+  target.
+- A version that returns to an earlier value (`"1"` → `"2"` → `"1"`): versions
+  are opaque and only the immediate predecessor is compared (disposition Q3),
+  so `(modelId, modelVersion)` need not identify one record across a chain.
 
 Base selection is part of the checker: `base-schemas.json` registers the released
 FHGFF3 bytes the checker accepts (v0.5.0 and v0.6.0, each resolved from its tag to

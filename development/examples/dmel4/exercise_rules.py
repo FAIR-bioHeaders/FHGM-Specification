@@ -224,17 +224,16 @@ NEUTERS = {
     #      (primary mutant that must now pass, its predecessors),
     #      (cross-control mutant that must still be rejected, its predecessors))
     "N-K4": (
-        "K4 gene-row target check disabled",
-        "            if len(target_types) != 1 or target_types[0] not in "
-        '(b"gene", b"SO:0000704"):\n',
-        "            if False:\n",
+        "K4 root gene-row target check disabled (every featureId resolves to one root gene row)",
+        "        rows = targets.get(feature_id.encode(), [])\n",
+        '        rows = [(b"gene", False)]\n',
         ("mutant-k4-target-transcript", ()),
         ("mutant-k5-contradicts", ()),
     ),
     "N-K3": (
         "K3 duplicate-modelId rejection disabled",
-        "    for model_id, records in models.items():\n        if len(records) > 1:\n",
-        "    for model_id, records in models.items():\n        if False:\n",
+        "    for key, records in models.items():\n        if len(records) > 1:\n",
+        "    for key, records in models.items():\n        if False:\n",
         ("mutant-k3-duplicate-modelid", ()),
         ("mutant-k4-target-transcript", ()),
     ),
