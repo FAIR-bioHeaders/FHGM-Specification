@@ -1,5 +1,10 @@
 # FHGM contract review for David and Adam
 
+Current disposition: [Round 14 D4–D6](conformance/DECISIONS-2026-11-19.md)
+supersedes the historical open wording below. Hand-authored JSON Schema is
+settled through v0.x; model-contract publication is separate from FHGFF3 file
+identity. Historical review questions below are retained as a dated record.
+
 Draft decision record for [shared issue #204](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/204).
 The comparison target is [released FHGFF3 1.1](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/blob/v0.5.0/fhgff3.json).
 
@@ -11,8 +16,9 @@ plus reasoned deviations that remain proposals. The
 [review dispositions (2026-11-14)](#review-dispositions-2026-11-14) record the
 joint review's positions on the six open questions and four flagged deviations,
 taken against the shared specification's adoption decision packet. They close
-Q1–Q4 and D1–D4 at the packet's recommended positions, leave Q5 as a named
-publication gate and Q6 to curators. Publication-ready is not published: FHGM
+Q1–Q4 and D1–D4 at the packet's recommended positions. Later maintainer
+direction settles Q5 as hand-authored JSON Schema through v0.x; Q6 scopes are
+explicitly deferred by the Round 14 decision. Publication-ready is not published: FHGM
 still has no released contract, no `schemaVersion`, no schema URL and no
 `schemas/versions.json` entry, and selection rule V7 keeps it that way until the
 shared publication PR lands.
@@ -117,7 +123,7 @@ also corrects how D4 is realized in the checker.
   The identity the pointer needs cannot be selected, so the verdict name is
   part of the interface.
 
-### Open questions for the #204 joint review
+### Historical questions for the #204 joint review
 
 v0.1 deliberately does not close. Dispositions were recorded on 2026-11-14 in
 the [review dispositions](#review-dispositions-2026-11-14): Q1–Q4 adopted, Q5
@@ -161,7 +167,7 @@ publication PR lands. The release vehicle (`v0.7.0` with FHT or its own
 | Q2 — `modelId` authority | Adopted: **file-local by default**. `modelId` is unique within one annotation snapshot and needs no minting authority; a producer-supplied external identifier may occupy the same opaque field, with its authority recorded alongside it. | The packet's recommendation (b)-as-default, plus decision 3's existing allowance. **Partial dissent:** the packet also proposes keeping "an optional external-identifier field pending curator input". No pilot needs a second field — `modelId` is opaque, and `publication.deposit` already carries deposit CURIEs with their authorities — and a new optional field is a schema addition with its own cycle. So no field is added by this review; if the curator round asks for one, it comes as a labeled draft addition. *Who may mint external model IDs remains curator-gated.* |
 | Q3 — `modelVersion` semantics | Adopted: **opaque**, equality/difference only, through v0.x. An immediate revision must differ from its predecessor; `9` may name a revision earlier than `2`. | The packet's recommendation (a), and the pilots support it: the whole gap rule set is bounded to supplied snapshots precisely because no ordering is claimed. Ordering needs curator use cases the pilots did not supply. Pinned by the `version-gap-*` and `version-reuse` vectors. |
 | Q4 — model-contract identity | Adopted: **selection-only until publication**. No in-record contract version marker and no contract URI in the draft. | The packet's recommendation (a); the record keeps carrying no `schema` field, and the transport keeps the released FHGFF3 file identity. Consequence carried forward, not decided here: because FHGM records name no schema, the publication PR must state whether the contract is `schemas/versions.json`-eligible at all (rule V1 selects a *file's* schema) or registry-ineligible by design, with a contract URI minted beside it. |
-| Q5 — schema pipeline | **Not decided.** The draft stays hand-authored JSON Schema; the LinkML-chain question is recorded as a publication gate. | **Ambiguity flagged in the packet, not resolved by us.** Its recommendation reads "decide (b) **at publication, not now**", which can be read as endorsing the family LinkML chain or as deferring the choice; its evidence section establishes only that the shared chain (`schemas/core.yaml`, per-type LinkML, `scripts/check_linkml.py`, `scripts/make_jsonld.py`, drift checks) enumerates the released types today. Both branches and their cost are named below so the publication PR cannot be started without the choice on the record: LinkML means registering a generator lane for a contract that is not a file-header schema; JSON Schema means the published file *is* the artifact and drift checking reduces to a pinned-bytes rule. |
+| Q5 — schema pipeline (historical; superseded) | **Now settled through v0.x: hand-authored JSON Schema.** Historical disposition: The draft stays hand-authored JSON Schema; the LinkML-chain question is recorded as a publication gate. | **Ambiguity flagged in the packet, not resolved by us.** Its recommendation reads "decide (b) **at publication, not now**", which can be read as endorsing the family LinkML chain or as deferring the choice; its evidence section establishes only that the shared chain (`schemas/core.yaml`, per-type LinkML, `scripts/check_linkml.py`, `scripts/make_jsonld.py`, drift checks) enumerates the released types today. Both branches and their cost are named below so the publication PR cannot be started without the choice on the record: LinkML means registering a generator lane for a contract that is not a file-header schema; JSON Schema means the published file *is* the artifact and drift checking reduces to a pinned-bytes rule. |
 | Q6 — scope edges | **Left open, exactly as decision 3/4 and the packet leave it.** No transcript-only scope, no split/merge, no assembly migration, no companion-file identity in v0.x. | The packet makes no recommendation (curator decision, per the 2026-11-11 instruction). The conformance suite lists these as *open scope* with no vectors and no implied verdicts rather than silently testing them as invalid-by-design. |
 | D1 — record `reference` required | **Adopted (keep required)** — a record carries its own assembly binding, mirroring the FHGFF3 genome-link alternative. | The packet's recommendation (a); `record-without-reference` shows the extracted-record loss the requirement closes. |
 | D2 — pointer names its own `modelId` | **Adopted (keep)**. A predecessor pointer that names another `modelId` is `unresolvable`. | The packet's recommendation (a). This is the load-bearing stability assumption from the PR #4 revision pilot; `predecessor-name-mismatch` is the attack the released base schema waves through. Renames stay a Q6 split/merge case, not a v0.x loosening. |

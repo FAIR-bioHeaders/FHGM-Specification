@@ -10,12 +10,14 @@ itself is **not performed here** - no `schemaVersion`, no w3id schema URL and no
 V7 keeps the draft out of every release form until the shared publication PR
 lands. Publication stays with the shared specification.
 
-The draft advances the PR #10 overlay. The record contract is authored directly
-as JSON Schema in `fhgm-model.schema.json`. The family LinkML generation chain
-stays an **undecided publication gate**, not a direction (open question Q5): the
-adoption packet's recommendation reads both as "migrate to LinkML at
-publication" and as "defer the choice", so this draft claims neither branch, and
-the publication PR must make the choice with each branch's cost named.
+The record contract remains hand-authored JSON Schema through v0.x (maintainer
+choice, reaffirmed 2026-11-19). LinkML migration is deferred. The model contract
+is explicitly selected and versioned separately from the released FHGFF3 file
+identity: no in-record schema field or FHGM header-registry row is added.
+Concrete publication artifacts still require the shared publication review.
+
+The [Round 14 decision record](../conformance/DECISIONS-2026-11-19.md) records
+the selected D4–D6 semantics and the evidence interface implemented here.
 
 ## Record fields
 
@@ -93,13 +95,15 @@ checker enforces through the JSON Schema files.
     with a leading space, so that row carries no ID and does not resolve, and
     `id=toy-a` is not `ID` either. Some GFF3 readers trim that space; a
     producer that wants the target to resolve writes `Name=x;ID=toy-a`;
-  - exactly one row may carry the ID. GFF3 also allows a discontinuous feature
-    written as several rows sharing one ID; v0.1 rejects that, and whether to
-    group such rows is open on
-    [#22](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/22);
-  - other gene-like types (`ncRNA_gene`, `pseudogene`, …) are not accepted
-    yet; which types count, and how much gene-model structure FHGM checks, is
-    open on [#27](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/27).
+  - exactly one row may carry the ID. Multiple rows sharing one ID and other
+    gene-like types (`ncRNA_gene`, `pseudogene`, …) are outside the initial
+    FHGM model scope. This is not a claim of generic GFF3 invalidity;
+  - `Parent` must be absent: bare `Parent` and `Parent=` cannot establish a
+    root. GFF3 syntax and feature-graph/biological correctness remain owned by
+    `gff3-validator`;
+  - a trustworthy complete inventory with zero matching rows rejects K4,
+    including a known empty inventory. Missing or untrustworthy inventory
+    leaves K4 not-run with a reason and cannot earn a full model pass.
 - **K5** (rule 3) — a record `reference` shares at least one comparable form with
   the file genome link and never contradicts it. Both halves are enforced: an
   accession-plus-digest file and an FHR-checksum record reject each other even
@@ -109,13 +113,15 @@ checker enforces through the JSON Schema files.
   reference must match the predecessor's, the versions must differ, the pointer
   must name its own `modelId` (deviation D2), and when the supplied set contains
   a recorded successor of the pointed record the pointer must name that successor
-  rather than skip it (version-gap misuse).
+  rather than skip it (version-gap misuse). Relevant prerequisites of every
+  supplied snapshot are evaluated, including its complete feature inventory.
+  A failed or unavailable prerequisite prevents a full selected-file model
+  pass. Its own predecessor claim is not transitively resolved.
 
-### Identity cases v0.1 does not rule on
+### Permitted identity cases (maintainer decision 2026-11-19)
 
-The checker accepts the following, and the draft contract neither permits nor
-forbids them. They are listed so silence is not read as a ruling; the options
-are on [#28](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/28).
+The initial model contract permits the following. Each has a conformance case;
+none establishes curator acceptance or a globally unique model identity.
 
 - Two records with different `modelId`s targeting the same gene row in one
   snapshot.
@@ -219,12 +225,8 @@ For each record with a `predecessor`, the checker resolves against the
 explicitly supplied prior snapshots. **Each supplied snapshot must itself pass
 the snapshot-level checks above; its own `predecessor` claim is not resolved** —
 that is the bound deviation D3 describes, and it is why a snapshot with an
-unverifiable or skipped intermediate link can still serve as history here. The
-review raised the question of whether reviewers should be allowed to supply such
-a chain (Q7 in the
-[review dispositions](../CONTRACT-REVIEW.md#review-dispositions-2026-11-14));
-v0.x keeps the bounded behavior and the conformance suite pins it rather than
-leaving it implicit.
+unverifiable or skipped intermediate link can still serve as history here. The 2026-11-19 decision preserves this bounded behavior: no external history
+lookup or transitive history service is inferred.
 
 v0.1 accepts only `resolvable`; `unresolvable` and `ambiguous` exit non-zero
 with the reason, and the reason text is a stable part of the interface — the

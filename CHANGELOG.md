@@ -1,5 +1,17 @@
 # FHGM changelog
 
+## Unreleased — selected model scope and earned evidence (2026-11-19)
+
+- Implement maintainer D4–D6: earned per-rule and per-layer JSON receipts,
+  full-pass prerequisites, complete-empty inventory rejection and absent Parent
+  root semantics. Preserve bounded supplied history and strict K5 comparability.
+- Add eleven clause-derived cases (92 total), including permitted competing
+  identities, changed local targets, opaque A–B–A versions and a real noncoding
+  gene slice. The earlier 81 fixture bytes remain unchanged.
+- Record independent expectation acceptance for the twelve historical dmel
+  cases and eleven new cases; guard pending markers and missing review records.
+  Keep hand-authored JSON Schema through v0.x and publication separately gated.
+
 ## Unreleased — existing K2 text coverage (2026-11-19)
 
 - Add 19 synthetic conformance vectors (81 total: 18 valid, 63 invalid) for

@@ -157,7 +157,7 @@ def gene_targets(data):
             key, _, value = attribute.partition(b"=")
             if key == b"ID":
                 identifiers.append(unquote_to_bytes(value))
-            elif key == b"Parent" and value:
+            elif key == b"Parent":
                 has_parent = True
         for identifier in identifiers:
             targets[identifier].append((columns[2], has_parent))
@@ -205,72 +205,131 @@ def parse_snapshot(data):
     return load_yaml("\n".join(lines))
 
 
-def validate_snapshot(data, candidates, transport, record_contract, label="carrier"):
-    header = parse_snapshot(data)
-    if not isinstance(header, dict):
-        raise ValueError("FHGFF3 header metadata must be an object")
-    digest, record, base, basis = choose_base(header, candidates)
-    print(f"Base selection: {label} cites schema {header.get('schema')!r} "
-          f"(schemaVersion {header.get('schemaVersion')!r}) -> "
-          f"{describe(record, digest)} ({basis})")
-    base.validate(header)
-    transport.validate(header)
-    if checksum(BytesIO(data), "gff3") != header["checksum"]:
-        raise ValueError("File checksum mismatch")
+def new_snapshot_evidence(label):
+    """Actual evidence, separate from expected outcomes and process exit status."""
+    return {
+        "subject": label,
+        "layers": {name: {"status": "not-run", "reason": "not evaluated"}
+                   for name in ("base", "checksum", "model", "gff3")},
+        "rules": {f"K{number}": {"status": "not-run", "reason": "prerequisite not met"}
+                  for number in range(1, 7)},
+    }
 
-    # K2 first: every record must have the contract's shape before any rule
-    # reads its fields.
-    for index, model in enumerate(header[MODELS]):
-        try:
-            record_contract.validate(model)
-        except ValidationError as exc:
-            raise ModelCheckError(
-                f"Model record {index} is invalid under draft contract v0.1: "
-                f"{exc.json_path}: {exc.message}"
-            ) from exc
 
-    # K3 (deviation D4) before any per-record rule: a duplicate identity is a
-    # snapshot defect and is reported as ambiguous whatever else is wrong with
-    # the colliding records. IDs are compared after Unicode NFC normalisation,
-    # so canonically equivalent spellings of one ID collide too.
-    models = defaultdict(list)
-    for model in header[MODELS]:
-        models[unicodedata.normalize("NFC", model["modelId"])].append(model)
-    for key, records in models.items():
-        if len(records) > 1:
-            spellings = sorted({record["modelId"] for record in records})
-            detail = (f" ({len(spellings)} spellings equal under NFC normalisation)"
-                      if len(spellings) > 1 else "")
-            raise ModelCheckError(
-                f"Ambiguous model ID {spellings[0]!r}: {len(records)} records share it in "
-                f"one snapshot{detail}"
-            )
+def earned(evidence, kind, key, action):
+    """Record only the phase actually executed; later phases remain not-run."""
+    try:
+        value = action()
+    except (ValueError, ValidationError, YAMLError) as exc:
+        if evidence is not None:
+            evidence[kind][key] = {"status": "reject", "reason": str(exc)}
+        raise
+    if evidence is not None:
+        evidence[kind][key] = {"status": "pass", "reason": "predicate evaluated"}
+    return value
 
-    # K4 and K5 per record.
-    targets = gene_targets(data)
-    file_keys = assembly_keys(header)
-    for model in header[MODELS]:
-        model_id = model["modelId"]
-        feature_id = model["featureId"]
-        rows = targets.get(feature_id.encode(), [])
-        if len(rows) != 1 or rows[0][0] not in (b"gene", b"SO:0000704"):
-            raise ModelCheckError(
-                f"Model {model_id!r} must target one local gene row: {feature_id!r}"
-            )
-        if rows[0][1]:
-            raise ModelCheckError(
-                f"Model {model_id!r} must target one local gene row: {feature_id!r} has a "
-                "Parent attribute, so it is not a root gene row"
-            )
-        record_keys = reference_keys(model)
-        if links_conflict(record_keys, file_keys):
-            raise ModelCheckError(
-                f"Model {model_id!r} carries a reference that contradicts the file genome link"
-            )
-        if not links_match(record_keys, file_keys):
-            raise ModelCheckError(
-                f"Model {model_id!r} has no reference form comparable with the file genome link"
-            )
+
+def require_target(targets, model):
+    """K4: complete empty inventories reject; unavailable ones cannot be scored."""
+    if targets is None:
+        raise ValueError("Feature inventory unavailable: K4 is not-run, not a pass")
+    feature_id = model["featureId"]
+    rows = targets.get(feature_id.encode(), [])
+    if len(rows) != 1 or rows[0][0] not in (b"gene", b"SO:0000704"):
+        raise ModelCheckError(
+            f"Model {model['modelId']!r} must target one local gene row: {feature_id!r}"
+        )
+    if rows[0][1]:
+        raise ModelCheckError(
+            f"Model {model['modelId']!r} must target one local gene row: {feature_id!r} "
+            "has a Parent attribute, so it is not a root gene row"
+        )
+
+
+def validate_snapshot(data, candidates, transport, record_contract, label="carrier",
+                      evidence=None):
+    def read_base():
+        header = parse_snapshot(data)
+        if not isinstance(header, dict):
+            raise ValueError("FHGFF3 header metadata must be an object")
+        digest, record, base, basis = choose_base(header, candidates)
+        print(f"Base selection: {label} cites schema {header.get('schema')!r} "
+              f"(schemaVersion {header.get('schemaVersion')!r}) -> "
+              f"{describe(record, digest)} ({basis})")
+        base.validate(header)
+        return header
+
+    header = earned(evidence, "layers", "base", read_base)
+    earned(evidence, "rules", "K1", lambda: transport.validate(header))
+
+    def verify_checksum():
+        if checksum(BytesIO(data), "gff3") != header["checksum"]:
+            raise ValueError("File checksum mismatch")
+
+    earned(evidence, "layers", "checksum", verify_checksum)
+
+    def record_shapes():
+        for index, model in enumerate(header[MODELS]):
+            try:
+                record_contract.validate(model)
+            except ValidationError as exc:
+                raise ModelCheckError(
+                    f"Model record {index} is invalid under draft contract v0.1: "
+                    f"{exc.json_path}: {exc.message}"
+                ) from exc
+
+    earned(evidence, "rules", "K2", record_shapes)
+
+    def unique_ids():
+        groups = defaultdict(list)
+        for model in header[MODELS]:
+            groups[unicodedata.normalize("NFC", model["modelId"])].append(model)
+        for records in groups.values():
+            if len(records) > 1:
+                spellings = sorted({record["modelId"] for record in records})
+                detail = (f" ({len(spellings)} spellings equal under NFC normalisation)"
+                          if len(spellings) > 1 else "")
+                raise ModelCheckError(
+                    f"Ambiguous model ID {spellings[0]!r}: {len(records)} records share it in "
+                    f"one snapshot{detail}"
+                )
+
+    earned(evidence, "rules", "K3", unique_ids)
+    # An unreadable/malformed feature inventory is not a negative K4 verdict.
+    # It refuses the snapshot's model run; a trustworthy empty dictionary below
+    # is different and is evaluated as zero matching rows (K4 rejection).
+    try:
+        targets = gene_targets(data)
+    except ValueError as exc:
+        if evidence is not None:
+            evidence["rules"]["K4"] = {"status": "not-run", "reason":
+                f"feature inventory untrustworthy: {exc}"}
+        raise
+
+    earned(evidence, "rules", "K4",
+           lambda: [require_target(targets, model) for model in header[MODELS]])
+
+    def references():
+        file_keys = assembly_keys(header)
+        for model in header[MODELS]:
+            record_keys = reference_keys(model)
+            if links_conflict(record_keys, file_keys):
+                raise ModelCheckError(
+                    f"Model {model['modelId']!r} carries a reference that contradicts "
+                    "the file genome link"
+                )
+            if not links_match(record_keys, file_keys):
+                raise ModelCheckError(
+                    f"Model {model['modelId']!r} has no reference form comparable "
+                    "with the file genome link"
+                )
+
+    earned(evidence, "rules", "K5", references)
+    if evidence is not None:
+        evidence["rules"]["K6"] = {"status": "not-run", "reason":
+            "snapshot prerequisites passed; revision claims are evaluated on the selected file only"}
+        evidence["layers"]["model"] = {"status": "partial", "reason":
+            "K1-K5 evaluated; no full model pass until the selected file's K6 claims are checked"}
     return header, {model["modelId"]: model for model in header[MODELS]}
 
 
@@ -331,36 +390,69 @@ def validate_revisions(header, models, predecessors):
         print(f"model {model_id} version {model['modelVersion']!r}: {verdict} ({detail})")
 
 
+def evaluate(file, base_paths, prior_paths):
+    """Return a receipt and process outcome without inventing unavailable evidence."""
+    receipt = {"evidenceVersion": 1, "status": "refused", "snapshots": [],
+               "fullModel": {"status": "not-run", "reason": "execution not completed"}}
+    try:
+        candidates = load_bases(base_paths)
+        transport = Draft202012Validator(json.loads(TRANSPORT.read_bytes()))
+        record_contract = Draft202012Validator(
+            json.loads(MODEL_CONTRACT.read_bytes()), format_checker=FORMAT_CHECKER)
+    except (OSError, ValueError, ValidationError) as exc:
+        receipt["reason"] = f"unusable execution prerequisite: {exc}"
+        return receipt, 2, str(exc)
+    try:
+        carrier = new_snapshot_evidence("carrier")
+        receipt["snapshots"].append(carrier)
+        header, models = validate_snapshot(file.read_bytes(), candidates, transport,
+                                          record_contract, evidence=carrier)
+        predecessors = {}
+        for path in prior_paths:
+            prior = new_snapshot_evidence(f"predecessor {path.name}")
+            receipt["snapshots"].append(prior)
+            snapshot = validate_snapshot(path.read_bytes(), candidates, transport,
+                                         record_contract, label=prior["subject"], evidence=prior)
+            predecessors[snapshot[0]["checksum"]] = snapshot
+        earned(carrier, "rules", "K6",
+               lambda: validate_revisions(header, models, predecessors))
+    except (OSError, ValueError, ValidationError, YAMLError) as exc:
+        receipt["status"] = "evaluated" if any(
+            rule["status"] == "reject" for snap in receipt["snapshots"]
+            for rule in snap["rules"].values()) else "refused"
+        # A rejection earned on a predecessor is a failed K6 prerequisite for
+        # the selected file, not evidence that its pointer was resolved.
+        failed = next((snap for snap in receipt["snapshots"]
+                       if any(r["status"] == "reject" for r in snap["rules"].values())), None)
+        if failed is carrier:
+            receipt["fullModel"] = {"status": "reject", "reason": str(exc)}
+            carrier["layers"]["model"] = dict(receipt["fullModel"])
+        else:
+            receipt["fullModel"] = {"status": "not-run", "reason": str(exc)}
+        receipt["reason"] = str(exc)
+        return receipt, 1, str(exc)
+    carrier["layers"]["model"] = {"status": "pass", "reason":
+        "K1-K6 and relevant supplied-snapshot prerequisites evaluated"}
+    receipt["status"] = "evaluated"
+    receipt["fullModel"] = dict(carrier["layers"]["model"])
+    return receipt, 0, f"Passed FHGFF3 header, checksum and draft FHGM checks for {len(models)} model(s)."
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-schema", type=Path, action="append", required=True,
-                        help="bytes of a released fhgff3.json named in base-schemas.json; "
-                             "repeat to hand the checker more than one base release")
+                        help="bytes of a released fhgff3.json named in base-schemas.json")
     parser.add_argument("--predecessor", type=Path, action="append", default=[])
+    parser.add_argument("--report-json", type=Path,
+                        help="write actual layers/per-rule evidence, including refusals")
     parser.add_argument("file", type=Path)
     args = parser.parse_args()
-
-    try:
-        candidates = load_bases(args.base_schema)
-        transport = Draft202012Validator(json.loads(TRANSPORT.read_bytes()))
-        record_contract = Draft202012Validator(
-            json.loads(MODEL_CONTRACT.read_bytes()),
-            format_checker=FORMAT_CHECKER,
-        )
-        header, models = validate_snapshot(
-            args.file.read_bytes(), candidates, transport, record_contract)
-        predecessors = {}
-        for path in args.predecessor:
-            snapshot = validate_snapshot(
-                path.read_bytes(), candidates, transport, record_contract,
-                label=f"predecessor {path.name}")
-            predecessors[snapshot[0]["checksum"]] = snapshot
-        validate_revisions(header, models, predecessors)
-    except ValidationError as exc:
-        parser.exit(1, f"{exc.json_path}: {exc.message}\n")
-    except (OSError, ValueError, YAMLError) as exc:
-        parser.exit(1, f"{exc}\n")
-    print(f"Passed FHGFF3 header, checksum and draft FHGM checks for {len(models)} model(s).")
+    receipt, code, message = evaluate(args.file, args.base_schema, args.predecessor)
+    if args.report_json:
+        args.report_json.write_text(json.dumps(receipt, indent=2) + "\n")
+    if code:
+        parser.exit(code, message + "\n")
+    print(message)
 
 
 if __name__ == "__main__":

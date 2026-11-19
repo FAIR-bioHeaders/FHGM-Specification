@@ -72,3 +72,10 @@ draft main moves; use the coordinated refresh after the owning suite settles.
   positive, plus the required-modelId clause. This is technical corroboration
   by a separate reader; it is not different-model PR approval or curator
   acceptance, and it does not review the older real-data promotions.
+
+## Ongoing coverage rule
+
+Whenever a contract rule names Unicode whitespace or a non-ASCII character
+category, conformance must include a rule-attributed case outside ASCII and
+a permitted control. An ASCII-only passing case cannot establish that category.
+The tests inspect actual scalar code points as well as manifest attribution.

@@ -4,13 +4,20 @@ Date: 2026-11-15. Maintainer decision (same day): promote the selected
 example-lane cases to normative vectors. This packet is the review instrument
 for that promotion and implements it in the accompanying draft PR.
 
-Status: **DRAFT — the expectations recorded in `manifest.json` for the 12
-`dmel-*` vectors require independent review. The reviewer must not be the
-author of the derivations below, and nothing in this packet merges on the
-derivation author's approval.** The promoting PR stays a draft until that
-review completes. No curator acceptance, adoption, support or release is
-claimed or implied (selection rule V7; FHGM has no `schemaVersion`, no schema
-URL, no `schemas/versions.json` row and no release form).
+Status: **Draft contract; independent expectation review completed 2026-11-19.**
+The independent reader `independent_review_275` (gpt-6.1-terra, operated by
+David Molik) checked the manifest, fixture
+bytes, generator, clauses and [D4–D6 decision record](DECISIONS-2026-11-19.md).
+All twelve expectations were accepted: K1 empty array, K2 numeric version,
+K3 duplicate identity, K4 transcript/absent target scope, K5 contradictory and
+noncomparable references, K6 neighbor/same-immediate-version/missing-history,
+and both positive anchors. The reader reproduced all nine generated mutants,
+verified all twelve size/SHA-256 records and each seventeen-row payload.
+Per-vector clause, disposition and reader are recorded in `expectationReview`.
+The author and reader are distinct; this is technical expectation acceptance,
+not curator acceptance, biological validation, publication or a replacement for
+the independent different-model PR review gate. Historical observations below
+retain their original date and are not new full-layer evidence under D4.
 
 ## Scope and effect
 
@@ -419,3 +426,24 @@ for (const [name, rel, withHistory] of cases) {
                                errors: result.errors.slice(0, 2) }));
 }
 ```
+
+## Per-vector independent disposition (2026-11-19)
+
+Reader for every row: `independent_review_275`, gpt-6.1-terra, operated by
+David Molik; distinct from the original derivation author. Clauses and detailed
+derivations are the numbered sections above and manifest `expectationReview`.
+
+| Vector | Independent disposition |
+| --- | --- |
+| `dmel-snapshot-v1` | Accepted pass; D4 earned-evidence boundary retained. |
+| `dmel-snapshot-v2-resolved` | Accepted pass; D4 earned-evidence boundary retained. |
+| `dmel-duplicate-model-id` | Accepted rejection K3; D4 earned-evidence boundary retained. |
+| `dmel-empty-model-array` | Accepted rejection K1; D4 earned-evidence boundary retained. |
+| `dmel-numeric-model-version` | Accepted rejection K2; D4 earned-evidence boundary retained. |
+| `dmel-pointer-names-neighbor` | Accepted rejection K6; D4 earned-evidence boundary retained. |
+| `dmel-pointer-reuses-version` | Accepted rejection K6; D4 earned-evidence boundary retained. |
+| `dmel-reference-contradicts-file` | Accepted rejection K5; D4 earned-evidence boundary retained. |
+| `dmel-reference-not-comparable` | Accepted rejection K5; D4 earned-evidence boundary retained. |
+| `dmel-revision-without-history` | Accepted rejection K6; D4 earned-evidence boundary retained. |
+| `dmel-target-absent` | Accepted rejection K4; D4 earned-evidence boundary retained. |
+| `dmel-target-transcript-row` | Accepted rejection K4; D4 earned-evidence boundary retained. |

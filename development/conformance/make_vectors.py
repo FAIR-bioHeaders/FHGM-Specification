@@ -2,18 +2,17 @@
 """Generate the draft FHGM conformance vectors deterministically.
 
 Companion generator to ``development/examples/model/make_fixtures.py``: it reuses
-that pilot's machinery — the ``check_revision`` render helpers, the synthetic
-one-record SeqCol collection and the synthetic assembly — so every vector here is
-byte-reproducible with ``cmp`` and cites no external payload. All content is
-synthetic; the accessions, model IDs, URNs and evidence strings are placeholders
-scoped to this directory.
+that pilot's render helpers. Most vectors use the synthetic assembly and
+placeholder model IDs. The noncoding scope control instead uses the committed
+verbatim RefSeq subset, whose exact source and selection are recorded in
+DECISIONS-2026-11-19.md. All vectors are byte-reproducible.
 
 Two rules govern what this file may emit.
 
-* A vector's expected outcome must be **observed** by running
-  ``development/model/validate_fhgm.py`` on the emitted bytes before it is
-  recorded: ``run_conformance.py --seal`` builds the manifest from real checker
-  runs, and the committed manifest is then verified, never edited by hand.
+* A vector's expected outcome is derived from contract clauses and reviewed
+  independently; checker observations are evidence to compare against that
+  expectation. ``run_conformance.py --seal`` records only mechanical byte
+  digests/checksums and never generates expected outcomes.
 * Nothing here gives semantics to split, merge, assembly migration,
   transcript-only contribution or companion-file identity. Those are #204 open
   question Q6, left to curators; the manifest records them as open scope with no
@@ -112,7 +111,32 @@ def header_checksum(data):
 
 def valid_vectors():
     """Vectors the released base schema and the model-level checker accept."""
+    # Real RefSeq antisense gene; only authored metadata is synthetic.
+    # Use the actual assembly reference already established by the dmel fixture.
+    import yaml
+    dmel = (HERE.parent / "examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3").read_bytes()
+    real_ref = yaml.safe_load(b"\n".join(line[2:] for line in dmel.splitlines()
+                                        if line.startswith(b"#~")))["genomeReference"]
+    nc = metadata([record("nc-model-a", "A", feature="gene-Dmel_CR45124",
+                   reference={"genomeReference": real_ref})], "1", genomeReference=real_ref,
+                  annotation="RefSeq antisense gene slice for draft FHGM scope review",
+                  taxon={"name": "Drosophila melanogaster"})
+    a = render(metadata([record("model-a", "A")], "A"), feature_payload(30))
+    b = render(metadata([record("model-a", "B", predecessor=pointer(header_checksum(a), "model-a", "A"))], "B"), feature_payload(31))
     return {
+        "noncoding-root-gene": render(nc, (HERE / "noncoding-source.gff3").read_bytes()),
+        "opaque-version-a-initial": a,
+        "opaque-version-b-successor": b,
+        "opaque-version-a-reused": render(metadata([record("model-a", "A",
+            predecessor=pointer(header_checksum(b), "model-a", "B"))], "A-again"), feature_payload(32)),
+        "competing-model-ids-same-target": render(
+            metadata([record("model-a", "A"), record("model-b", "B")], "1"),
+            feature_payload(30)),
+        "changed-file-local-feature-id": render(
+            metadata([record("model-a", "B", feature="renamed-a",
+                predecessor=pointer(header_checksum((FIXTURES / "valid-single.fhgff3.gff3").read_bytes()),
+                                    "model-a", "1"))], "2"),
+            feature_payload(30).replace(b"toy-a", b"renamed-a")),
         # Edge trimming is not a ban on internal whitespace (K2).
         "record-model-id-interior-nbsp": render(
             metadata([record("model-\u00a0a", "1")], "1"), feature_payload(30)),
@@ -198,6 +222,20 @@ def invalid_vectors():
     single_checksum = header_checksum((FIXTURES / "valid-single.fhgff3.gff3").read_bytes())
     external_checksum = header_checksum(valid["supplied-external-model-id"])
     vectors = {
+        "feature-inventory-complete-empty": render(
+            metadata([record("model-a", "1")], "1"), b""),
+        "feature-inventory-no-identifiers": render(
+            metadata([record("model-a", "1")], "1"),
+            b"toy\tpilot\tgene\t10\t30\t.\t+\t.\t.\n"),
+        "feature-target-bare-parent": render(
+            metadata([record("model-a", "1")], "1"),
+            feature_payload(30).replace(b"ID=toy-a\n", b"ID=toy-a;Parent\n")),
+        "feature-target-empty-parent": render(
+            metadata([record("model-a", "1")], "1"),
+            feature_payload(30).replace(b"ID=toy-a\n", b"ID=toy-a;Parent=\n")),
+        "feature-target-other-so-type": render(
+            metadata([record("model-a", "1")], "1"),
+            feature_payload(30).replace(b"\tgene\t", b"\tSO:0001263\t", 1)),
         # Rule K6, assembly-link half: the successor file is linked only by an
         # FHR parent while the supplied predecessor (valid-single) is linked by
         # accession plus SeqCol digest, so the two files share no comparable
