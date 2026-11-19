@@ -58,6 +58,15 @@ jobs:
             --checkout FAIR-bioHeaders/FAIR-bioHeaders-Specification=.upstream/reference-checker \
             --exercise-controls --inventory-output "$RUNNER_TEMP/fhgm-reference-inventory.json" \
             --output "$RUNNER_TEMP/fhgm-reference-offline.json"
+      - name: Retain an execution failure when setup produced no audit report
+        if: always()
+        shell: bash
+        run: |
+          if [ ! -s "$RUNNER_TEMP/fhgm-reference-offline.json" ]; then
+            cat > "$RUNNER_TEMP/fhgm-reference-offline.json" <<'JSON'
+          {"advisory":true,"wrote":[],"references":[{"id":"audit-execution","verdict":"QUERY_FAILED","reason":"Setup or execution produced no report; no authoritative comparison was established."}]}
+          JSON
+          fi
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
@@ -104,6 +113,15 @@ jobs:
               for gap in report['coverageGaps']:
                   summary.write(f'- Declaration finding: {gap}\n')
           PY
+      - name: Retain an execution failure when setup produced no audit report
+        if: always()
+        shell: bash
+        run: |
+          if [ ! -s "$RUNNER_TEMP/fhgm-reference-advisory.json" ]; then
+            cat > "$RUNNER_TEMP/fhgm-reference-advisory.json" <<'JSON'
+          {"advisory":true,"wrote":[],"references":[{"id":"audit-execution","verdict":"QUERY_FAILED","reason":"Setup or execution produced no report; no authoritative comparison was established."}]}
+          JSON
+          fi
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

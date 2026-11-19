@@ -20,12 +20,12 @@ by the new reference advisory.
 
 | Record | Technical evidence now delivered | Remaining disposition/gate |
 | --- | --- | --- |
-| FHGM #9 | Minimal/rich examples; real gene-scope noncoding case; independently reviewed target/revision negatives; distinct layers and earned states; actual shared suite/history absorption | Closed Completed for technical conformance/shared absorption; see the maintainer record below. Transcript-only is explicitly deferred. Joint package/publication gates remain on #8/#204. |
-| FHGM #8 | Selected fields, semantics, identity separation, extension, target/revision scope, dual-base compatibility and submission of the reviewed shared artifact | Joint acceptance of the concrete native contract identity/path/version package; actual publication follows its own gate. |
+| FHGM #9 | Minimal/rich examples; real gene-scope noncoding case; independently reviewed target/revision negatives; distinct layers and earned states; actual shared suite/history absorption | Closed Completed for technical conformance/shared absorption; see the maintainer record below. Transcript-only is explicitly deferred. Joint package/publication gates remain on shared #204. |
+| FHGM #8 | Selected fields, semantics, identity separation, extension, target/revision scope, dual-base compatibility and submission of the reviewed shared artifact | Closed Completed for owning draft definition and actual shared submission. Concrete package acceptance and publication remain on shared #204. |
 | Shared #204 | Owning model/schema, requirements/compatibility and INSDC boundary artifacts, worked fixtures and shared conformance staging | Recorded joint package acceptance and subsequent publication. No journal endorsement, new curator consultation or particular-model acceptance is asserted. |
 
 The maintainer closed [FHGM #9 as Completed](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/9#issuecomment-7021302891)
-for that technical scope. FHGM #8 and shared #204 remain open; the dependency
+for that technical scope. [FHGM #8 is also completed](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/8#issuecomment-7022204947) for owning definition/submission; shared #204 remains open. The dependency
 on contract semantics was fulfilled by the selected D4–D6 direction, and does
 not turn future joint publication acceptance into unfinished vector work.
 

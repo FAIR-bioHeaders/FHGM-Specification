@@ -37,10 +37,17 @@ The implementation itself is independently pinned in `references/checker.json`:
 accepted shared commit, script path and SHA-256. The workflow checks out that
 commit, and the runner refuses an unexpected checkout HEAD, repository declaration, safe canonical script path, immutable Git blob
 or script digest before executing any checker code. Symlink paths are refused.
-The verified stdlib-only checker executes with Python isolation (-I), so an
+Git object reads disable replacement refs. After verification, the exact immutable
+bytes execute from a private temporary snapshot with Python isolation (-I), so an
 unverified neighboring module or PYTHONPATH cannot shadow its imports. The central engine is not copied here.
 Release tags remain independent authorities; no moving main substitutes for
-released bytes. This implementation pin is not a contract repin.
+released bytes. A later source-file swap cannot replace the verified snapshot.
+The explicit checker-only refresh uses shared PR #280, reviewed commit
+`6dee4c8baba723ec5cad825d521db2dbbc1921ae`, script SHA-256
+`d64104ed33de344c18ba93c00575cad8b16024db5b95c34ee02556b6868f543c`.
+Its missing-tag-commit, missing-only copied-set and immutable Git-read corrections
+are prerequisites for this follow-up; merge it only after that shared change.
+This implementation pin is not a contract repin.
 
 ## Commands and outcomes
 
@@ -65,6 +72,11 @@ The controls use a real temporary git authority with an immutable local fixture
 tag. They prove FRESH, a changed-recorded-digest DRIFT, confirmed missing-file
 ABSENT and unmapped-authority QUERY_FAILED. The digest mutant must change actual
 serialized inventory bytes; the authority bytes must remain untouched.
+Missing revision, commit, path or digest metadata is retained as an incomplete
+reference for the central ABSENT classification. A supplied floating `main` stays
+a floating reference for DRIFT; it is not normalized into a missing declaration.
+Both workflow jobs retain QUERY_FAILED if setup/execution produces no audit report.
+
 Adapter tests additionally prove declaration disagreement is not repaired and
 unverified implementation code cannot execute, including joint file/digest
 tampering. A paired shadow-module control proves the unisolated command would

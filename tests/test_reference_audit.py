@@ -59,6 +59,30 @@ class Declarations(unittest.TestCase):
             self.assertTrue(table['coverageGaps'])
             self.assertEqual(before, {r: (root / r).read_bytes() for r in RECORDS})
 
+    def test_missing_metadata_and_floating_reference_are_preserved_for_the_engine(self):
+        for field in ('ref', 'commit', 'path', 'sha256'):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                for relative in RECORDS:
+                    dest = root / relative
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(ROOT / relative, dest)
+                file = root / RECORDS[1]
+                record = json.loads(file.read_text())
+                record['bases'][0].pop(field)
+                file.write_text(json.dumps(record))
+                row = next(r for r in adapter.inventory(root)['references']
+                           if r['id'].startswith('fhgm-registry-base:'))
+                value = row.get({'ref': 'revision', 'commit': 'commit'}[field]) if field in ('ref', 'commit') else row['files'][0].get(field)
+                self.assertIsNone(value)
+                if field == 'ref':
+                    record['bases'][0]['ref'] = 'main'
+                    file.write_text(json.dumps(record))
+                    row = next(r for r in adapter.inventory(root)['references']
+                               if r['id'] == 'fhgm-registry-base:main')
+                    self.assertEqual('main', row['revision'])
+                    self.assertEqual('branch', row['revisionKind'])
+
     def test_unverified_checker_cannot_execute(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -107,7 +131,7 @@ class Declarations(unittest.TestCase):
             (root / 'references').mkdir()
             file = root / 'references/checker.json'
             file.write_text(json.dumps(pin))
-            self.assertEqual(script, adapter.verified_checker(source, root))
+            self.assertEqual(script.read_bytes(), adapter.verified_checker(source, root))
             for key, value in (('repository', 'example/other'), ('commit', 'main'),
                     ('path', '../outside.py'), ('path', '/tmp/outside.py'),
                     ('path', 'scripts/other.py')):
@@ -141,9 +165,61 @@ class Declarations(unittest.TestCase):
             self.assertNotEqual(0, negative.returncode)
             self.assertTrue(marker.exists())
             marker.unlink()
-            report = adapter.execute(script, {'inventoryVersion': 1, 'references': []}, root, [])
+            report = adapter.execute(script.read_bytes(), {'inventoryVersion': 1, 'references': []}, root, [])
             self.assertEqual({'advisory': True, 'wrote': []}, report)
             self.assertFalse(marker.exists())
+
+    def test_replacement_ref_cannot_substitute_a_pinned_commit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source'
+            (source / 'scripts').mkdir(parents=True)
+            script = source / 'scripts/check_references.py'
+            script.write_bytes(b'print("original")\n')
+            def git(*args):
+                return subprocess.check_output(['git', '-C', str(source), *args], stderr=subprocess.DEVNULL)
+            git('init', '-q')
+            def commit():
+                git('add', '.')
+                git('-c', 'commit.gpgsign=false', '-c', 'user.name=Replacement fixture',
+                    '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture')
+                return git('rev-parse', 'HEAD').decode().strip()
+            original = commit()
+            script.write_bytes(b'print("replacement")\n')
+            replacement = commit()
+            git('checkout', '-q', original)
+            git('replace', original, replacement)
+            script.write_bytes(b'print("replacement")\n')
+            self.assertEqual(script.read_bytes(), git('show', original + ':scripts/check_references.py'))
+            (root / 'references').mkdir()
+            (root / 'references/checker.json').write_text(json.dumps({
+                'repository': 'FAIR-bioHeaders/FAIR-bioHeaders-Specification',
+                'commit': original, 'path': 'scripts/check_references.py',
+                'sha256': hashlib.sha256(script.read_bytes()).hexdigest()}))
+            with self.assertRaisesRegex(ValueError, 'immutable Git blob'):
+                adapter.verified_checker(source, root)
+
+    def test_execution_uses_verified_bytes_after_source_is_replaced(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkout = root / 'source'
+            (checkout / 'scripts').mkdir(parents=True)
+            source = checkout / 'scripts/check_references.py'
+            source.write_bytes(b'import json\nprint(json.dumps({"advisory":True,"wrote":[]}))\n')
+            subprocess.run(['git', 'init', '-q', str(checkout)], check=True)
+            subprocess.run(['git', '-C', str(checkout), 'add', '.'], check=True)
+            subprocess.run(['git', '-C', str(checkout), '-c', 'commit.gpgsign=false',
+                '-c', 'user.name=Snapshot fixture', '-c', 'user.email=fixture@example.invalid',
+                'commit', '-qm', 'fixture'], check=True)
+            commit = subprocess.check_output(['git', '-C', str(checkout), 'rev-parse', 'HEAD'], text=True).strip()
+            (root / 'references').mkdir()
+            (root / 'references/checker.json').write_text(json.dumps({
+                'repository': 'FAIR-bioHeaders/FAIR-bioHeaders-Specification', 'commit': commit,
+                'path': 'scripts/check_references.py', 'sha256': hashlib.sha256(source.read_bytes()).hexdigest()}))
+            verified = adapter.verified_checker(checkout, root)
+            source.write_text('raise RuntimeError("unverified replacement must not execute")\n')
+            self.assertEqual({'advisory': True, 'wrote': []},
+                adapter.execute(verified, {'inventoryVersion': 1, 'references': []}, root, []))
 
 
 if __name__ == '__main__':
