@@ -32,34 +32,35 @@ def inventory(root=ROOT):
     def row(identifier, record, category, repository, revision, commit, files, **extra):
         rows.append({'id': identifier, 'consumer': CONSUMER, 'record': record,
             'class': category, 'repository': repository, 'revision': revision,
-            'revisionKind': 'tag', 'commit': commit, 'files': files, **extra})
+            'revisionKind': 'tag' if not revision or isinstance(revision, str) and revision.startswith('v') else 'branch',
+            'commit': commit, 'files': files, **extra})
 
     row('fhgm-header-copy', 'header/provenance.json', 'copied-tree', source['repository'],
-        source['ref'], source['commit'],
-        [{'local': f['local'], 'path': f['upstream'], 'sha256': f['sha256']}
+        source.get('ref'), source.get('commit'),
+        [{'local': f['local'], 'path': f.get('upstream'), 'sha256': f.get('sha256')}
          for f in header['copied']], materialStatus='released', sourcePatterns=SOURCE_PATTERNS,
         localTree='header', localExclusions=HEADER_EXCLUSIONS)
-    for item in header['imports']:
-        category = 'conformance-suite' if item['upstream'] == 'conformance/manifest.json' else 'released-contract'
-        row('fhgm-header-import:' + item['upstream'], 'header/provenance.json', category,
-            source['repository'], source['ref'], source['commit'],
-            [{'local': None, 'path': item['upstream'], 'sha256': item['sha256']}])
+    for index, item in enumerate(header['imports']):
+        category = 'conformance-suite' if item.get('upstream') == 'conformance/manifest.json' else 'released-contract'
+        row('fhgm-header-import:' + (item.get('upstream') or 'missing-path-' + str(index)), 'header/provenance.json', category,
+            source['repository'], source.get('ref'), source.get('commit'),
+            [{'local': None, 'path': item.get('upstream'), 'sha256': item.get('sha256')}])
     claims = {}
     for base in bases:
-        key = (base['repository'], base['ref'], base['commit'], base['path'], base['sha256'])
-        claims[base['ref']] = key
-        row('fhgm-registry-base:' + base['ref'], 'development/model/base-schemas.json',
-            'base-carrier', base['repository'], base['ref'], base['commit'],
-            [{'local': None, 'path': base['path'], 'sha256': base['sha256']}])
+        key = (base['repository'], base.get('ref'), base.get('commit'), base.get('path'), base.get('sha256'))
+        claims[base.get('ref')] = key
+        row('fhgm-registry-base:' + str(base.get('ref')), 'development/model/base-schemas.json',
+            'base-carrier', base['repository'], base.get('ref'), base.get('commit'),
+            [{'local': None, 'path': base.get('path'), 'sha256': base.get('sha256')}])
     gaps = []
     for role in ('baseSchema', 'matrixBaseSchema'):
         base = suite[role]
-        key = (base['repository'], base['ref'], base['commit'], base['path'], base['sha256'])
-        if claims.get(base['ref']) != key:
+        key = (base['repository'], base.get('ref'), base.get('commit'), base.get('path'), base.get('sha256'))
+        if claims.get(base.get('ref')) != key:
             gaps.append('Carrier declaration disagreement: conformance ' + role + ' vs model registry')
         row('fhgm-conformance-base:' + role, 'development/conformance/provenance.json',
-            'base-carrier', base['repository'], base['ref'], base['commit'],
-            [{'local': None, 'path': base['path'], 'sha256': base['sha256']}])
+            'base-carrier', base['repository'], base.get('ref'), base.get('commit'),
+            [{'local': None, 'path': base.get('path'), 'sha256': base.get('sha256')}])
     return {'inventoryVersion': 1, 'advisory': True, 'consumer': CONSUMER,
             'coverage': 'Current declared external header/import/carrier references; local FHGM draft artifacts are owning material.',
             'declarations': [{'path': relative, 'sha256': hashlib.sha256((root / relative).read_bytes()).hexdigest()}
@@ -83,7 +84,7 @@ def verified_checker(checker_root, root=ROOT):
         raise ValueError('Unexpected central checker script path')
     if not re.fullmatch('[0-9a-f]{64}', pin.get('sha256', '')):
         raise ValueError('Invalid central checker digest')
-    head = subprocess.check_output(['git', '-C', str(checker_root), 'rev-parse', 'HEAD'], text=True).strip()
+    head = subprocess.check_output(['git', '--no-replace-objects', '-C', str(checker_root), 'rev-parse', 'HEAD'], text=True).strip()
     if head != pin['commit']:
         raise ValueError('Central checker checkout HEAD differs from immutable implementation pin')
     file = checker_root / relative
@@ -94,20 +95,23 @@ def verified_checker(checker_root, root=ROOT):
         cursor = cursor / part
         if cursor.is_symlink():
             raise ValueError('Symlink checker path is not accepted')
-    blob = subprocess.check_output(['git', '-C', str(checker_root), 'show', pin['commit'] + ':' + relative])
+    blob = subprocess.check_output(['git', '--no-replace-objects', '-C', str(checker_root), 'show', pin['commit'] + ':' + relative])
     data = file.read_bytes()
     if data != blob:
         raise ValueError('Central checker worktree differs from immutable Git blob')
     if hashlib.sha256(blob).hexdigest() != pin['sha256']:
         raise ValueError('Central checker bytes differ from immutable implementation digest')
-    return file
+    return blob
 
 
 def execute(checker, table, root, checkouts):
     with tempfile.TemporaryDirectory() as directory:
+        script = Path(directory) / 'check_references.py'
+        script.write_bytes(checker)
+        script.chmod(0o400)
         record = Path(directory) / 'inventory.json'
         record.write_text(json.dumps(table, indent=2) + '\n')
-        command = [sys.executable, '-I', str(checker), '--inventory', str(record),
+        command = [sys.executable, '-I', str(script), '--inventory', str(record),
                    '--consumer', CONSUMER, '--consumer-root', str(root)]
         for authority in checkouts:
             command.extend(['--checkout', authority])
@@ -158,10 +162,19 @@ def exercise_controls(checker_root):
         absent['files'][0]['path'] = 'missing.json'
         failed['id'] = 'query-failed'
         failed['repository'] = 'example/unmapped'
-        table = {'inventoryVersion': 1, 'references': [fresh, drift, absent, failed]}
+        incomplete = []
+        for field in ('revision', 'commit', 'path', 'sha256'):
+            row = deepcopy(fresh)
+            row['id'] = 'missing-' + field
+            (row if field in ('revision', 'commit') else row['files'][0]).pop(field)
+            incomplete.append(row)
+        floating = dict(deepcopy(fresh), id='floating-main', revision='main', revisionKind='branch')
+        table = {'inventoryVersion': 1, 'references': [fresh, drift, absent, failed, *incomplete, floating]}
         report = execute(checker, table, authority, ['example/authority=' + str(authority)])
         actual = {row['id']: row['verdict'] for row in report['references']}
         wanted = {'fresh': 'FRESH', 'drift': 'DRIFT', 'absent': 'ABSENT', 'query-failed': 'QUERY_FAILED'}
+        wanted.update({row['id']: 'ABSENT' for row in incomplete})
+        wanted['floating-main'] = 'DRIFT'
         if actual != wanted:
             raise ValueError('Reference controls disagreed: ' + str(actual))
         if (authority / 'fixture.json').read_bytes() != data:
