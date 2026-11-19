@@ -1,5 +1,9 @@
 # Proposal: separately earned FHGM layer verdicts
 
+Disposition: D4–D6 were selected by the maintainer on 2026-11-19. The
+[decision and implementation record](DECISIONS-2026-11-19.md) is current;
+questions below are historical proposal context.
+
 Status: **proposed, not adopted**, 2026-11-16. Refs
 [FHGM #22](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/22).
 This document requests a maintainer decision before changing the manifest,

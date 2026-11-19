@@ -67,8 +67,8 @@
     {
       "local": "development/model/validate_fhgm.py",
       "role": "model-level checker (K3-K6) and base selector, the authority for every recorded outcome",
-      "size": 16053,
-      "sha256": "de4e393d15f89eaa2043d76bcc0dbe445c08af787a748eabdd954715b018f460",
+      "size": 20782,
+      "sha256": "2cb973c83df96f7e5225da3c127bbe93f0502df63375e8c71649cffbe0346393",
       "note": "Since 2026-11-18 the checker selects each loaded file's base by its cited schema URL (base-schemas.json schemaUrls) and refuses an unregistered citation or one whose bytes were not supplied, instead of selecting by schemaVersion with a fallback to other bytes; every sealed and matrix outcome was re-observed after that change. Earlier: the Copilot-Autofix guard merged 2026-11-15 (non-dict header -> clean ValueError instead of a traceback). Also 2026-11-18: K3 runs before K4/K5 and compares modelIds after NFC normalisation, and K4 requires the target gene row to carry no Parent."
     },
     {
@@ -82,8 +82,8 @@
     {
       "local": "development/conformance/make_vectors.py",
       "role": "generates the vectors under development/conformance/vectors/",
-      "size": 22121,
-      "sha256": "ddcc4b407e93d90f8965c57e63a20ea21a92dbfb14da50414b1df87d4f0f5836"
+      "size": 24680,
+      "sha256": "313d8e0a3cde117eb3a2a83d2387882a47bc556a8f6e7264e7d0f86a88c6a22a"
     },
     {
       "local": "development/examples/model/make_fixtures.py",
@@ -108,6 +108,13 @@
       "role": "emits the promoted real-data vectors named dmel-* from the committed examples/dmel4 fixtures (draft promotion packet, PROMOTION-2026-11-15.md; one documented header mutation per case, canonical render with a fresh checksum, feature bytes untouched)",
       "size": 5708,
       "sha256": "4e0290a1651dcce402605077553398b185fda10a68769aefdc31a5497379424c"
+    },
+    {
+      "local": "development/conformance/noncoding-source.gff3",
+      "role": "verbatim RefSeq antisense-gene source rows used by make_vectors",
+      "size": 1539,
+      "sha256": "bf9c492ecfbf781c8c57f451924b2356d64e45c29829d9b7c97eac25858ee93c",
+      "note": "Whole archive and selection derivation in DECISIONS-2026-11-19.md. Original source licensing preserved."
     }
   ],
   "observedWith": {
@@ -151,5 +158,6 @@
       "asOf": "2026-11-18, measured with --check-downstream-pins against FHGM main f0b3aee: fresh - the pin records sha256 d1619cced91b4ef554853bf5512b5b4ad593b1dc571c2beacb5ee92466ea244a, the dual-base overlay. (The 2026-11-15 note that it recorded the single-identity overlay dd9f6927... is superseded.) Base selection by cited URL changes the overlay bytes - the v0.6.0 branch gains the FHR-Specification alias URL and admits schemaVersion 1.1 - so this pin and the consumer's vendored copy go stale when that change merges. The refresh is the consumer's action against the merged commit, never an FHGM-side edit.",
       "checkedBy": "run_conformance.py --check-downstream-pins (network; scheduled and dispatch only, so PR lanes stay offline)"
     }
-  ]
+  ],
+  "round14Decision": "2026-11-19 D4-D6 selected; native record constraints unchanged; checker adds earned evidence and absent Parent semantics; generator adds approved identity/noncoding and K4 scope controls."
 }

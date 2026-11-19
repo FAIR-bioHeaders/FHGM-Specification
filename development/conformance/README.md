@@ -13,20 +13,19 @@ into CI.
 ## Why a separate suite
 
 An FHGM model record lives under the FHGFF3 header's `x-fhgm-models` extension
-key, where the released FHGFF3 base schema cannot see inside it — on either
-released identity, 1.1 or 1.2. Every
-model-level rejection recorded here therefore **also passes the released base
-schema and its exact-byte checksum** — 42 of the 45 invalid vectors do; the
-three exceptions are named below. That gap is the reason FHGM has a separate
-model-level checker, and it is why an FHGM conformance lane has to run the
-checker rather than evaluate a schema: schema-vector conformance cannot express
-FHGM acceptance.
+key, whose content the released base schema does not constrain. Model-level
+predicates require a separate checker, including feature target resolution and
+bounded revision context. The current suite has 92 vectors (24 valid,
+68 invalid); 63 invalid cases per base lane earn a model rejection while the
+base header and checksum pass. Boundary refusals and unavailable evidence do
+not count as model rejections. [D4–D6](DECISIONS-2026-11-19.md) defines that
+separation and the actual evidence counts.
 
 ## Layout
 
 - `manifest.json` — the rule ids, the open-scope list and the expected outcome of
   every vector, including the prior snapshots each pointer check is handed. The
-  sealed lane runs all 62 vector entries, with the FHGFF3 1.1 (v0.5.0) bytes as
+  sealed lane runs all 92 vector entries, with the FHGFF3 1.1 (v0.5.0) bytes as
   its base layer.
 - `base_matrix.json` — the FHGFF3 1.2 matrix lane: for every sealed vector, the
   identity-rewritten twin's sealed digest and the layers observed against the
@@ -67,7 +66,7 @@ The vectors reuse the overlay and snapshot machinery merged in
 (native record contract, checker and v0.1 fixture set): the same
 `fhgm-draft.schema.json`, the same `fhgm-model.schema.json`, the same checker,
 the same `render`/`synthetic_reference`/`feature_payload` helpers. The census
-contains the original 31 vectors plus 12 promoted real-data vectors. Nothing
+retains all earlier vectors and adds the selected Round 14 cases. Nothing
 here re-implements a reader, a checksum or a validator.
 
 ## Layers
@@ -82,17 +81,20 @@ reported separately and never collapsed into one "valid" boolean:
 | `gff3` | `gff3-validate --no-header`, when that separate tool is installed | gff3-validator, not this contract |
 | `model` | `validate_fhgm.py`: transport overlay, native record contract, rules K3–K6 and the pointer verdict | the reviewed draft contract |
 
-Every vector records `gff3: accept`: gff3-validator 0.1.0 reports zero errors and
-zero warnings on all 62 sealed files and all 62 matrix twins, including the
-duplicate-gene-ID vector. External GFF3 syntax validation and the model verdict
-are reported separately. The model checker also reads local feature IDs, types
-and `Parent` values to resolve K4 targets; an external GFF3 pass does not establish
-a model pass. No rejection in this suite is attributed to external GFF3 syntax.
+The external GFF3 executor is separate from the model predicate. The checker
+must read a complete trustworthy local inventory for K4; skipping the external
+tool never removes that requirement. A full model pass also requires the
+relevant supplied snapshots' inventories for K6. One new bare-Parent case earns
+both an independent GFF3 syntax rejection and a model-scope rejection; all
+other cases retain their separately recorded GFF3 outcomes.
 
-The unresolved distinction between local feature-ID resolution and the external
-GFF3 executor is addressed in the
-[layer-semantics proposal](LAYER-SEMANTICS-PROPOSAL.md) for #22. It is not adopted
-and changes no manifest or acceptance outcome.
+Manifest `ruleRequirements` declares inputs for every K rule, not only the
+vector's focus labels. `layers.model` preserves the historical combined
+checker-process outcome; `evidenceExpectation.model` and actual JSON receipts
+state earned model evidence. Missing/untrustworthy inputs stay not-run/refused,
+known complete empty inventories reject K4, and no partial pass counts as a
+complete model pass. See [the selected decisions](DECISIONS-2026-11-19.md);
+the earlier layer proposal is retained as historical context.
 
 ## Rules
 
@@ -258,24 +260,21 @@ branch; every file below has an otherwise valid FHGM record targeting the gene:
 So a passing run across all four layers says nothing about whether the targeted
 gene model is internally coherent. An exon with several parents
 (`Parent=m1,m2`, shared by isoforms) is ordinary GFF3 and is accepted by both,
-correctly. Whether FHGM should check structure under the targeted gene, and
-which gene-like types K4 should accept, is open on
-[#27](https://github.com/FAIR-bioHeaders/FHGM-Specification/issues/27); the
-remaining gaps belong to gff3-validator either way.
+correctly. The selected D5 decision keeps graph and biological structure with
+gff3-validator and limits initial FHGM targets to one root `gene` or
+`SO:0000704` row. The four listed structural gaps remain visible; no graph
+implementation or closure in gff3-validator is claimed here.
 
 ## Promotion status of the `dmel-*` batch
 
-The 12 `dmel-*` cases were **measured** in the example lane (the 2026-11-15
-`exercise_rules.py` run: 10 gap-proof rejections, 4/4 neutered-checker controls)
-and are promoted here as a **draft**: every expectation in their manifest entries
-is an observation of the committed checker over generator-emitted bytes, and the
-contract-text derivations sit in
-[PROMOTION-2026-11-15.md](PROMOTION-2026-11-15.md). Review conditions stated
-there and binding on this batch: the expectations require independent review,
-the reviewer must not be the derivation's author, and nothing merges on the
-deriver's own approval. This promotion changes no earlier vector's bytes or
-expectation; it moves the manifest file's own digest, which consumers byte-pin
-as their own refresh action.
+The twelve `dmel-*` clause derivations and the eleven new Round 14 expectations
+were independently accepted by reader `independent_review_275` (gpt-6.1-terra,
+David-operated) on 2026-11-19, after checking actual bytes, generators and
+contexts. The manifest records each reader, author, clause, derivation and
+disposition; [the promotion packet](PROMOTION-2026-11-15.md) records individual
+historical-case acceptance. Pending markers and missing accepted records now
+fail manifest validation. This expectation review establishes no biological or
+curator acceptance and does not replace independent PR review.
 
 ## Open scope — no vector, no outcome
 
@@ -459,13 +458,13 @@ additional vectors or curator-reviewed model expectations.
 
 ## Existing K2 non-ASCII coverage — 2026-11-19
 
-The suite now has **81 vectors (18 valid, 63 invalid)** and 81 twins under the
+At PR #33 the suite reached **81 vectors (18 valid, 63 invalid)** and 81 twins under the
 released 1.2 base. Nineteen synthetic cases add coverage for existing constraints;
 all 62 previous entries and fixture bytes are preserved. The record/transport
 contracts and checker are unchanged. The [clause-derived expectation packet](
 TEXT-COVERAGE-2026-11-19.md) distinguishes technical evidence from independent
-review and curator acceptance. No outcome for malformed/empty Parent attributes
-is selected here; #22/#27/#28/#32 retain their pending decisions.
+review and curator acceptance. The subsequent Round 14 D4–D6 section below records the selected Parent,
+scope and identity outcomes.
 
 | id | Expected | Rule focus |
 | --- | --- | --- |
@@ -488,3 +487,22 @@ is selected here; #22/#27/#28/#32 retain their pending decisions.
 | `record-model-id-absent` | invalid | K2 |
 | `two-records-model-id-absent` | invalid | K2 |
 | `record-model-id-interior-nbsp` | valid | K2 |
+
+## Round 14 selected scope and evidence cases
+
+See [D4–D6 decisions and derivations](DECISIONS-2026-11-19.md).
+Legacy model process results and earned fullModel evidence are distinct.
+
+| `id` | expected | clause |
+| --- | --- | --- |
+| `competing-model-ids-same-target` | valid | K3 |
+| `changed-file-local-feature-id` | valid | K6 |
+| `opaque-version-a-initial` | valid | K6 |
+| `opaque-version-b-successor` | valid | K6 |
+| `opaque-version-a-reused` | valid | K6 |
+| `noncoding-root-gene` | valid | K4 |
+| `feature-inventory-complete-empty` | invalid | K4 |
+| `feature-inventory-no-identifiers` | invalid | K4 |
+| `feature-target-bare-parent` | invalid | K4 |
+| `feature-target-empty-parent` | invalid | K4 |
+| `feature-target-other-so-type` | invalid | K4 |

@@ -19,11 +19,11 @@ manifest records it per vector). This script therefore reports the layers
 
 Two lanes run over one suite:
 
-    sealed lane  the 43 committed vectors, observed against the FHGFF3 1.1
+    sealed lane  the committed vectors, observed against the FHGFF3 1.1
                  (v0.5.0) bytes. Every expectation lives in manifest.json and
                  keeps its evidence trail; the lane's semantics are unchanged
                  by the dual-base work.
-    matrix lane  (``--matrix``) identity-rewritten twins of the same 43
+    matrix lane  (``--matrix``) identity-rewritten twins of the same
                  vectors, evaluated against the FHGFF3 1.2 (v0.6.0) bytes with
                  nothing else altered: the ``#~schema`` and ``#~schemaVersion``
                  lines move to the v0.6.0 citation, and the checksum line is
@@ -44,8 +44,8 @@ judged by the v0.5.0 bytes it cites, never by the 1.2 bytes. The ``base``
 layer is the lane's own release (v0.5.0 for the sealed lane, v0.6.0 for the
 matrix lane) over the header read by the toolkit's strict reader.
 
-Nothing is imported from ``check_draft.py`` or from the generators. Vector
-outcomes are only ever read from a run of the committed checker:
+Nothing is imported from ``check_draft.py`` or from the generators. Clause-derived expectations are committed independently of observed evidence;
+actual outcomes are read from a run of the committed checker:
 ``make_vectors.py`` states no expectations, and ``--seal`` records digests and
 checksums from bytes that already matched a recorded outcome; ``--seal-matrix``
 does the same for the twins.
@@ -82,6 +82,7 @@ MANIFEST = HERE / "manifest.json"
 MATRIX = HERE / "base_matrix.json"
 PROVENANCE = HERE / "provenance.json"
 CHECKER = DEVELOPMENT / "model" / "validate_fhgm.py"
+REPORT_PATH = None
 REGISTRY = DEVELOPMENT / "model" / "base-schemas.json"
 GENERATORS = {
     "make_fixtures": DEVELOPMENT / "examples" / "model" / "make_fixtures.py",
@@ -394,15 +395,22 @@ def model_lane(vector, data, base_schemas):
     with tempfile.TemporaryDirectory() as directory:
         current = Path(directory) / "current.fhgff3.gff3"
         current.write_bytes(data)
-        command = [sys.executable, str(CHECKER)]
+        evidence_file = Path(directory) / "evidence.json"
+        command = [sys.executable, str(CHECKER), "--report-json", str(evidence_file)]
         for base_schema in base_schemas:
             command += ["--base-schema", str(base_schema)]
         for predecessor in predecessors_of(vector):
             command += ["--predecessor", str(predecessor)]
         command.append(str(current))
         result = subprocess.run(command, capture_output=True, text=True)
+        try:
+            evidence = json.loads(evidence_file.read_text())
+        except (OSError, ValueError) as exc:
+            raise Failure(f"checker produced no usable actual-evidence receipt: {exc}") from exc
+        if result.returncode == 2:
+            raise Failure(f"model execution prerequisite unusable: {evidence.get('reason')}")
     text = (result.stdout + result.stderr).strip()
-    return ("pass" if result.returncode == 0 else "reject"), text
+    return ("pass" if result.returncode == 0 else "reject"), text, evidence
 
 
 SELECTION_LINE = re.compile(
@@ -462,7 +470,7 @@ def check_vector(vector, lanes, base_schemas, data=None, recorded=None, expected
     if lanes.offline:
         return problems, None
     base, base_text = lanes.base(data)
-    model, model_text = model_lane(vector, data, base_schemas)
+    model, model_text, evidence = model_lane(vector, data, base_schemas)
     gff3, gff3_text = lanes.gff3(data)
     if layers["base"] is not None and base != layers["base"]:
         problems.append(f"base layer {base} ({base_text}) != recorded {layers['base']}")
@@ -480,9 +488,13 @@ def check_vector(vector, lanes, base_schemas, data=None, recorded=None, expected
             problems.append(f"recorded reason {reason!r} not in output: {model_text}")
     if gff3 != "skipped" and layers["gff3"] is not None and gff3 != layers["gff3"]:
         problems.append(f"GFF3 layer {gff3} != recorded {layers['gff3']}: {gff3_text}")
-    gap = model == "reject" and base == "accept" and recomputed == stated
+    actual_model = evidence["fullModel"]["status"]
+    wanted_model = vector["evidenceExpectation"]["model"]
+    if actual_model != wanted_model:
+        problems.append(f"actual model evidence {actual_model} != expected {wanted_model}")
+    gap = actual_model == "reject" and base == "accept" and recomputed == stated
     return problems, {"base": base, "model": model, "gff3": gff3, "gap": gap,
-                      "selected": selected_base(model_text)}
+                      "selected": selected_base(model_text), "evidence": evidence}
 
 
 # --- sealing -----------------------------------------------------------------
@@ -619,7 +631,8 @@ def report(results, manifest, offline):
     rules = manifest["rules"]
     table = census(results, manifest)
     width = max(len(rule) for rule in rules)
-    print(f"\n{'rule':<{width}}  valid  invalid  skipped  covers")
+    print("\nFocus-label census (labels, not predicate-evaluation counts)")
+    print(f"{'rule':<{width}}  valid  invalid  skipped  covers")
     for rule, summary in rules.items():
         counts = table.get(rule, {"valid": 0, "invalid": 0, "skipped": 0})
         text = summary["summary"]
@@ -641,7 +654,7 @@ def report(results, manifest, offline):
         print("Model lane offline: base, model and gff3 layers were not run.")
         return
     print(f"Gap-proof rejections (the released base schema and the exact-byte checksum "
-          f"accept them, only the model-level checker rejects): {len(gaps)}/{len(rejected)}")
+          f"accept them and an earned model predicate rejects; GFF3 is separate): {len(gaps)}/{len(rejected)}")
     for result in rejected:
         if not result.get("gap"):
             print(f"  not gap-proof: {result['id']} "
@@ -689,11 +702,29 @@ def manifest_problems(manifest):
     and assert that each defect is caught.
     """
     problems = []
+    for rule in (f"K{number}" for number in range(1, 7)):
+        if not manifest.get('ruleRequirements', {}).get(rule):
+            problems.append(f"{rule}: missing rule input requirements")
+    if not manifest.get('fullModelRequirements'):
+        problems.append("missing full model prerequisite declaration")
     vectors = manifest["vectors"]
     ids = [vector["id"] for vector in vectors]
     if len(set(ids)) != len(ids):
         problems.append("duplicate vector id in manifest")
     for vector in vectors:
+        rendered = json.dumps(vector).lower()
+        for marker in ("requires independent review", "observed outputs", "candidate-unreviewed"):
+            if marker in rendered:
+                problems.append(f"{vector['id']}: active vector carries pending review marker {marker!r}")
+        if vector['id'].startswith('dmel-') or vector.get('reviewRequired'):
+            review = vector.get('expectationReview', {})
+            if (review.get('status') != 'accepted'
+                    or not all(review.get(key) for key in
+                               ('reader', 'author', 'derivation', 'clause', 'disposition', 'date'))
+                    or review.get('reader') == review.get('author')):
+                problems.append(f"{vector['id']}: missing independent accepted expectation record")
+        if vector.get('evidenceExpectation', {}).get('model') not in ('pass', 'reject', 'not-run'):
+            problems.append(f"{vector['id']}: invalid or missing fullModel evidence expectation")
         if not VECTOR_ID.match(vector["id"]):
             problems.append(f"vector id {vector['id']!r} is not kebab-case")
         if not path_of(vector).is_file():
@@ -867,6 +898,8 @@ def run_lane(vectors, matrix_entries, lanes, base_paths, offline, verbose, lane)
             "gff3": "skipped" if offline else outcome["gff3"],
             "gap": None if offline else outcome["gap"],
             "selected": None if offline else outcome["selected"],
+            "actualEvidence": None if offline else outcome["evidence"],
+            "matched": not problems,
         }
         if lane == "matrix":
             result["method"] = entry["method"]
@@ -911,7 +944,11 @@ def main():
                         help="fetch the draft pins other repositories hold on our contract bytes "
                              "and report whether they are still fresh (network)")
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--report-json", type=Path,
+                        help="write separately counted actual layer/rule evidence")
     args = parser.parse_args()
+    global REPORT_PATH
+    REPORT_PATH = args.report_json
     if args.seal_matrix:
         args.matrix = True
 
@@ -966,6 +1003,11 @@ def main():
             for digest in sorted(supplied, key=lambda d: registry[d]["schemaVersion"])))
         print(f"Provenance verified for the base schemas, the registry and "
               f"{artifacts} recorded artifacts.")
+
+    if args.check_downstream_pins:
+        stale = check_downstream_pins(provenance)
+        if stale:
+            raise Failure("downstream pin prerequisites failed: " + "; ".join(stale))
 
     generated = sum(1 for vector in vectors if vector["generator"] != "committed")
     if args.skip_regeneration:
@@ -1061,16 +1103,35 @@ def main():
         print(f"Sealed {MATRIX.name}: twin digests, observed layers and agreement flags "
               "re-recorded from this run.")
 
+    measured = [result for result in results if result["actualEvidence"] is not None]
+    counts = {
+        "vectorsVisited": len(results),
+        "rulePredicatesEvaluated": sum(
+            rule["status"] in ("pass", "reject")
+            for result in measured
+            for rule in result["actualEvidence"]["snapshots"][0]["rules"].values()),
+        "layerExpectationsCompared": sum(
+            3 + (result["gff3"] != "skipped") for result in measured),
+        "completeVectorsMatched": sum(
+            result["matched"] and result["gff3"] != "skipped"
+            and result["actualEvidence"]["fullModel"]["status"] in ("pass", "reject")
+            for result in measured),
+        "completeModelPasses": sum(
+            result["actualEvidence"]["fullModel"]["status"] == "pass"
+            for result in measured),
+    }
+    if not args.offline:
+        print("Actual evidence counts: " + "; ".join(f"{key}={value}" for key, value in counts.items()))
+    if args.report_json:
+        args.report_json.write_text(json.dumps({
+            "evidenceVersion": 1, "status": "mismatch" if failed else "completed",
+            "countScope": "vector visits across requested lanes; predicates are selected-carrier K1-K6 only, not repeated history validation",
+            "counts": counts, "vectors": results,
+        }, indent=2) + "\n")
+
     report(lane_results, manifest, args.offline)
     if args.matrix and matrix_results:
         report_matrix(matrix_results, matrix)
-    if args.check_downstream_pins:
-        print()
-        stale = check_downstream_pins(provenance)
-        for problem in stale:
-            print(f"run_conformance: {problem}")
-        if stale:
-            return 1
     if failed:
         print(f"\nFAILED {len(failed)} of {len(results)} checks: {', '.join(failed)}")
         return 1
@@ -1085,6 +1146,9 @@ def main():
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except Failure as failure:
+    except (Failure, OSError, ImportError, json.JSONDecodeError) as failure:
+        if REPORT_PATH is not None:
+            REPORT_PATH.write_text(json.dumps({"evidenceVersion": 1,
+                "status": "refused", "reason": str(failure)}, indent=2) + "\n")
         print(f"run_conformance: {failure}", file=sys.stderr)
         raise SystemExit(2)

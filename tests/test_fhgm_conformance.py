@@ -483,11 +483,140 @@ class Provenance(unittest.TestCase):
                 self.assertTrue(pin["checkedBy"])
 
 
+class EarnedEvidence(unittest.TestCase):
+    def test_review_guard_rejects_each_real_pending_marker_and_missing_record(self):
+        import copy
+        original = manifest()
+        control = next(v for v in original['vectors'] if v['id'].startswith('dmel-'))
+        self.assertFalse(runner.manifest_problems(original))
+        for marker in ('requires independent review', 'OBSERVED outputs', 'candidate-unreviewed'):
+            bad = copy.deepcopy(original)
+            next(v for v in bad['vectors'] if v['id'] == control['id'])['description'] += ' ' + marker
+            self.assertTrue(any('pending review marker' in p for p in runner.manifest_problems(bad)))
+        bad = copy.deepcopy(original)
+        next(v for v in bad['vectors'] if v['id'] == control['id']).pop('expectationReview')
+        self.assertTrue(any('expectation record' in p for p in runner.manifest_problems(bad)))
+
+    def test_every_model_rule_declares_inputs_and_not_run_is_not_gap_evidence(self):
+        document = manifest()
+        self.assertEqual({f'K{n}' for n in range(1, 7)}, set(document['ruleRequirements']))
+        self.assertIn('complete trustworthy', ' '.join(document['ruleRequirements']['K4']))
+        unearned = {v['id'] for v in document['vectors']
+                    if v['evidenceExpectation']['model'] == 'not-run'}
+        self.assertIn('pointer-into-ambiguous-history', unearned)
+        self.assertIn('carrier-cites-raw-main', unearned)
+        self.assertIn('tampered-record-bytes', unearned)
+        self.assertNotIn('feature-inventory-complete-empty', unearned)
+
+    def test_empty_is_not_unavailable_and_parent_presence_is_not_truthiness(self):
+        checker = load_checker()
+        if checker is None:
+            self.skipTest("checker dependencies unavailable")
+        model = {'modelId': 'm', 'featureId': 'g'}
+        with self.assertRaisesRegex(checker.ModelCheckError, 'one local gene row'):
+            checker.require_target({}, model)
+        with self.assertRaisesRegex(ValueError, 'not-run'):
+            checker.require_target(None, model)
+        for tag in (b'Parent', b'Parent=', b'Parent=x'):
+            rows = checker.gene_targets(b't\tp\tgene\t1\t2\t.\t+\t.\tID=g;' + tag + b'\n')
+            with self.assertRaisesRegex(checker.ModelCheckError, 'Parent attribute'):
+                checker.require_target(rows, model)
+        checker.require_target(checker.gene_targets(b't\tp\tgene\t1\t2\t.\t+\t.\tID=g\n'), model)
+
+    def test_runner_bad_pin_json_refuses_without_aggregate_counts(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            bad = Path(directory) / 'base.json'
+            report = Path(directory) / 'report.json'
+            bad.write_text('{}')
+            process = subprocess.run([sys.executable, str(CONFORMANCE / 'run_conformance.py'),
+                '--base-schema', str(bad), '--report-json', str(report)],
+                capture_output=True, text=True)
+            evidence = json.loads(report.read_text())
+        self.assertEqual(2, process.returncode)
+        self.assertEqual('refused', evidence['status'])
+        self.assertIn('not a registered', evidence['reason'])
+        self.assertNotIn('counts', evidence)
+
+    def test_invalid_base_refuses_without_scoring_rules(self):
+        checker = load_checker()
+        if checker is None:
+            self.skipTest("checker dependencies unavailable")
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            bad = Path(directory) / 'base.json'
+            bad.write_text('{}')
+            receipt, code, _ = checker.evaluate(Path('/missing-input'), [bad], [])
+        self.assertEqual(2, code)
+        self.assertEqual('refused', receipt['status'])
+        self.assertEqual('not-run', receipt['fullModel']['status'])
+        self.assertEqual([], receipt['snapshots'])
+
+    def test_failed_history_prerequisite_and_malformed_carrier_never_earn_full_pass(self):
+        checker = load_checker()
+        if checker is None:
+            self.skipTest("checker dependencies unavailable")
+        from unittest.mock import patch
+        import tempfile
+        from jsonschema import Draft202012Validator
+        sys.path.insert(0, str(CONFORMANCE))
+        import make_vectors as generator
+        # Base selection is stubbed here so this state-machine regression is
+        # offline; exact registered base bytes are tested by the full suite.
+        selected = ('digest', {'repository': 'fixture', 'ref': 'test', 'path': 'base'},
+                    Draft202012Validator({}), 'unit state-machine base')
+        with tempfile.TemporaryDirectory() as directory:
+            carrier = Path(directory) / 'carrier.gff3'
+            prior = Path(directory) / 'prior.gff3'
+            carrier.write_bytes(generator.render(generator.metadata(
+                [generator.record('m', '1')], '1'), generator.feature_payload(30)))
+            prior.write_bytes(generator.render(generator.metadata(
+                [generator.record('m', '0')], '0'), b'toy\tpilot\tgene\t1\t9\t.\t+\t.\tID=toy-a;Parent =other\n'))
+            with patch.object(checker, 'load_bases', return_value=[]), \
+                    patch.object(checker, 'choose_base', return_value=selected):
+                receipt, code, _ = checker.evaluate(carrier, [], [prior])
+                self.assertEqual(1, code)
+                self.assertEqual('not-run', receipt['fullModel']['status'])
+                self.assertEqual('not-run', receipt['snapshots'][0]['rules']['K6']['status'])
+                self.assertEqual('not-run', receipt['snapshots'][1]['rules']['K4']['status'])
+                self.assertIn('untrustworthy', receipt['snapshots'][1]['rules']['K4']['reason'])
+                receipt, code, _ = checker.evaluate(prior, [], [])
+                self.assertEqual(1, code)
+                self.assertEqual('not-run', receipt['fullModel']['status'])
+
+    def test_selected_identity_and_root_scope_cases_have_earned_outcomes(self):
+        checker = load_checker()
+        if checker is None:
+            self.skipTest("checker dependencies unavailable")
+        from unittest.mock import patch
+        import tempfile
+        from jsonschema import Draft202012Validator
+        selected = ('digest', {'repository': 'fixture', 'ref': 'test', 'path': 'base'},
+                    Draft202012Validator({}), 'unit state-machine base')
+        cases = [v for v in manifest()['vectors'] if v.get('reviewRequired')]
+        self.assertEqual(11, len(cases))
+        with patch.object(checker, 'load_bases', return_value=[]), \
+                patch.object(checker, 'choose_base', return_value=selected):
+            for vector in cases:
+                with self.subTest(vector=vector['id']):
+                    prior = [CONFORMANCE / p for p in vector.get('context', {}).get('predecessors', [])]
+                    receipt, code, _ = checker.evaluate(CONFORMANCE / vector['file'], [], prior)
+                    self.assertEqual(vector['evidenceExpectation']['model'], receipt['fullModel']['status'])
+                    self.assertEqual(0 if vector['expected'] == 'valid' else 1, code)
+
+    def test_untrustworthy_inventory_cannot_pass_k4(self):
+        checker = load_checker()
+        if checker is None:
+            self.skipTest("checker dependencies unavailable")
+        with self.assertRaisesRegex(ValueError, 'nine columns'):
+            checker.gene_targets(b'not a feature row\n')
+
+
 class Census(unittest.TestCase):
     def setUp(self):
         self.vectors = manifest()["vectors"]
 
-    def test_a_model_rejection_is_gap_proof_unless_the_base_layer_already_catches_it(self):
+    def test_legacy_process_rejections_keep_boundary_polarity_without_claiming_model_evidence(self):
         rejected = [vector for vector in self.vectors if vector["layers"]["model"] == "reject"]
         self.assertTrue(rejected)
         for vector in rejected:
@@ -772,14 +901,23 @@ class CheckerGuards(unittest.TestCase):
         self.assertEqual(self.checker.RESOLVABLE, verdict)
 
     def test_attribute_keys_match_exactly(self):
-        # GFF3 attribute tags are case-sensitive and whitespace is not trimmed:
-        # "Name=x; ID=toy-a" carries the tag " ID", not "ID", so that row has no
-        # ID, and only the percent-decoded value is indexed.
-        rows = (b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tName=x; ID=toy-a\n"
-                b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tid=toy-b\n"
+        # Lowercase id is not ID; percent-decoding is only applied to values.
+        rows = (b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tid=toy-b\n"
                 b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tID=toy%2Dc\n")
         targets = self.checker.gene_targets(rows)
         self.assertEqual({b"toy-c"}, set(targets))
+
+    def test_malformed_identity_or_parent_tags_refuse_inventory_instead_of_establishing_root(self):
+        prefix = b"toy\tpilot\tgene\t1\t9\t.\t+\t.\t"
+        for attributes in (b"ID=toy-a;Parent =other", b"ID=toy-a; Parent=other",
+                           b"ID=toy-a;ID", b"ID=toy-a;ID=other", b"ID=",
+                           b"ID=toy-a,other", b"Name=x; ID=toy-a"):
+            with self.subTest(attributes=attributes):
+                with self.assertRaisesRegex(ValueError, 'ntrustworthy feature inventory'):
+                    self.checker.gene_targets(prefix + attributes + b"\n")
+        # Unknown ordinary tags are outside this inventory's identity/root
+        # responsibility; separate syntax/graph validation remains separate.
+        self.assertIn(b'toy-a', self.checker.gene_targets(prefix + b'ID=toy-a;name=x\n'))
 
 
 if __name__ == "__main__":

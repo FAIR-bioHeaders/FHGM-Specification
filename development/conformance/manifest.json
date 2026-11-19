@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "status": "Draft FHGM conformance suite, prepared from the reviewed model contract. FHGM has no released contract, no schemaVersion, no schema URL and no schemas/versions.json entry, and selection rule V7 keeps it that way until the shared publication PR lands; nothing here publishes, adopts or claims support. Every outcome recorded below is an observation of development/model/validate_fhgm.py run against the base-schema bytes recorded in provenance.json, re-verified by run_conformance.py.",
+  "status": "Draft FHGM conformance suite, prepared from the reviewed model contract. FHGM has no released contract, no schemaVersion, no schema URL and no schemas/versions.json entry, and selection rule V7 keeps it that way until the shared publication PR lands; nothing here publishes, adopts or claims support. Expectations are derived from clauses, including independent accepted promotion records. Actual checker observations are reported separately by run_conformance.py against exact registered base bytes.",
   "specification": "../model/README.md",
   "decisionRecord": "../CONTRACT-REVIEW.md",
   "checker": "../model/validate_fhgm.py",
@@ -11,7 +11,7 @@
   "baseMatrix": "base_matrix.json",
   "ruleVocabulary": "K1-K6 are the FHGM model-level rules and B1 the boundary above them; they are drafted in this repository and are not registered in the shared conformance manifest, whose R1-R15, M, J, P, G and V namespaces keep their meanings. Vectors may also cite shared rules (sharedRules) where the shared text is the authority. The shared suite enumerates released types only, so this manifest is the seed the #204 publication PR either absorbs into conformance/manifest.json under ids it chooses, or mirrors with a cross-repository digest check - see README.md.",
   "contextVocabulary": "Pointer resolution is context-dependent: `context.predecessors` names the prior snapshots handed to the checker, in addition to the vector's own bytes. Two entries may therefore share one file and differ only in the history supplied - that pair is how deviation D3's bound is pinned.",
-  "layers": "Each vector records what four independent checks report: base (the released fhgff3.json schema alone, over the parsed header), checksum (verify when the file-bound SHA-512/256 covers the bytes, stale when the header states a digest the bytes no longer produce), gff3 (gff3-validate --no-header over the feature layer, a separate tool: every vector here is recorded as accept, so no rejection in this suite can be attributed to GFF3 syntax) and model (the draft checker's outcome). These observations bind to the v0.5.0 base bytes; the checker is handed both registered base releases and prints, for every loaded file, the release it selected from that file's cited schema URL, so no verdict is silent about which bytes produced it. The checksum field always holds the value the file states, stale or not, so a tampered vector pins which digest it kept. An invalid vector records the reason substring the checker must print. A reader without gff3-validate reports that layer as skipped; no FHGM rule depends on it.",
+  "layers": "Each vector records what four independent checks report: base (the released fhgff3.json schema alone, over the parsed header), checksum (verify when the file-bound SHA-512/256 covers the bytes, stale when the header states a digest the bytes no longer produce), gff3 (gff3-validate --no-header over the feature layer, a separate tool: each vector records its own outcome, including the bare-Parent syntax rejection) and model (the draft checker's outcome). These observations bind to the v0.5.0 base bytes; the checker is handed both registered base releases and prints, for every loaded file, the release it selected from that file's cited schema URL, so no verdict is silent about which bytes produced it. The checksum field always holds the value the file states, stale or not, so a tampered vector pins which digest it kept. An invalid vector records the reason substring the checker must print. A reader without gff3-validate reports that layer as skipped; no FHGM rule depends on it.",
   "rules": {
     "K1": {
       "summary": "Transport: an FHGM-carrying file keeps a released FHGFF3 identity - the v0.5.0 citation with schemaVersion 1.1, or the v0.6.0 citation with schemaVersion 1.2 or 1.1 (maintainer dual-base decision 2026-11-15; each citation may use the w3id URL or the raw tag URL under either repository name) - and carries one or more records under the single top-level x-fhgm-models key (docs/FORMAT.md R15). The checker validates the file against the registered base release its schema URL cites and refuses a citation no registered release answers to (raw main, superseded releases) or whose bytes were not supplied. A file stating FHGFF3 1.0 cannot carry the extension at all.",
@@ -118,6 +118,10 @@
       "bytes": {
         "size": 1215,
         "sha256": "a9720110c88170b21abab6e1c845905ccfb3d482bda5135442a81f539e86fe78"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -144,6 +148,10 @@
       "bytes": {
         "size": 755,
         "sha256": "14c37f5d09604d9514f5e98eb0fd289f9434ccce7d199ccdd1588dd011c34f57"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -172,6 +180,10 @@
       "bytes": {
         "size": 1240,
         "sha256": "ebf7238069fb5315b58b14536673354eeb79b1878b0a7e7cd5436a47b29d9ef2"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -186,7 +198,7 @@
         "K4",
         "K5"
       ],
-      "description": "Two real chromosome-4 gene models (multi-isoform Dmel_CG11076 plus the single-exon neighbour Dmel_CG11077) bound to the two released genome-link forms with real values; the positive anchor the pointer cases below hand to the checker. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "Two real chromosome-4 gene models (multi-isoform Dmel_CG11076 plus the single-exon neighbour Dmel_CG11077) bound to the two released genome-link forms with real values; the positive anchor the pointer cases below hand to the checker. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -197,6 +209,19 @@
       "bytes": {
         "size": 10096,
         "sha256": "4e8d44ce289c6c891eba183449719d76c6b0f2df4549ec50927c50f7812d86fb"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K1, K2, K4, K5",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -210,7 +235,7 @@
         "K2",
         "K6"
       ],
-      "description": "The real revision snapshot resolved against the v1 anchor: pointer checksum, own modelId and recorded version all match; verdict resolvable, which states no curator acceptance. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "The real revision snapshot resolved against the v1 anchor: pointer checksum, own modelId and recorded version all match; verdict resolvable, which states no curator acceptance. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -226,6 +251,19 @@
         "predecessors": [
           "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3"
         ]
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K1, K2, K6",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -248,6 +286,10 @@
       "bytes": {
         "size": 998,
         "sha256": "34b128c338626cd24f91a392b19211d4b40914281af25c252e793d462652b3b3"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -271,6 +313,10 @@
       "bytes": {
         "size": 935,
         "sha256": "5add0025916e2ab085b0f9ea29347f5881773a382f4e305261ef1dfed19718ac"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -298,6 +344,10 @@
       "bytes": {
         "size": 1223,
         "sha256": "77e5dc904e5dc020020ff02790dad9b32b7a1a0e0f45c343d4ea802505e58edd"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -326,6 +376,10 @@
       "bytes": {
         "size": 1223,
         "sha256": "c42fdf0a84640f55fb0ac476343bf64cbfcbc7ae57410753b2d1fdf1861b23bd"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -348,6 +402,10 @@
       "bytes": {
         "size": 960,
         "sha256": "7a43e409f894859bd33ff3b5924813b29df62c282e5b8ce0b07f190bf02d2369"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -370,6 +428,10 @@
       "bytes": {
         "size": 1220,
         "sha256": "fec57abbf903f5125f89180fdd1871749956f583178fa7bb246afbe2138fd352"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -400,6 +462,10 @@
       "bytes": {
         "size": 1223,
         "sha256": "c42fdf0a84640f55fb0ac476343bf64cbfcbc7ae57410753b2d1fdf1861b23bd"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -424,6 +490,10 @@
       "bytes": {
         "size": 4574,
         "sha256": "bc00668960410d7acf6b38680439f87f9cc2b7f978425db189b15664a2e1f177"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -450,6 +520,10 @@
       "bytes": {
         "size": 923,
         "sha256": "7f400445754e9a561da6a67c46f9bbaab532001276da998a4758294390bbf367"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -472,6 +546,10 @@
       "bytes": {
         "size": 984,
         "sha256": "008cdf56aded57961bb146d2b6192953a084ed6dd36e65dbbff10f9d3991c048"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -499,6 +577,10 @@
       "bytes": {
         "size": 1100,
         "sha256": "706ec80436e0abf2b25af9f286bc2dd29466150b3a40cb5d4f433e77e6872cfe"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -521,6 +603,10 @@
       "bytes": {
         "size": 958,
         "sha256": "34c668b5f6661ad2cbb177d44001960141c5362b56ee8775f9ef70026c82264a"
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -542,6 +628,10 @@
       "bytes": {
         "size": 1100,
         "sha256": "da09d10bc4da0c6ba9c94b2180372ec1b9b3469996c4dd44e676481048e180e4"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -563,6 +653,10 @@
       "bytes": {
         "size": 1008,
         "sha256": "57e50f31cc89c968144101000e99b1694babfc2033b229e84ac4a926ff8749d2"
+      },
+      "evidenceExpectation": {
+        "model": "not-run",
+        "basis": "D4 prerequisite boundary"
       }
     },
     {
@@ -573,7 +667,7 @@
       "expected": "invalid",
       "rule": "K3",
       "reason": "Ambiguous model ID",
-      "description": "Deviation D4 on real records: the unchanged neighbour model is appended a second time, two records share modelId gene-Dmel_CG11077, and the snapshot is rejected. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "Deviation D4 on real records: the unchanged neighbour model is appended a second time, two records share modelId gene-Dmel_CG11077, and the snapshot is rejected. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -584,6 +678,19 @@
       "bytes": {
         "size": 10686,
         "sha256": "5e7a9cd810ec02ca7908ad25498ef71cb2c09d70b6d0a4c13f9d59a586050f8b"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K3",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -594,7 +701,7 @@
       "expected": "invalid",
       "rule": "K1",
       "reason": "should be non-empty",
-      "description": "The transport requires one or more records: x-fhgm-models emptied on the real snapshot. The base schema accepts any extension value, so only the checker distinguishes an empty array from an FHGM file. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "The transport requires one or more records: x-fhgm-models emptied on the real snapshot. The base schema accepts any extension value, so only the checker distinguishes an empty array from an FHGM file. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -605,6 +712,19 @@
       "bytes": {
         "size": 8302,
         "sha256": "17a00252a172fecf525a33f58cac491b615a210fd7d7dc70c9dc6a31686af460"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K1",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -615,7 +735,7 @@
       "expected": "invalid",
       "rule": "K2",
       "reason": "is not of type 'string'",
-      "description": "modelVersion set to the YAML integer 2 on the real CG record: the contract's opaque text field takes non-empty strings only (fhgm-model.schema.json $defs/text). Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "modelVersion set to the YAML integer 2 on the real CG record: the contract's opaque text field takes non-empty strings only (fhgm-model.schema.json $defs/text). Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -626,6 +746,19 @@
       "bytes": {
         "size": 9927,
         "sha256": "33df25c7e303b5ea6bb8b957bb751fe7b43a68c26eb41457d48ae8afb61e1524"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K2",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -636,7 +769,7 @@
       "expected": "invalid",
       "rule": "K6",
       "reason": "the pointer names another model ID",
-      "description": "Deviation D2 attacked through the pointer on real records: the v2 CG record's predecessor names the unchanged neighbour gene-Dmel_CG11077. The predecessor snapshot itself is valid bytes with a verifying checksum. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "Deviation D2 attacked through the pointer on real records: the v2 CG record's predecessor names the unchanged neighbour gene-Dmel_CG11077. The predecessor snapshot itself is valid bytes with a verifying checksum. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -652,6 +785,19 @@
         "predecessors": [
           "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3"
         ]
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K6",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -662,7 +808,7 @@
       "expected": "invalid",
       "rule": "K6",
       "reason": "reuses the predecessor model version",
-      "description": "The successor's own modelVersion set to '1', equal to the recorded predecessor version: the one version rule v0.1 states (an immediate revision must differ) fires on real data. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "The successor's own modelVersion set to '1', equal to the recorded predecessor version: the one version rule v0.1 states (an immediate revision must differ) fires on real data. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -678,6 +824,19 @@
         "predecessors": [
           "../examples/dmel4/Dmel_CG11076-Mpv17.snapshot-v1.fhgff3.gff3"
         ]
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K6",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -688,7 +847,7 @@
       "expected": "invalid",
       "rule": "K5",
       "reason": "contradicts the file genome link",
-      "description": "Rule K5's contradiction half with a real wrong parent: the MP record re-bound to annotates = the committed S6k example fixture's own checksum - a genuine FHGFF3 file digest that is simply not this file's parent, invisible to every released check. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "Rule K5's contradiction half with a real wrong parent: the MP record re-bound to annotates = the committed S6k example fixture's own checksum - a genuine FHGFF3 file digest that is simply not this file's parent, invisible to every released check. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -699,6 +858,19 @@
       "bytes": {
         "size": 9929,
         "sha256": "0cd2f55656f905086798b1f07c4c0ffa78e68d6f3f99ea38df1397a8fb29a258"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K5",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -709,7 +881,7 @@
       "expected": "invalid",
       "rule": "K5",
       "reason": "has no reference form comparable with the file genome link",
-      "description": "Rule K5's strictness half on real data: the file's genomeReference dropped (only the FHR subset derivedFrom link remains) while the CG record keeps only its accession-plus-SeqCol binding. Nothing contradicts; no shared comparable form exists. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "Rule K5's strictness half on real data: the file's genomeReference dropped (only the FHR subset derivedFrom link remains) while the CG record keeps only its accession-plus-SeqCol binding. Nothing contradicts; no shared comparable form exists. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -720,6 +892,19 @@
       "bytes": {
         "size": 9791,
         "sha256": "0be8ba5aafb77fcb3e103bb07cdfe8b0222bd89b225930f3b4f59b92bfa42753"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K5",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -730,7 +915,7 @@
       "expected": "invalid",
       "rule": "K6",
       "reason": "the predecessor snapshot is the current file or was not supplied",
-      "description": "Deviation D3's bound on real bytes: the committed v2 revision snapshot run with no supplied history - unresolvable, because resolution covers only what the reviewer hands over. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "Deviation D3's bound on real bytes: the committed v2 revision snapshot run with no supplied history - unresolvable, because resolution covers only what the reviewer hands over. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -741,6 +926,19 @@
       "bytes": {
         "size": 10474,
         "sha256": "1bcba240f11c332c85dfec2539eb359efd9623a959ac5a66021e7efb94ec73c9"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K6",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -751,7 +949,7 @@
       "expected": "invalid",
       "rule": "K4",
       "reason": "must target one local gene row",
-      "description": "Rule K4: the CG record's featureId changed to gene-Dmel_absentFromThisFile, which no row in the real locus payload carries. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "Rule K4: the CG record's featureId changed to gene-Dmel_absentFromThisFile, which no row in the real locus payload carries. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -762,6 +960,19 @@
       "bytes": {
         "size": 9940,
         "sha256": "ffd59b49022256b29a63acd727af5b1764cdcaf21eb6ebac3c18ad63136690e1"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K4",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -772,7 +983,7 @@
       "expected": "invalid",
       "rule": "K4",
       "reason": "must target one local gene row",
-      "description": "Rule K4's v0.1 scope against the exact real confusion a producer editing a nested RefSeq graph faces: featureId set to rna-NM_143687.4, a real mRNA row of the same gene. A transcript row is not a gene row; #204 Q6 transcript-only scope stays open. Promotion candidate from the real-data example lane (development/examples/dmel4/, RefSeq GCF_000001215.4 chr4 rows copied verbatim): expectations here are OBSERVED outputs of the committed checker and their contract-text derivations are collected in PROMOTION-2026-11-15.md; the packet is a draft and requires independent review by a reader who is not the derivation's author.",
+      "description": "Rule K4's v0.1 scope against the exact real confusion a producer editing a nested RefSeq graph faces: featureId set to rna-NM_143687.4, a real mRNA row of the same gene. A transcript row is not a gene row; #204 Q6 transcript-only scope stays open. Independent clause derivation accepted on 2026-11-19; see expectationReview.",
       "layers": {
         "base": "accept",
         "checksum": "verify",
@@ -783,6 +994,19 @@
       "bytes": {
         "size": 9927,
         "sha256": "deac006b3e4f88170c348dd0666409e197b3ac0b7c8801987a15943ae2783df0"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "original promotion derivation author (Qwen; historical packet)",
+        "derivation": "PROMOTION-2026-11-15.md",
+        "clause": "K4",
+        "disposition": "Accept the recorded expectation for this draft suite; D4 earned evidence boundaries apply. No curator acceptance or publication.",
+        "date": "2026-11-19"
       }
     },
     {
@@ -804,6 +1028,10 @@
       "bytes": {
         "size": 1141,
         "sha256": "5aef25790488872ed8c5f44200a46a9fdaca187a51eb9d964c62f66a44f65d83"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -828,6 +1056,10 @@
       "bytes": {
         "size": 782,
         "sha256": "2428eaaad84045477ce5e8063eab7cfca6a0369a4c628e0841e0a3054e15f6c3"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -849,6 +1081,10 @@
       "bytes": {
         "size": 962,
         "sha256": "5b861a3883157a547281bc5c56e80b2a5da5ce2bf83dd0e83e68d102207639dd"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -870,6 +1106,10 @@
       "bytes": {
         "size": 964,
         "sha256": "61bfd704dc73dc9434cc34f41440dc70293619fd3435b6ad895162efb1cce544"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -891,6 +1131,10 @@
       "bytes": {
         "size": 992,
         "sha256": "20fe45ede108e9a504a86c4184cc5c1ccef8feb4e19fe73859bc3c4e02800d2f"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -912,6 +1156,10 @@
       "bytes": {
         "size": 975,
         "sha256": "ea8577e32a27c4a93a55f63610b2b8020c08eb2b6e962e205f245438ff105d21"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -933,6 +1181,10 @@
       "bytes": {
         "size": 958,
         "sha256": "81ebb96c9fe9384c269bd26b7bc4d94557ed35ed721c1ebc3faadadcf198b447"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -954,6 +1206,10 @@
       "bytes": {
         "size": 962,
         "sha256": "0b78cc60b396f9a941b731202f88bbb65c7d1be70c5708123faf126328c84b86"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -981,6 +1237,10 @@
       "bytes": {
         "size": 1223,
         "sha256": "77e5dc904e5dc020020ff02790dad9b32b7a1a0e0f45c343d4ea802505e58edd"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1002,6 +1262,10 @@
       "bytes": {
         "size": 1152,
         "sha256": "36548892beaf89d0e5cd3ebc4c9dfd5f355a7c30fd2fd9ac5d0d4ae3507eb92b"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1028,6 +1292,10 @@
       "bytes": {
         "size": 1160,
         "sha256": "15094807d2cb4e33e15b596419a19cb5e5082386041f7d88b6df656c4c7b26de"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1054,6 +1322,10 @@
       "bytes": {
         "size": 1081,
         "sha256": "e3a839642ff428b75040d7438a0684b5a0f402dd41adac016a782ae99fbb9e62"
+      },
+      "evidenceExpectation": {
+        "model": "not-run",
+        "basis": "D4 prerequisite boundary"
       }
     },
     {
@@ -1080,6 +1352,10 @@
       "bytes": {
         "size": 1204,
         "sha256": "81b02d5c3002e5f34ab8df48bc37a4268685218f0851d8e071810d44858333cb"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1106,6 +1382,10 @@
       "bytes": {
         "size": 1081,
         "sha256": "8e66f08708e0ad545b7a68e7183ca1601d68390555c67864d219afa61ae18af0"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1132,6 +1412,10 @@
       "bytes": {
         "size": 1223,
         "sha256": "12d817b65e1d148cb9e41307f417ae0a165191c225986a452185ac8d2ff304f5"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1158,6 +1442,10 @@
       "bytes": {
         "size": 1223,
         "sha256": "14d6175b13b6ec86ae84695f95797266034cc3297f5bcfad3c86fef8f4d8cfd1"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1184,6 +1472,10 @@
       "bytes": {
         "size": 1223,
         "sha256": "82763b0480533203ed7d51536b969cee05b7ff9dc187a53a087e93e157eb972f"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1205,6 +1497,10 @@
       "bytes": {
         "size": 1045,
         "sha256": "5d5e29534270739a778f030d656d491752301a9eb3e08f7052bff78e06c4f370"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1226,6 +1522,10 @@
       "bytes": {
         "size": 1065,
         "sha256": "757f931e69549461c7064893f1c72119e56aff05940a88e6467572b66bdd25dd"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1247,6 +1547,10 @@
       "bytes": {
         "size": 1041,
         "sha256": "2cc94528e4684b52bb606354a91d0a3d5e3e0b20d970d514e50452d97dc68234"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1268,6 +1572,10 @@
       "bytes": {
         "size": 996,
         "sha256": "85060eb9d7eb7e078b776cf04ca440149a8146f7079f81251d7a78a0e85bfbf1"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1289,6 +1597,10 @@
       "bytes": {
         "size": 959,
         "sha256": "6130a639341f129e6e2e51a37295767547a1383291c2bd881dcdbdf27ad6514c"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1310,6 +1622,10 @@
       "bytes": {
         "size": 956,
         "sha256": "88e8d27eabfc1d06f8cef804b1b9a4fa4a70901f6c442dd86b38b1d314885491"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1331,6 +1647,10 @@
       "bytes": {
         "size": 920,
         "sha256": "8ea1e35cf442149bebfc679d82333ec40e9363758bcc5e7c457e0f2968c39443"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1352,6 +1672,10 @@
       "bytes": {
         "size": 1037,
         "sha256": "20afe60ac4cca78f5d00ff1a59b3c1a93079a5e8f7fe34d41a75c86e9de64341"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1376,6 +1700,10 @@
       "bytes": {
         "size": 983,
         "sha256": "781eb4e7eda9710923cdffa70d528a0dc29c3aa3cdbaeedb19ff6a808f781f16"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1397,6 +1725,10 @@
       "bytes": {
         "size": 807,
         "sha256": "2fee4a274710e1ba3e017f259e9353939ca0536f02dbf740b1b3b5bf8a60d381"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1418,6 +1750,10 @@
       "bytes": {
         "size": 915,
         "sha256": "93eafce6cd8d0656bff3bec466c6f08eb961f0d5f20ccf6eba36e383d2aeb32e"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1439,6 +1775,10 @@
       "bytes": {
         "size": 1223,
         "sha256": "c42fdf0a84640f55fb0ac476343bf64cbfcbc7ae57410753b2d1fdf1861b23bd"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1465,6 +1805,10 @@
       "bytes": {
         "size": 1223,
         "sha256": "5bac530f4300066f3957e3d3f20a897f1457378b57650d9294f561e3105496a9"
+      },
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
       }
     },
     {
@@ -1489,6 +1833,10 @@
       "bytes": {
         "size": 953,
         "sha256": "d27e43eb1e98fe8147764aa13abf3798adcb407ce28fe5bccbea285c5fbb4e99"
+      },
+      "evidenceExpectation": {
+        "model": "not-run",
+        "basis": "D4 prerequisite boundary"
       }
     },
     {
@@ -1513,6 +1861,10 @@
       "bytes": {
         "size": 958,
         "sha256": "787afca3c013253f68a8bbfea1d5947749cd3a5281abe4eac730b8dfb5c930a3"
+      },
+      "evidenceExpectation": {
+        "model": "not-run",
+        "basis": "D4 prerequisite boundary"
       }
     },
     {
@@ -1537,6 +1889,10 @@
       "bytes": {
         "size": 958,
         "sha256": "cd73204b809f1a5d91f41e0e5175be8c50a04599e266c0332bf94e7808727d4b"
+      },
+      "evidenceExpectation": {
+        "model": "not-run",
+        "basis": "D4 prerequisite boundary"
       }
     },
     {
@@ -1558,7 +1914,11 @@
         "size": 964,
         "sha256": "547f69fd081b2394661e178982d2fa5d0259e7efdb50307150e897a5f1d0d89c"
       },
-      "checksum": "hSmuUMrqFHkOG9vQnmp3HlO4801MAiqIV3982sJJTBM="
+      "checksum": "hSmuUMrqFHkOG9vQnmp3HlO4801MAiqIV3982sJJTBM=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-invisible-plus",
@@ -1579,7 +1939,11 @@
         "size": 964,
         "sha256": "7d754c67210b1825860366b3a17f9f38b84c32202d9f15b5252cacc4c1504950"
       },
-      "checksum": "dCETchq66gmm4hbclBAVPQwqpupEPW7jDMR42TArR+o="
+      "checksum": "dCETchq66gmm4hbclBAVPQwqpupEPW7jDMR42TArR+o=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-leading-line-separator",
@@ -1600,7 +1964,11 @@
         "size": 964,
         "sha256": "f5b9e8394485f6a8e70b05af84750ad86996fc986d441761395dfcfe0ea5a6f1"
       },
-      "checksum": "ebcs3bAGXK8mI+QmjVdVYgGF3UxwNxlyT74LOrNfEwI="
+      "checksum": "ebcs3bAGXK8mI+QmjVdVYgGF3UxwNxlyT74LOrNfEwI=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-leading-ogham-space",
@@ -1621,7 +1989,11 @@
         "size": 964,
         "sha256": "18d5041c651aa00a535265308a0fbaf002806a9f1cb0931f57fc4171a2959c0b"
       },
-      "checksum": "zWAQXD0HXDi6a+uvS5NgcAXsbqNK+B7qNBsO6b7mJ3w="
+      "checksum": "zWAQXD0HXDi6a+uvS5NgcAXsbqNK+B7qNBsO6b7mJ3w=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-leading-paragraph-separator",
@@ -1642,7 +2014,11 @@
         "size": 964,
         "sha256": "33c6845a4d75be8ca3e32596b1cd3830e1da5062b91e45df0e3a8adf42b90d97"
       },
-      "checksum": "s5Oaa+eGwCW4lxFiSQEDeQOvaJGCYc+EVC8w2AIpUKA="
+      "checksum": "s5Oaa+eGwCW4lxFiSQEDeQOvaJGCYc+EVC8w2AIpUKA=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-left-to-right-embedding",
@@ -1663,7 +2039,11 @@
         "size": 964,
         "sha256": "7946fd54ccdf8ee879ae2a004e447a74c7f4f430d6fb652aebbb9e41e6113e3c"
       },
-      "checksum": "UAse4dTboDcdt7MVCyntKDWP1DKnn6i5IXcpp8dIRwI="
+      "checksum": "UAse4dTboDcdt7MVCyntKDWP1DKnn6i5IXcpp8dIRwI=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-right-to-left-mark",
@@ -1684,7 +2064,11 @@
         "size": 964,
         "sha256": "20bc8bfadcb7786e9b4ccf8486fe852555f1b13b3bdf746ef5d4b5e1a85dc041"
       },
-      "checksum": "yKmr6LZPFlQXylNeT4rzVc5xpVRE0swVem2pfaW+A+c="
+      "checksum": "yKmr6LZPFlQXylNeT4rzVc5xpVRE0swVem2pfaW+A+c=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-right-to-left-override",
@@ -1705,7 +2089,11 @@
         "size": 964,
         "sha256": "d72728aa51377b2bf3203d7007896426d11c3649edd2f1f73d0527d929751ef6"
       },
-      "checksum": "Qme1c78EKOoLtldxCRK7+s7hHQ6+RHNwxPX2CqI9Fos="
+      "checksum": "Qme1c78EKOoLtldxCRK7+s7hHQ6+RHNwxPX2CqI9Fos=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-trailing-en-quad",
@@ -1726,7 +2114,11 @@
         "size": 964,
         "sha256": "17bafca3fd0e009430a8f448e964e06ae3b4d3f707390a349de06a15149cd9a8"
       },
-      "checksum": "dpjykbhXXQFnB07/0Hpm621J61q5stfo7WrgV8RUVng="
+      "checksum": "dpjykbhXXQFnB07/0Hpm621J61q5stfo7WrgV8RUVng=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-trailing-hair-space",
@@ -1747,7 +2139,11 @@
         "size": 964,
         "sha256": "62df7c80ae0729d41abcfc3585c4e39e26be6cfbf0f79fa6cca176cd94463b46"
       },
-      "checksum": "lFR77IKjvP4P3KLTu9Y9MMeI6jvjIiMdm2UEvoXI9LY="
+      "checksum": "lFR77IKjvP4P3KLTu9Y9MMeI6jvjIiMdm2UEvoXI9LY=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-trailing-ideographic-space",
@@ -1768,7 +2164,11 @@
         "size": 964,
         "sha256": "35eca7521ab460da65695e8c5a24e9236ee4e606c2ad8f8c08037bc7aede2c36"
       },
-      "checksum": "CBs8lazePk0MjjVheeS9ARxce6UNmXZ+28rdOfVFU4o="
+      "checksum": "CBs8lazePk0MjjVheeS9ARxce6UNmXZ+28rdOfVFU4o=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-trailing-medium-mathematical-space",
@@ -1789,7 +2189,11 @@
         "size": 964,
         "sha256": "403b362d0c1dce3c507303355715ff1f7f53bfb1e980abf1d24f86304d8b45e6"
       },
-      "checksum": "Z9/S+mVZESitwQXHMpyO4rbpRyaiChi5KHxhPUPv2l8="
+      "checksum": "Z9/S+mVZESitwQXHMpyO4rbpRyaiChi5KHxhPUPv2l8=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-trailing-narrow-nbsp",
@@ -1810,7 +2214,11 @@
         "size": 964,
         "sha256": "9ea6bc09a52fae127057ae92b7a50469c1e536de3f167ef12c7aae78892df309"
       },
-      "checksum": "7MmBA35zi0LualoAqZ+ZM9GP+8RKTZTO2rormTyyjBo="
+      "checksum": "7MmBA35zi0LualoAqZ+ZM9GP+8RKTZTO2rormTyyjBo=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-trailing-nbsp",
@@ -1831,7 +2239,11 @@
         "size": 964,
         "sha256": "4c4af7ae519a2eb58d9479b1ecb9fa2ef61eeb8b9d7329258c24f8a008b24742"
       },
-      "checksum": "OnFaXqD+wY2LZZ/ZVfMoMcdYsgK2Mal434quyfCf3WE="
+      "checksum": "OnFaXqD+wY2LZZ/ZVfMoMcdYsgK2Mal434quyfCf3WE=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-word-joiner",
@@ -1852,7 +2264,11 @@
         "size": 964,
         "sha256": "ad5bdb6aad0e44f5f2a5a7db8f19d5d6e3caadcce9f896c4433aace85781ed09"
       },
-      "checksum": "a0BQmbiDIofaro49705gmBOahU1XiwdKbpHpToBbNOA="
+      "checksum": "a0BQmbiDIofaro49705gmBOahU1XiwdKbpHpToBbNOA=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-zero-width-space",
@@ -1873,7 +2289,11 @@
         "size": 964,
         "sha256": "aec8442bcfbda480094a1e235b0de33ca18f47305a7d788958012a62a09ff228"
       },
-      "checksum": "5Ycv40Ad7iUxlFK3fo/aAFHW86e3O7YdqSM7TLYPM1c="
+      "checksum": "5Ycv40Ad7iUxlFK3fo/aAFHW86e3O7YdqSM7TLYPM1c=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-absent",
@@ -1894,7 +2314,11 @@
         "size": 938,
         "sha256": "d4859d09fa39dce2b53bf7ace17139d2b120e8cddb02b27aeeb848636c08b722"
       },
-      "checksum": "aoyvp6lrG6yDSLyEHK+1b/WF7UOqADsby8UiwX81zng="
+      "checksum": "aoyvp6lrG6yDSLyEHK+1b/WF7UOqADsby8UiwX81zng=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "two-records-model-id-absent",
@@ -1915,7 +2339,11 @@
         "size": 1095,
         "sha256": "47ea532f4d9034300423b60a7868d3eac1115366880592d47095edbfd9cd7e23"
       },
-      "checksum": "J6hs56H/BNsT9XzBbMoHmpvZsO/rwn8HeqdJPy0filc="
+      "checksum": "J6hs56H/BNsT9XzBbMoHmpvZsO/rwn8HeqdJPy0filc=",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      }
     },
     {
       "id": "record-model-id-interior-nbsp",
@@ -1940,8 +2368,448 @@
         "size": 964,
         "sha256": "63c9d1b748381553d02f34378dd7f2a6e0ba3cbd963ff352d02b5cbd70fa0969"
       },
-      "checksum": "eBulOPQjZ9RuXHdLwhyc2NHMrviQKTdAI0KS1YIo7uM="
+      "checksum": "eBulOPQjZ9RuXHdLwhyc2NHMrviQKTdAI0KS1YIo7uM=",
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
+      }
+    },
+    {
+      "id": "competing-model-ids-same-target",
+      "file": "vectors/valid/competing-model-ids-same-target.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "description": "Distinct model IDs may share the same root-gene target; no featureId uniqueness constraint.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "rules": [
+        "K3"
+      ],
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 1135,
+        "sha256": "cb3829ed979004e6609c613ba1c05ae154fd01442da731aab81034ddf26e2dd0"
+      },
+      "checksum": "ZINr+Bt5xF4gcAG/U9HPANCLDoC9+sPmQRgSfMFYwxk=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K3",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "changed-file-local-feature-id",
+      "file": "vectors/valid/changed-file-local-feature-id.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "description": "A stable modelId points to its preceding version while its current file-local featureId is renamed.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "rules": [
+        "K6"
+      ],
+      "context": {
+        "predecessors": [
+          "../examples/model/valid-single.fhgff3.gff3"
+        ]
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 1101,
+        "sha256": "4f4cca54afbb66268101140418898b4ce531a09af198218ebfd81aa26c15eba5"
+      },
+      "checksum": "I6lORNofmi8P+Lj+vtsQyA+9hoY52giPBAxH/tLUh4s=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K6",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "opaque-version-a-initial",
+      "file": "vectors/valid/opaque-version-a-initial.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "description": "Opaque version A has no predecessor claim.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "rules": [
+        "K6"
+      ],
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 958,
+        "sha256": "d6ee78cac282422a9b1f0a6076c22663212f7d98704fe517148e89f3b4d6db5c"
+      },
+      "checksum": "+BgZ84WDJDoaRAaSc6EY42O51eKnp16F8FVOSKl5GZI=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K6",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "opaque-version-b-successor",
+      "file": "vectors/valid/opaque-version-b-successor.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "description": "B differs from its immediate predecessor A.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "rules": [
+        "K6"
+      ],
+      "context": {
+        "predecessors": [
+          "vectors/valid/opaque-version-a-initial.fhgff3.gff3"
+        ]
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 1081,
+        "sha256": "fbdbcee0786125c24eef39e3b7d60ed663b0beab2f8bda35db3c6f6a4600ab05"
+      },
+      "checksum": "Ra+fTFDObV7AMnP2ytFnjuoGv9C4gISUgUFO87KQ3Xw=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K6",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "opaque-version-a-reused",
+      "file": "vectors/valid/opaque-version-a-reused.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "description": "Reused A differs from its immediate predecessor B; no global version uniqueness requirement.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "rules": [
+        "K6"
+      ],
+      "context": {
+        "predecessors": [
+          "vectors/valid/opaque-version-a-initial.fhgff3.gff3",
+          "vectors/valid/opaque-version-b-successor.fhgff3.gff3"
+        ]
+      },
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 1087,
+        "sha256": "ca225c7084423041686f4179bf587d913858dabaf2fa3e5dd33e253c3007fba3"
+      },
+      "checksum": "nW4XmSI3sC1Ri3Tut6ZOMO4UjWl25QATVGpiDOk/l0k=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K6",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "noncoding-root-gene",
+      "file": "vectors/valid/noncoding-root-gene.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "description": "A real antisense gene root and its RNA/exon descendants satisfy gene scope without CDS.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "rules": [
+        "K4"
+      ],
+      "evidenceExpectation": {
+        "model": "pass",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 2314,
+        "sha256": "28e1074909239af8277b3f4e4ef7ef1ca123e41e5ebc10a00f430c86e27f856f"
+      },
+      "checksum": "vTDZPpg9lvSE1Af6XKd85kxtd+TvhWC8J4SIP2FDLMg=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K4",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "feature-inventory-complete-empty",
+      "file": "vectors/invalid/feature-inventory-complete-empty.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "description": "Complete empty inventory has zero matching rows, so K4 rejects.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "rule": "K4",
+      "reason": "one local gene row",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 688,
+        "sha256": "954f83efc45d762566ade742cc00261b0504e2f9f86c9675d3ed5b4ae2b29ee5"
+      },
+      "checksum": "yB4Ia4w9aG75DNkiQRb604Tlw3Bw9etizudWx/aWBi8=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K4",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "feature-inventory-no-identifiers",
+      "file": "vectors/invalid/feature-inventory-no-identifiers.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "description": "Complete inventory without ID attributes has zero matching rows, so K4 rejects.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "rule": "K4",
+      "reason": "one local gene row",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 717,
+        "sha256": "b2245c7738ad74b84dceb132d0f4b757faead8ab6837c1f52f9ae955bd04b512"
+      },
+      "checksum": "TRq3GxaVQ8NpJQ0wo8oEmkRFgRnArPpQ09rOC9aZQ9A=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K4",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "feature-target-bare-parent",
+      "file": "vectors/invalid/feature-target-bare-parent.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "description": "Presence of a bare Parent tag cannot establish a root, even though malformed syntax is independently reported by GFF3 validation.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "reject",
+        "model": "reject"
+      },
+      "rule": "K4",
+      "reason": "root gene",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 965,
+        "sha256": "91a362dca094dd55b5b62329221f08b4c19899a23c60d0aaf0097aef1c116522"
+      },
+      "checksum": "V7RMt19swlq/FIV2Rw3fcZHZ0RazV1g72gpY4WBKaA8=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K4",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "feature-target-empty-parent",
+      "file": "vectors/invalid/feature-target-empty-parent.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "description": "Presence of Parent= cannot establish a root, regardless of empty value.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "rule": "K4",
+      "reason": "root gene",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 966,
+        "sha256": "57053987402298db7bcf19f1a0b5a83b21a5cb3792e536bed8e8fcfc026bc20d"
+      },
+      "checksum": "tPadY3MhaadA3f0antaASHumOYlkK3xu7ULYYiRBiR4=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K4",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
+    },
+    {
+      "id": "feature-target-other-so-type",
+      "file": "vectors/invalid/feature-target-other-so-type.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "description": "SO:0001263 is not gene or SO:0000704; this is an initial FHGM scope limit.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "rule": "K4",
+      "reason": "one local gene row",
+      "evidenceExpectation": {
+        "model": "reject",
+        "basis": "K1-K6 clause derivation"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "39834480679af05942837f73cea7704ec4be1a6ce346a36421215ba8d8cc561e"
+      },
+      "checksum": "3v7JR22YALbHO7xOzq3At7dQx0I+dCuSV3ME5IAP2Ng=",
+      "reviewRequired": true,
+      "expectationReview": {
+        "status": "accepted",
+        "reader": "independent_review_275, gpt-6.1-terra, operated by David Molik",
+        "author": "FHGM authoring agent inherited parent gpt-6.1-sol; parent verified runtime session metadata",
+        "derivation": "DECISIONS-2026-11-19.md#new-expected-outcomes-derived-from-clauses",
+        "clause": "K4",
+        "disposition": "Accept clause-derived fullModel expectation after checking actual manifest, bytes, generator and supplied contexts; not biological or curator acceptance.",
+        "date": "2026-11-19"
+      }
     }
   ],
-  "retired": []
+  "retired": [],
+  "evidenceSemantics": "layers.model retains the historical checker-process outcome. evidenceExpectation.model is earned fullModel evidence; not-run cannot count as rejection or pass. Actual rule/layer receipts are emitted by --report-json.",
+  "ruleRequirements": {
+    "K1": [
+      "carrier header",
+      "selected FHGFF3 base",
+      "selected FHGM transport contract"
+    ],
+    "K2": [
+      "carrier model records",
+      "selected native record contract"
+    ],
+    "K3": [
+      "all carrier model records after K2"
+    ],
+    "K4": [
+      "carrier featureId values",
+      "complete trustworthy local carrier feature inventory (ID/type/Parent presence)"
+    ],
+    "K5": [
+      "carrier header assembly links",
+      "carrier model reference bindings"
+    ],
+    "K6": [
+      "selected carrier records and header",
+      "explicitly supplied prior snapshots with relevant K1-K5 prerequisites, including complete trustworthy feature inventories",
+      "recorded successor relations within supplied history only"
+    ]
+  },
+  "fullModelRequirements": "All selected-file K1-K6 predicates and relevant supplied-snapshot prerequisites must pass. Focus labels are not dependency declarations. No feature inventory means K4 not-run, not pass; known complete empty inventory rejects K4. No external or transitive history service."
 }
