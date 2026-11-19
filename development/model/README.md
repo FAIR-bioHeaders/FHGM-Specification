@@ -90,11 +90,10 @@ checker enforces through the JSON Schema files.
   Matching rules, all pinned by vectors:
   - only the percent-decoded ID is compared: `ID=toy%2Da` is `toy-a`, and a
     record naming the raw spelling `toy%2Da` does not resolve;
-  - the checker matches attribute tags exactly as written, case-sensitive and
-    without trimming whitespace: in `Name=x; ID=toy-a` the second tag is `ID`
-    with a leading space, so that row carries no ID and does not resolve, and
-    `id=toy-a` is not `ID` either. Some GFF3 readers trim that space; a
-    producer that wants the target to resolve writes `Name=x;ID=toy-a`;
+  - attribute tags are case-sensitive, without trimming: `id` is not `ID`.
+    Whitespace-disguised `ID`/`Parent` tags and malformed or duplicate ID
+    attributes make the local inventory untrustworthy; K4 stays not-run with
+    a reason. They cannot establish a root by being silently ignored;
   - exactly one row may carry the ID. Multiple rows sharing one ID and other
     gene-like types (`ncRNA_gene`, `pseudogene`, …) are outside the initial
     FHGM model scope. This is not a claim of generic GFF3 invalidity;

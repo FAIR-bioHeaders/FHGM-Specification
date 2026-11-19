@@ -654,7 +654,7 @@ def report(results, manifest, offline):
         print("Model lane offline: base, model and gff3 layers were not run.")
         return
     print(f"Gap-proof rejections (the released base schema and the exact-byte checksum "
-          f"accept them, only the model-level checker rejects): {len(gaps)}/{len(rejected)}")
+          f"accept them and an earned model predicate rejects; GFF3 is separate): {len(gaps)}/{len(rejected)}")
     for result in rejected:
         if not result.get("gap"):
             print(f"  not gap-proof: {result['id']} "

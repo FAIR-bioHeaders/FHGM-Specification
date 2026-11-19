@@ -67,8 +67,8 @@
     {
       "local": "development/model/validate_fhgm.py",
       "role": "model-level checker (K3-K6) and base selector, the authority for every recorded outcome",
-      "size": 20368,
-      "sha256": "797b6f440a44651505cd533b534cc5015544c344aede6efa70c037172a8f0964",
+      "size": 20782,
+      "sha256": "2cb973c83df96f7e5225da3c127bbe93f0502df63375e8c71649cffbe0346393",
       "note": "Since 2026-11-18 the checker selects each loaded file's base by its cited schema URL (base-schemas.json schemaUrls) and refuses an unregistered citation or one whose bytes were not supplied, instead of selecting by schemaVersion with a fallback to other bytes; every sealed and matrix outcome was re-observed after that change. Earlier: the Copilot-Autofix guard merged 2026-11-15 (non-dict header -> clean ValueError instead of a traceback). Also 2026-11-18: K3 runs before K4/K5 and compares modelIds after NFC normalisation, and K4 requires the target gene row to carry no Parent."
     },
     {

@@ -137,10 +137,10 @@ def describe(record, digest):
 def gene_targets(data):
     """Map each percent-decoded feature ID to (type, has-Parent) per row carrying it.
 
-    Attribute keys are matched exactly as written: ``Name=x; ID=toy-a`` has the
-    key `` ID`` (leading space), which is not ``ID``, so that row carries no ID.
-    Only the decoded value is indexed; the raw percent-encoded spelling never
-    resolves.
+    Attribute keys are case-sensitive and never trimmed into a valid tag.
+    Malformed ID syntax or whitespace-disguised ID/Parent tags prevent a
+    trustworthy identity/root inventory. Bare/empty Parent remains present
+    and therefore cannot establish an eligible root. Only decoded IDs resolve.
     """
     targets = defaultdict(list)
     for line in data.splitlines():
@@ -154,8 +154,12 @@ def gene_targets(data):
         identifiers = []
         has_parent = False
         for attribute in columns[8].split(b";"):
-            key, _, value = attribute.partition(b"=")
+            key, separator, value = attribute.partition(b"=")
+            if key != key.strip() and key.strip() in (b"ID", b"Parent"):
+                raise ValueError("Untrustworthy feature inventory: whitespace in ID/Parent tag")
             if key == b"ID":
+                if not separator or not value or identifiers or b"," in value:
+                    raise ValueError("Untrustworthy feature inventory: malformed or duplicate ID attribute")
                 identifiers.append(unquote_to_bytes(value))
             elif key == b"Parent":
                 has_parent = True

@@ -126,3 +126,20 @@ The installed dependency environment passed 116 unit tests; the standard-library
 run passed 116 with ten dependency-related skips. Dual-base draft self-check,
 Markdown lint and owned local-link checks passed. The PR still requires its
 own current-head independent review and CI before merge.
+
+## PR review correction: trustworthy attribute inventory
+
+The independent gpt-6.1-terra PR review reproduced false root passes for
+`ID=toy-a;Parent =other` and `ID=toy-a;ID`. These malformed identity/root
+attributes now refuse inventory construction instead of silently establishing
+a root. Whitespace-disguised ID/Parent tags, missing/empty ID values, duplicate
+ID attributes and raw comma-separated IDs are untrustworthy. K4 and fullModel
+remain not-run with a reason, including when such a snapshot is supplied as
+history. Exact lowercase custom tags and percent-decoded ID values keep their
+semantics. This limited identity/root parse guard adds no graph/biology checks;
+bare Parent and Parent= remain the explicitly selected K4 rejections.
+
+After the PR correction, all 117 installed-dependency unit tests passed;
+the standard-library run passed with eleven dependency skips. A fifth mutant
+removing both new malformed-attribute guards was caught by the seven-case
+parser regression, and the original four mutants were rerun and caught.

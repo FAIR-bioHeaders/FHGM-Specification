@@ -571,7 +571,7 @@ class EarnedEvidence(unittest.TestCase):
             carrier.write_bytes(generator.render(generator.metadata(
                 [generator.record('m', '1')], '1'), generator.feature_payload(30)))
             prior.write_bytes(generator.render(generator.metadata(
-                [generator.record('m', '0')], '0'), b'malformed row\n'))
+                [generator.record('m', '0')], '0'), b'toy\tpilot\tgene\t1\t9\t.\t+\t.\tID=toy-a;Parent =other\n'))
             with patch.object(checker, 'load_bases', return_value=[]), \
                     patch.object(checker, 'choose_base', return_value=selected):
                 receipt, code, _ = checker.evaluate(carrier, [], [prior])
@@ -901,14 +901,23 @@ class CheckerGuards(unittest.TestCase):
         self.assertEqual(self.checker.RESOLVABLE, verdict)
 
     def test_attribute_keys_match_exactly(self):
-        # GFF3 attribute tags are case-sensitive and whitespace is not trimmed:
-        # "Name=x; ID=toy-a" carries the tag " ID", not "ID", so that row has no
-        # ID, and only the percent-decoded value is indexed.
-        rows = (b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tName=x; ID=toy-a\n"
-                b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tid=toy-b\n"
+        # Lowercase id is not ID; percent-decoding is only applied to values.
+        rows = (b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tid=toy-b\n"
                 b"toy\tpilot\tgene\t1\t9\t.\t+\t.\tID=toy%2Dc\n")
         targets = self.checker.gene_targets(rows)
         self.assertEqual({b"toy-c"}, set(targets))
+
+    def test_malformed_identity_or_parent_tags_refuse_inventory_instead_of_establishing_root(self):
+        prefix = b"toy\tpilot\tgene\t1\t9\t.\t+\t.\t"
+        for attributes in (b"ID=toy-a;Parent =other", b"ID=toy-a; Parent=other",
+                           b"ID=toy-a;ID", b"ID=toy-a;ID=other", b"ID=",
+                           b"ID=toy-a,other", b"Name=x; ID=toy-a"):
+            with self.subTest(attributes=attributes):
+                with self.assertRaisesRegex(ValueError, 'ntrustworthy feature inventory'):
+                    self.checker.gene_targets(prefix + attributes + b"\n")
+        # Unknown ordinary tags are outside this inventory's identity/root
+        # responsibility; separate syntax/graph validation remains separate.
+        self.assertIn(b'toy-a', self.checker.gene_targets(prefix + b'ID=toy-a;name=x\n'))
 
 
 if __name__ == "__main__":
