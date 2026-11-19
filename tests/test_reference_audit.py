@@ -65,7 +65,8 @@ class Declarations(unittest.TestCase):
             source = root / 'checker'
             source.mkdir()
             marker = root / 'EXECUTED'
-            script = source / 'check.py'
+            (source / 'scripts').mkdir()
+            script = source / 'scripts/check_references.py'
             script.write_text('from pathlib import Path\nPath(' + repr(str(marker)) + ').write_text("bad")\n')
             subprocess.run(['git', 'init', '-q', str(source)], check=True)
             subprocess.run(['git', '-C', str(source), 'add', '.'], check=True)
@@ -75,7 +76,8 @@ class Declarations(unittest.TestCase):
             commit = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
             (root / 'references').mkdir()
             pinfile = root / 'references/checker.json'
-            pin = {'commit': commit, 'path': 'check.py', 'sha256': '0' * 64}
+            pin = {'repository': 'FAIR-bioHeaders/FAIR-bioHeaders-Specification',
+                   'commit': commit, 'path': 'scripts/check_references.py', 'sha256': '0' * 64}
             pinfile.write_text(json.dumps(pin))
             with self.assertRaisesRegex(ValueError, 'digest'):
                 adapter.run(source, root)
@@ -85,6 +87,62 @@ class Declarations(unittest.TestCase):
             pinfile.write_text(json.dumps(pin))
             with self.assertRaisesRegex(ValueError, 'HEAD'):
                 adapter.run(source, root)
+            self.assertFalse(marker.exists())
+
+    def test_joint_worktree_digest_tamper_and_invalid_source_metadata_are_refused(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source'
+            (source / 'scripts').mkdir(parents=True)
+            script = source / 'scripts/check_references.py'
+            script.write_text('print("original")\n')
+            subprocess.run(['git', 'init', '-q', str(source)], check=True)
+            subprocess.run(['git', '-C', str(source), 'add', '.'], check=True)
+            subprocess.run(['git', '-C', str(source), '-c', 'commit.gpgsign=false',
+                '-c', 'user.name=Immutable fixture', '-c', 'user.email=fixture@example.invalid',
+                'commit', '-qm', 'fixture'], check=True)
+            commit = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
+            pin = {'repository': 'FAIR-bioHeaders/FAIR-bioHeaders-Specification', 'commit': commit,
+                   'path': 'scripts/check_references.py', 'sha256': hashlib.sha256(script.read_bytes()).hexdigest()}
+            (root / 'references').mkdir()
+            file = root / 'references/checker.json'
+            file.write_text(json.dumps(pin))
+            self.assertEqual(script, adapter.verified_checker(source, root))
+            for key, value in (('repository', 'example/other'), ('commit', 'main'),
+                    ('path', '../outside.py'), ('path', '/tmp/outside.py'),
+                    ('path', 'scripts/other.py')):
+                bad = dict(pin, **{key: value})
+                file.write_text(json.dumps(bad))
+                with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                    adapter.verified_checker(source, root)
+            script.write_text('print("tampered")\n')
+            bad = dict(pin, sha256=hashlib.sha256(script.read_bytes()).hexdigest())
+            file.write_text(json.dumps(bad))
+            with self.assertRaisesRegex(ValueError, 'immutable Git blob'):
+                adapter.verified_checker(source, root)
+            script.unlink()
+            replacement = root / 'replacement.py'
+            replacement.write_text('print("original")\n')
+            script.symlink_to(replacement)
+            file.write_text(json.dumps(pin))
+            with self.assertRaisesRegex(ValueError, 'Symlink'):
+                adapter.verified_checker(source, root)
+
+    def test_isolated_execution_ignores_unverified_neighbor_stdlib_shadow(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            marker = root / 'SHADOW_EXECUTED'
+            (root / 'json.py').write_text('from pathlib import Path\nPath(' + repr(str(marker))
+                + ').write_text("shadow")\nraise RuntimeError("unverified shadow")\n')
+            script = root / 'checker.py'
+            script.write_text('import json\nprint(json.dumps({"advisory": True, "wrote": []}))\n')
+            negative = subprocess.run([__import__('sys').executable, str(script)],
+                                      capture_output=True, text=True)
+            self.assertNotEqual(0, negative.returncode)
+            self.assertTrue(marker.exists())
+            marker.unlink()
+            report = adapter.execute(script, {'inventoryVersion': 1, 'references': []}, root, [])
+            self.assertEqual({'advisory': True, 'wrote': []}, report)
             self.assertFalse(marker.exists())
 
 

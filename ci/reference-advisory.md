@@ -35,8 +35,10 @@ coverage of every URL in the repository.
 
 The implementation itself is independently pinned in `references/checker.json`:
 accepted shared commit, script path and SHA-256. The workflow checks out that
-commit, and the runner refuses an unexpected checkout HEAD or script digest
-before executing any checker code. The central engine is not copied here.
+commit, and the runner refuses an unexpected checkout HEAD, repository declaration, safe canonical script path, immutable Git blob
+or script digest before executing any checker code. Symlink paths are refused.
+The verified stdlib-only checker executes with Python isolation (-I), so an
+unverified neighboring module or PYTHONPATH cannot shadow its imports. The central engine is not copied here.
 Release tags remain independent authorities; no moving main substitutes for
 released bytes. This implementation pin is not a contract repin.
 
@@ -64,7 +66,9 @@ tag. They prove FRESH, a changed-recorded-digest DRIFT, confirmed missing-file
 ABSENT and unmapped-authority QUERY_FAILED. The digest mutant must change actual
 serialized inventory bytes; the authority bytes must remain untouched.
 Adapter tests additionally prove declaration disagreement is not repaired and
-unverified implementation code cannot execute.
+unverified implementation code cannot execute, including joint file/digest
+tampering. A paired shadow-module control proves the unisolated command would
+execute an unverified neighbor while the isolated command does not.
 
 Pull requests exercise the adapter, fixture controls and offline integration.
 The live network report runs only on schedule/manual dispatch with read-only
