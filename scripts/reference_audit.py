@@ -3,7 +3,8 @@
 import argparse
 import hashlib
 import json
-from pathlib import Path
+import re
+from pathlib import Path, PurePosixPath
 import subprocess
 import sys
 import tempfile
@@ -69,11 +70,35 @@ def inventory(root=ROOT):
 
 def verified_checker(checker_root, root=ROOT):
     pin = load(root, 'references/checker.json')
+    if pin.get('repository') != 'FAIR-bioHeaders/FAIR-bioHeaders-Specification':
+        raise ValueError('Unexpected central checker repository')
+    if not re.fullmatch('[0-9a-f]{40}', pin.get('commit', '')):
+        raise ValueError('Central checker requires a full immutable commit')
+    relative = pin.get('path', '')
+    path = PurePosixPath(relative)
+    if (not relative or path.is_absolute() or '..' in path.parts or '\\' in relative
+            or path.as_posix() != relative):
+        raise ValueError('Unsafe central checker relative path')
+    if relative != 'scripts/check_references.py':
+        raise ValueError('Unexpected central checker script path')
+    if not re.fullmatch('[0-9a-f]{64}', pin.get('sha256', '')):
+        raise ValueError('Invalid central checker digest')
     head = subprocess.check_output(['git', '-C', str(checker_root), 'rev-parse', 'HEAD'], text=True).strip()
     if head != pin['commit']:
         raise ValueError('Central checker checkout HEAD differs from immutable implementation pin')
-    file = checker_root / pin['path']
-    if hashlib.sha256(file.read_bytes()).hexdigest() != pin['sha256']:
+    file = checker_root / relative
+    cursor = checker_root
+    if cursor.is_symlink():
+        raise ValueError('Symlink checker root is not accepted')
+    for part in path.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise ValueError('Symlink checker path is not accepted')
+    blob = subprocess.check_output(['git', '-C', str(checker_root), 'show', pin['commit'] + ':' + relative])
+    data = file.read_bytes()
+    if data != blob:
+        raise ValueError('Central checker worktree differs from immutable Git blob')
+    if hashlib.sha256(blob).hexdigest() != pin['sha256']:
         raise ValueError('Central checker bytes differ from immutable implementation digest')
     return file
 
@@ -82,7 +107,7 @@ def execute(checker, table, root, checkouts):
     with tempfile.TemporaryDirectory() as directory:
         record = Path(directory) / 'inventory.json'
         record.write_text(json.dumps(table, indent=2) + '\n')
-        command = [sys.executable, str(checker), '--inventory', str(record),
+        command = [sys.executable, '-I', str(checker), '--inventory', str(record),
                    '--consumer', CONSUMER, '--consumer-root', str(root)]
         for authority in checkouts:
             command.extend(['--checkout', authority])
