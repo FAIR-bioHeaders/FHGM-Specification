@@ -1538,6 +1538,409 @@
         "size": 958,
         "sha256": "cd73204b809f1a5d91f41e0e5175be8c50a04599e266c0332bf94e7808727d4b"
       }
+    },
+    {
+      "id": "record-model-id-byte-order-mark",
+      "file": "vectors/invalid/record-model-id-byte-order-mark.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: byte order mark. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "547f69fd081b2394661e178982d2fa5d0259e7efdb50307150e897a5f1d0d89c"
+      },
+      "checksum": "hSmuUMrqFHkOG9vQnmp3HlO4801MAiqIV3982sJJTBM="
+    },
+    {
+      "id": "record-model-id-invisible-plus",
+      "file": "vectors/invalid/record-model-id-invisible-plus.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: invisible plus. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "7d754c67210b1825860366b3a17f9f38b84c32202d9f15b5252cacc4c1504950"
+      },
+      "checksum": "dCETchq66gmm4hbclBAVPQwqpupEPW7jDMR42TArR+o="
+    },
+    {
+      "id": "record-model-id-leading-line-separator",
+      "file": "vectors/invalid/record-model-id-leading-line-separator.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: leading line separator. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "f5b9e8394485f6a8e70b05af84750ad86996fc986d441761395dfcfe0ea5a6f1"
+      },
+      "checksum": "ebcs3bAGXK8mI+QmjVdVYgGF3UxwNxlyT74LOrNfEwI="
+    },
+    {
+      "id": "record-model-id-leading-ogham-space",
+      "file": "vectors/invalid/record-model-id-leading-ogham-space.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: leading ogham space. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "18d5041c651aa00a535265308a0fbaf002806a9f1cb0931f57fc4171a2959c0b"
+      },
+      "checksum": "zWAQXD0HXDi6a+uvS5NgcAXsbqNK+B7qNBsO6b7mJ3w="
+    },
+    {
+      "id": "record-model-id-leading-paragraph-separator",
+      "file": "vectors/invalid/record-model-id-leading-paragraph-separator.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: leading paragraph separator. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "33c6845a4d75be8ca3e32596b1cd3830e1da5062b91e45df0e3a8adf42b90d97"
+      },
+      "checksum": "s5Oaa+eGwCW4lxFiSQEDeQOvaJGCYc+EVC8w2AIpUKA="
+    },
+    {
+      "id": "record-model-id-left-to-right-embedding",
+      "file": "vectors/invalid/record-model-id-left-to-right-embedding.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: left to right embedding. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "7946fd54ccdf8ee879ae2a004e447a74c7f4f430d6fb652aebbb9e41e6113e3c"
+      },
+      "checksum": "UAse4dTboDcdt7MVCyntKDWP1DKnn6i5IXcpp8dIRwI="
+    },
+    {
+      "id": "record-model-id-right-to-left-mark",
+      "file": "vectors/invalid/record-model-id-right-to-left-mark.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: right to left mark. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "20bc8bfadcb7786e9b4ccf8486fe852555f1b13b3bdf746ef5d4b5e1a85dc041"
+      },
+      "checksum": "yKmr6LZPFlQXylNeT4rzVc5xpVRE0swVem2pfaW+A+c="
+    },
+    {
+      "id": "record-model-id-right-to-left-override",
+      "file": "vectors/invalid/record-model-id-right-to-left-override.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: right to left override. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "d72728aa51377b2bf3203d7007896426d11c3649edd2f1f73d0527d929751ef6"
+      },
+      "checksum": "Qme1c78EKOoLtldxCRK7+s7hHQ6+RHNwxPX2CqI9Fos="
+    },
+    {
+      "id": "record-model-id-trailing-en-quad",
+      "file": "vectors/invalid/record-model-id-trailing-en-quad.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: trailing en quad. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "17bafca3fd0e009430a8f448e964e06ae3b4d3f707390a349de06a15149cd9a8"
+      },
+      "checksum": "dpjykbhXXQFnB07/0Hpm621J61q5stfo7WrgV8RUVng="
+    },
+    {
+      "id": "record-model-id-trailing-hair-space",
+      "file": "vectors/invalid/record-model-id-trailing-hair-space.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: trailing hair space. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "62df7c80ae0729d41abcfc3585c4e39e26be6cfbf0f79fa6cca176cd94463b46"
+      },
+      "checksum": "lFR77IKjvP4P3KLTu9Y9MMeI6jvjIiMdm2UEvoXI9LY="
+    },
+    {
+      "id": "record-model-id-trailing-ideographic-space",
+      "file": "vectors/invalid/record-model-id-trailing-ideographic-space.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: trailing ideographic space. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "35eca7521ab460da65695e8c5a24e9236ee4e606c2ad8f8c08037bc7aede2c36"
+      },
+      "checksum": "CBs8lazePk0MjjVheeS9ARxce6UNmXZ+28rdOfVFU4o="
+    },
+    {
+      "id": "record-model-id-trailing-medium-mathematical-space",
+      "file": "vectors/invalid/record-model-id-trailing-medium-mathematical-space.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: trailing medium mathematical space. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "403b362d0c1dce3c507303355715ff1f7f53bfb1e980abf1d24f86304d8b45e6"
+      },
+      "checksum": "Z9/S+mVZESitwQXHMpyO4rbpRyaiChi5KHxhPUPv2l8="
+    },
+    {
+      "id": "record-model-id-trailing-narrow-nbsp",
+      "file": "vectors/invalid/record-model-id-trailing-narrow-nbsp.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: trailing narrow nbsp. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "9ea6bc09a52fae127057ae92b7a50469c1e536de3f167ef12c7aae78892df309"
+      },
+      "checksum": "7MmBA35zi0LualoAqZ+ZM9GP+8RKTZTO2rormTyyjBo="
+    },
+    {
+      "id": "record-model-id-trailing-nbsp",
+      "file": "vectors/invalid/record-model-id-trailing-nbsp.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: trailing nbsp. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "4c4af7ae519a2eb58d9479b1ecb9fa2ef61eeb8b9d7329258c24f8a008b24742"
+      },
+      "checksum": "OnFaXqD+wY2LZZ/ZVfMoMcdYsgK2Mal434quyfCf3WE="
+    },
+    {
+      "id": "record-model-id-word-joiner",
+      "file": "vectors/invalid/record-model-id-word-joiner.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: word joiner. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "ad5bdb6aad0e44f5f2a5a7db8f19d5d6e3caadcce9f896c4433aace85781ed09"
+      },
+      "checksum": "a0BQmbiDIofaro49705gmBOahU1XiwdKbpHpToBbNOA="
+    },
+    {
+      "id": "record-model-id-zero-width-space",
+      "file": "vectors/invalid/record-model-id-zero-width-space.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "is invalid under draft contract v0.1",
+      "description": "K2 text coverage: zero width space. Expectation derived from the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "aec8442bcfbda480094a1e235b0de33ca18f47305a7d788958012a62a09ff228"
+      },
+      "checksum": "5Ycv40Ad7iUxlFK3fo/aAFHW86e3O7YdqSM7TLYPM1c="
+    },
+    {
+      "id": "record-model-id-absent",
+      "file": "vectors/invalid/record-model-id-absent.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "'modelId' is a required property",
+      "description": "K2 required record identity: modelId is absent. Required record shape is checked before K3 duplicate identity; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 938,
+        "sha256": "d4859d09fa39dce2b53bf7ace17139d2b120e8cddb02b27aeeb848636c08b722"
+      },
+      "checksum": "aoyvp6lrG6yDSLyEHK+1b/WF7UOqADsby8UiwX81zng="
+    },
+    {
+      "id": "two-records-model-id-absent",
+      "file": "vectors/invalid/two-records-model-id-absent.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "invalid",
+      "rule": "K2",
+      "reason": "'modelId' is a required property",
+      "description": "K2 required record identity: modelId is absent. Required record shape is checked before K3 duplicate identity; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "reject"
+      },
+      "bytes": {
+        "size": 1095,
+        "sha256": "47ea532f4d9034300423b60a7868d3eac1115366880592d47095edbfd9cd7e23"
+      },
+      "checksum": "J6hs56H/BNsT9XzBbMoHmpvZsO/rwn8HeqdJPy0filc="
+    },
+    {
+      "id": "record-model-id-interior-nbsp",
+      "file": "vectors/valid/record-model-id-interior-nbsp.fhgff3.gff3",
+      "generator": "make_vectors",
+      "format": "fhgff3",
+      "expected": "valid",
+      "rules": [
+        "K1",
+        "K2",
+        "K4",
+        "K5"
+      ],
+      "description": "K2 positive control: NBSP inside opaque text is neither edge whitespace nor a forbidden invisible character. Expectation follows the unchanged text definition; see TEXT-COVERAGE-2026-11-19.md.",
+      "layers": {
+        "base": "accept",
+        "checksum": "verify",
+        "gff3": "accept",
+        "model": "pass"
+      },
+      "bytes": {
+        "size": 964,
+        "sha256": "63c9d1b748381553d02f34378dd7f2a6e0ba3cbd963ff352d02b5cbd70fa0969"
+      },
+      "checksum": "eBulOPQjZ9RuXHdLwhyc2NHMrviQKTdAI0KS1YIo7uM="
     }
   ],
   "retired": []

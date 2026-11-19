@@ -182,6 +182,65 @@ class ManifestShape(unittest.TestCase):
         self.assertEqual(set(), set(retired) & set(live))
 
 
+class TextCoverage(unittest.TestCase):
+    """The existing K2 text promise must reach outside ASCII in sealed vectors."""
+
+    def test_named_cases_contain_the_actual_non_ascii_values(self):
+        # Names alone do not prove non-ASCII coverage: parse the sealed header's
+        # JSON value and compare the actual code points, independently of the
+        # generator or schema/checker outcome.
+        values = {
+            "trailing-nbsp": "model-a\u00a0",
+            "leading-line-separator": "\u2028model-a",
+            "leading-paragraph-separator": "\u2029model-a",
+            "trailing-en-quad": "model-a\u2000",
+            "trailing-hair-space": "model-a\u200a",
+            "trailing-medium-mathematical-space": "model-a\u205f",
+            "trailing-ideographic-space": "model-a\u3000",
+            "leading-ogham-space": "\u1680model-a",
+            "trailing-narrow-nbsp": "model-a\u202f",
+            "zero-width-space": "model-\u200ba",
+            "right-to-left-mark": "model-\u200fa",
+            "left-to-right-embedding": "model-\u202aa",
+            "right-to-left-override": "model-\u202ea",
+            "word-joiner": "model-\u2060a",
+            "invisible-plus": "model-\u2064a",
+            "byte-order-mark": "model-\ufeffa",
+            "interior-nbsp": "model-\u00a0a",
+        }
+        for suffix, expected in values.items():
+            kind = "valid" if suffix == "interior-nbsp" else "invalid"
+            file = CONFORMANCE / "vectors" / kind / (
+                "record-model-id-" + suffix + ".fhgff3.gff3")
+            line = next(line for line in file.read_bytes().splitlines()
+                        if line.startswith(b"#~x-fhgm-models: "))
+            records = json.loads(line.removeprefix(b"#~x-fhgm-models: "))
+            with self.subTest(vector=file.name):
+                self.assertEqual(expected, records[0]["modelId"])
+                self.assertTrue(any(ord(char) > 127 for char in expected))
+
+    def test_non_ascii_classes_and_required_identity_have_rule_specific_vectors(self):
+        by_id = {v["id"]: v for v in manifest()["vectors"]}
+        ids = (
+            "trailing-nbsp", "leading-line-separator", "leading-paragraph-separator",
+            "trailing-en-quad", "trailing-hair-space", "trailing-medium-mathematical-space",
+            "trailing-ideographic-space", "leading-ogham-space", "trailing-narrow-nbsp",
+            "zero-width-space", "right-to-left-mark", "left-to-right-embedding",
+            "right-to-left-override", "word-joiner", "invisible-plus", "byte-order-mark",
+            "absent",
+        )
+        for suffix in ids:
+            key = "record-model-id-" + suffix
+            with self.subTest(vector=key):
+                self.assertIn(key, by_id)
+                self.assertEqual("K2", by_id[key]["rule"])
+                self.assertEqual("reject", by_id[key]["layers"]["model"])
+                self.assertEqual("invalid", by_id[key]["expected"])
+        self.assertIn("two-records-model-id-absent", by_id)
+        self.assertEqual("K2", by_id["two-records-model-id-absent"]["rule"])
+        self.assertEqual("valid", by_id["record-model-id-interior-nbsp"]["expected"])
+
+
 class Contexts(unittest.TestCase):
     def setUp(self):
         self.manifest = manifest()

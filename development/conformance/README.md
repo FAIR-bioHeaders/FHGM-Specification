@@ -456,3 +456,35 @@ The contract-only acceptance matrix in `development/model/check_draft.py` also
 checks leading whitespace in `modelId`, blank `assemblyName` and trailing or
 invisible text in deposit identifiers. Those are contract-case controls, not
 additional vectors or curator-reviewed model expectations.
+
+## Existing K2 non-ASCII coverage — 2026-11-19
+
+The suite now has **81 vectors (18 valid, 63 invalid)** and 81 twins under the
+released 1.2 base. Nineteen synthetic cases add coverage for existing constraints;
+all 62 previous entries and fixture bytes are preserved. The record/transport
+contracts and checker are unchanged. The [clause-derived expectation packet](
+TEXT-COVERAGE-2026-11-19.md) distinguishes technical evidence from independent
+review and curator acceptance. No outcome for malformed/empty Parent attributes
+is selected here; #22/#27/#28/#32 retain their pending decisions.
+
+| id | Expected | Rule focus |
+| --- | --- | --- |
+| `record-model-id-byte-order-mark` | invalid | K2 |
+| `record-model-id-invisible-plus` | invalid | K2 |
+| `record-model-id-leading-line-separator` | invalid | K2 |
+| `record-model-id-leading-ogham-space` | invalid | K2 |
+| `record-model-id-leading-paragraph-separator` | invalid | K2 |
+| `record-model-id-left-to-right-embedding` | invalid | K2 |
+| `record-model-id-right-to-left-mark` | invalid | K2 |
+| `record-model-id-right-to-left-override` | invalid | K2 |
+| `record-model-id-trailing-en-quad` | invalid | K2 |
+| `record-model-id-trailing-hair-space` | invalid | K2 |
+| `record-model-id-trailing-ideographic-space` | invalid | K2 |
+| `record-model-id-trailing-medium-mathematical-space` | invalid | K2 |
+| `record-model-id-trailing-narrow-nbsp` | invalid | K2 |
+| `record-model-id-trailing-nbsp` | invalid | K2 |
+| `record-model-id-word-joiner` | invalid | K2 |
+| `record-model-id-zero-width-space` | invalid | K2 |
+| `record-model-id-absent` | invalid | K2 |
+| `two-records-model-id-absent` | invalid | K2 |
+| `record-model-id-interior-nbsp` | valid | K2 |
