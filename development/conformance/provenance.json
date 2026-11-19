@@ -82,8 +82,8 @@
     {
       "local": "development/conformance/make_vectors.py",
       "role": "generates the vectors under development/conformance/vectors/",
-      "size": 20008,
-      "sha256": "49e5a5517839b45ded1e18188f4185add211dafd48dfe1d85767d4bff50ce641"
+      "size": 22121,
+      "sha256": "ddcc4b407e93d90f8965c57e63a20ea21a92dbfb14da50414b1df87d4f0f5836"
     },
     {
       "local": "development/examples/model/make_fixtures.py",

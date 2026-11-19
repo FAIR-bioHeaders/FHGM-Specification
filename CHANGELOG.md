@@ -1,5 +1,16 @@
 # FHGM changelog
 
+## Unreleased — existing K2 text coverage (2026-11-19)
+
+- Add 19 synthetic conformance vectors (81 total: 18 valid, 63 invalid) for
+  existing non-ASCII edge-whitespace, invisible-character and required-modelId
+  constraints, including an interior-NBSP positive control. Both released-base
+  lanes retain every earlier vector and expectation. The clause derivations are
+  in `development/conformance/TEXT-COVERAGE-2026-11-19.md`.
+- Add a rule-specific coverage guard. No record/transport contract or checker
+  changes, consumer repins, publication or support claims. FHGM #32 remains
+  open for the Parent and mechanism decisions; #22/#27/#28 remain open.
+
 ## Unreleased — model-level checks every guard is tested by (2026-11-18)
 
 - Mutation testing showed several checker guards that no vector noticed. Eleven

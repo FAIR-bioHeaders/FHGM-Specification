@@ -113,6 +113,9 @@ def header_checksum(data):
 def valid_vectors():
     """Vectors the released base schema and the model-level checker accept."""
     return {
+        # Edge trimming is not a ban on internal whitespace (K2).
+        "record-model-id-interior-nbsp": render(
+            metadata([record("model-\u00a0a", "1")], "1"), feature_payload(30)),
         # Disposition Q2: file-local identity is the default and needs no minting
         # authority, and a producer-supplied external identifier may occupy the
         # same opaque field. The urn:example: namespace is reserved for
@@ -194,7 +197,7 @@ def invalid_vectors():
     both_forms_checksum = header_checksum(valid["both-reference-forms"])
     single_checksum = header_checksum((FIXTURES / "valid-single.fhgff3.gff3").read_bytes())
     external_checksum = header_checksum(valid["supplied-external-model-id"])
-    return {
+    vectors = {
         # Rule K6, assembly-link half: the successor file is linked only by an
         # FHR parent while the supplied predecessor (valid-single) is linked by
         # accession plus SeqCol digest, so the two files share no comparable
@@ -404,6 +407,42 @@ def invalid_vectors():
         "tampered-record-bytes":
             (FIXTURES / "valid-single.fhgff3.gff3").read_bytes()
             + b"# byte added after the header\n",
+    }
+    # K2 is already normative: edge whitespace and the explicitly forbidden
+    # invisible ranges are rejected. The expected outcomes are derived in
+    # TEXT-COVERAGE-2026-11-19.md, not inferred from this checker.
+    for vector_id, value in text_rejection_cases().items():
+        vectors[vector_id] = render(
+            metadata([record(value, "1")], "1"), feature_payload(30))
+    for count in (1, 2):
+        records = [record("model-a", "1") for _ in range(count)]
+        for model in records:
+            del model["modelId"]
+        vector_id = ("record-model-id-absent" if count == 1
+                     else "two-records-model-id-absent")
+        vectors[vector_id] = render(metadata(records, "1"), feature_payload(30))
+    return vectors
+
+
+def text_rejection_cases():
+    """One case per named whitespace class and invisible-range boundary."""
+    return {
+        "record-model-id-trailing-nbsp": "model-a\u00a0",
+        "record-model-id-leading-line-separator": "\u2028model-a",
+        "record-model-id-leading-paragraph-separator": "\u2029model-a",
+        "record-model-id-trailing-en-quad": "model-a\u2000",
+        "record-model-id-trailing-hair-space": "model-a\u200a",
+        "record-model-id-trailing-medium-mathematical-space": "model-a\u205f",
+        "record-model-id-trailing-ideographic-space": "model-a\u3000",
+        "record-model-id-leading-ogham-space": "\u1680model-a",
+        "record-model-id-trailing-narrow-nbsp": "model-a\u202f",
+        "record-model-id-zero-width-space": "model-\u200ba",
+        "record-model-id-right-to-left-mark": "model-\u200fa",
+        "record-model-id-left-to-right-embedding": "model-\u202aa",
+        "record-model-id-right-to-left-override": "model-\u202ea",
+        "record-model-id-word-joiner": "model-\u2060a",
+        "record-model-id-invisible-plus": "model-\u2064a",
+        "record-model-id-byte-order-mark": "model-\ufeffa",
     }
 
 
