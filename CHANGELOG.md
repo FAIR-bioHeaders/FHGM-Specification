@@ -1,5 +1,13 @@
 # FHGM changelog
 
+## Unreleased — declared-reference advisory and shared staging record
+
+- Normalize current header/import/carrier declarations for the immutable central
+  reference checker; add fixture controls, offline integration and a scheduled
+  read-only advisory report. No contract, suite, carrier or consumer pin moves.
+- Record actual unpublished shared FHGM staging and distinguish completed
+  technical conformance work from joint package acceptance and publication.
+
 ## Unreleased — selected model scope and earned evidence (2026-11-19)
 
 - Implement maintainer D4–D6: earned per-rule and per-layer JSON receipts,

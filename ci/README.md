@@ -13,6 +13,10 @@ and selection rule V7 keeps the draft out of every release form. Owned
 documentation includes `development/**/*.md`. No feature-model generation or
 deployment lane is enabled.
 
+The [declared-reference advisory](reference-advisory.md) additionally checks this
+repository's actual external declarations through the immutable central checker.
+It is read-only and never repins; live findings run on schedule/manual dispatch.
+
 ## Inherited FHGFF3 baseline
 
 The independently authored header and the inherited feature model have separate
