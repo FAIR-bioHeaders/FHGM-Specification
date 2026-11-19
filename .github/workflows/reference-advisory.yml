@@ -1,0 +1,112 @@
+name: Declared reference advisory
+
+on:
+  pull_request:
+    paths:
+      - 'references/**'
+      - 'scripts/reference_audit.py'
+      - 'tests/test_reference_audit.py'
+      - 'header/provenance.json'
+      - 'development/model/base-schemas.json'
+      - 'development/conformance/provenance.json'
+      - '.github/workflows/reference-advisory.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'references/**'
+      - 'scripts/reference_audit.py'
+      - 'tests/test_reference_audit.py'
+      - 'header/provenance.json'
+      - 'development/model/base-schemas.json'
+      - 'development/conformance/provenance.json'
+      - '.github/workflows/reference-advisory.yml'
+  schedule:
+    - cron: '47 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  adapter-controls:
+    name: Reference adapter and offline controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - name: Read immutable checker implementation pin
+        id: checker
+        run: echo "commit=$(python -c 'import json; print(json.load(open("references/checker.json"))["commit"])')" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: FAIR-bioHeaders/FAIR-bioHeaders-Specification
+          ref: ${{ steps.checker.outputs.commit }}
+          path: .upstream/reference-checker
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      - name: Test declaration normalization and refusal of unverified code
+        run: python -m unittest discover -s tests -p test_reference_audit.py -v
+      - name: Exercise central checker offline and record current declared references
+        run: |
+          python scripts/reference_audit.py --checker-root .upstream/reference-checker \
+            --checkout FAIR-bioHeaders/FAIR-bioHeaders-Specification=.upstream/reference-checker \
+            --exercise-controls --inventory-output "$RUNNER_TEMP/fhgm-reference-inventory.json" \
+            --output "$RUNNER_TEMP/fhgm-reference-offline.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: fhgm-reference-offline
+          path: ${{ runner.temp }}/fhgm-reference-*.json
+          if-no-files-found: warn
+
+  live-advisory:
+    name: Scheduled declared-reference report (advisory)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - name: Read immutable checker implementation pin
+        id: checker
+        run: echo "commit=$(python -c 'import json; print(json.load(open("references/checker.json"))["commit"])')" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: FAIR-bioHeaders/FAIR-bioHeaders-Specification
+          ref: ${{ steps.checker.outputs.commit }}
+          path: .upstream/reference-checker
+          persist-credentials: false
+      - name: Audit immutable authorities without changing any declaration
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/reference_audit.py --checker-root .upstream/reference-checker \
+            --inventory-output "$RUNNER_TEMP/fhgm-reference-inventory.json" \
+            --output "$RUNNER_TEMP/fhgm-reference-advisory.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report = json.loads((Path(os.environ['RUNNER_TEMP']) / 'fhgm-reference-advisory.json').read_text())
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('Read-only advisory: no contract, carrier or suite pin was changed.\n\n')
+              for row in report['references']:
+                  summary.write(f"- {row['id']}: **{row['verdict']}**\n")
+              for gap in report['coverageGaps']:
+                  summary.write(f'- Declaration finding: {gap}\n')
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: fhgm-reference-advisory
+          path: ${{ runner.temp }}/fhgm-reference-*.json
+          if-no-files-found: warn

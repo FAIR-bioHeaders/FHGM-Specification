@@ -1,5 +1,8 @@
 # FHGM contract review for David and Adam
 
+Shared submission: [unpublished shared staging and remaining gates](SHARED-STAGING-2026-11-19.md).
+The concrete package is staged; joint acceptance and publication remain separate.
+
 Current disposition: [Round 14 D4–D6](conformance/DECISIONS-2026-11-19.md)
 supersedes the historical open wording below. Hand-authored JSON Schema is
 settled through v0.x; model-contract publication is separate from FHGFF3 file

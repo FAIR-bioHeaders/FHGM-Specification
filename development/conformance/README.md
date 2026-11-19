@@ -391,16 +391,19 @@ mismatches, so it can never paper over a changed expectation.
 
 ## Relationship to the shared conformance suite
 
-The absorption decision is open and belongs to the publication PR: extend the
-shared `conformance/manifest.json` with a checker-vector lane, or keep a separate
-FHGM suite in the shared repository. This directory is the seed either way — it
-is manifest-shaped (`manifestVersion`, `rules`, `vectors`, `retired`, kebab-case
-ids, `valid`/`invalid` expectations with one broken rule per invalid vector), and
-it stays in this repository while the contract is unreleased, because publishing
-vectors beside a released suite would put a draft into a release form that V7
-forbids. Absorbing it later needs a decision on the `K`/`B` id namespace and on how
-a vector carries a `context.predecessors` snapshot, neither of which the shared
-manifest has a shape for today.
+The exact accepted owning dependency tree and suite are now staged in the
+shared specification under `drafts/fhgm/upstream/` by
+[shared PR #278](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/pull/278),
+merge `7a57d945bd2926067c884eb39e73c087ff5b9453`. This is actual shared absorption
+as an unpublished review package, with a separate checker/vector lane that
+preserves local K/B namespaces and supplied-history contexts. The existing
+released conformance manifest and contract registry are unchanged.
+
+See [the staging and remaining-gates record](../SHARED-STAGING-2026-11-19.md).
+Joint acceptance of the concrete publication package and release remain separate;
+main staging does not publish a contract or imply consumer support. The shared
+mirror stays pinned to its accepted owning commit, not automatically repinned
+when this repository's documentation changes.
 
 ## What this suite does not establish
 
