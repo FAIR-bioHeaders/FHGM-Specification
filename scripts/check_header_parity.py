@@ -23,7 +23,8 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
+import re
+from pathlib import Path, PurePosixPath
 import subprocess
 import sys
 
@@ -42,12 +43,66 @@ STRICT_DIRS = (
 # byte-exact copy; it is intentionally not part of the pinned set.
 ALLOWED_EXTRAS = frozenset({
     "header/docs/README.md",
+    "header/provenance.json",
+    "header/PROVENANCE.md",
+    "header/README.md",
+    "header/conformance/README.md",
 })
 UPSTREAM_ENV = "FAIR_BIOHEADERS_SPECIFICATION"
 
 
 def sha256(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def validate_provenance(data):
+    """Validate checker inputs without changing their recorded authority or pins."""
+    if not isinstance(data, dict) or not isinstance(data.get("source"), dict):
+        raise ValueError("provenance requires a source object")
+    source = data["source"]
+    if not isinstance(source.get("repository"), str) or not source["repository"]:
+        raise ValueError("source.repository must name its recorded authority")
+    if not isinstance(source.get("commit"), str) or not re.fullmatch(r"[0-9a-f]{40}", source["commit"]):
+        raise ValueError("source.commit must be a full immutable commit")
+    seen = set()
+    for section in ("copied", "imports"):
+        entries = data.get(section, [])
+        if not isinstance(entries, list) or (section == "copied" and not entries):
+            raise ValueError(f"{section} must be a nonempty copied array or imports array")
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise ValueError(f"{section} entries must be objects")
+            for field in ("upstream", "local"):
+                value = entry.get(field)
+                if field == "local" and section == "imports" and value is None:
+                    continue
+                if (not isinstance(value, str) or not value or "\\" in value
+                        or PurePosixPath(value).is_absolute()
+                        or ".." in PurePosixPath(value).parts
+                        or not PurePosixPath(value).parts or ":" in value):
+                    raise ValueError(f"{section}.{field} must be a confined relative path")
+            if (not isinstance(entry.get("sha256"), str)
+                    or not re.fullmatch(r"[0-9a-f]{64}", entry["sha256"])):
+                raise ValueError(f"{section}.sha256 must be a SHA-256 digest")
+            if section == "copied" or "size" in entry:
+                if type(entry.get("size")) is not int or entry["size"] < 0:
+                    raise ValueError(f"{section}.size must be a nonnegative integer")
+            if "local" in entry:
+                if section == "copied" and not entry["local"].startswith("header/"):
+                    raise ValueError("copied.local must be inside header/")
+                if entry["local"] in seen:
+                    raise ValueError("duplicate local copied path")
+                seen.add(entry["local"])
+    return data
+
+
+def linked_copy(path):
+    current = ROOT
+    for part in path.relative_to(ROOT).parts:
+        current = current / part
+        if current.is_symlink():
+            return True
+    return False
 
 
 def load_provenance():
@@ -57,7 +112,10 @@ def load_provenance():
         sys.exit(f"error: {PROVENANCE} is missing")
     except json.JSONDecodeError as exc:
         sys.exit(f"error: {PROVENANCE} is not valid JSON: {exc}")
-    return data
+    try:
+        return validate_provenance(data)
+    except ValueError as exc:
+        sys.exit(f"error: {PROVENANCE}: {exc}")
 
 
 def check_local(prov):
@@ -68,6 +126,9 @@ def check_local(prov):
         local = entry["local"]
         listed[local] = entry
         path = ROOT / local
+        if linked_copy(path):
+            errors.append(f"symlink copied path: {local}")
+            continue
         if not path.is_file():
             errors.append(f"missing: {local}")
             continue
@@ -84,20 +145,15 @@ def check_local(prov):
 
 
 def check_extras(listed):
-    """Fail on files present in the strict directories but not in provenance."""
+    """Classify the whole pinned tree and reject symlinks without changing its pin."""
     errors = []
-    for rel_dir in STRICT_DIRS:
-        directory = ROOT / rel_dir
-        if not directory.is_dir():
-            continue
-        expected = {p for p in listed if p.startswith(rel_dir + "/")}
-        actual = {
-            str(p.relative_to(ROOT))
-            for p in directory.rglob("*")
-            if p.is_file()
-        }
-        for extra in sorted(actual - expected - ALLOWED_EXTRAS):
-            errors.append(f"unlisted file: {extra}")
+    expected = set(listed) | set(ALLOWED_EXTRAS)
+    for path in (ROOT / "header").rglob("*"):
+        relative = path.relative_to(ROOT).as_posix()
+        if path.is_symlink():
+            errors.append(f"symlink in header tree: {relative}")
+        elif path.is_file() and relative not in expected:
+            errors.append(f"unlisted file: {relative}")
     return errors
 
 
@@ -112,10 +168,8 @@ def find_upstream(explicit):
         path = Path(env).expanduser()
         if (path / ".git").exists():
             return path
-    for candidate in (
-        ROOT.parent / "FAIR-bioHeaders-Specification",
-        ROOT.parent.parent / "FAIR-bioHeaders-Specification",
-    ):
+    for parent in ROOT.parents:
+        candidate = parent / "FAIR-bioHeaders-Specification"
         if (candidate / ".git").exists():
             return candidate
     return None
@@ -123,7 +177,7 @@ def find_upstream(explicit):
 
 def git_show(repo, commit, path):
     result = subprocess.run(
-        ["git", "-C", str(repo), "show", f"{commit}:{path}"],
+        ["git", "--no-replace-objects", "-C", str(repo), "show", f"{commit}:{path}"],
         capture_output=True,
     )
     if result.returncode != 0:
@@ -136,7 +190,7 @@ def check_upstream(prov, repo):
     errors = []
     commit = prov["source"]["commit"]
     exists = subprocess.run(
-        ["git", "-C", str(repo), "cat-file", "-e", f"{commit}^{{commit}}"],
+        ["git", "--no-replace-objects", "-C", str(repo), "cat-file", "-e", f"{commit}^{{commit}}"],
         capture_output=True,
     )
     if exists.returncode != 0:

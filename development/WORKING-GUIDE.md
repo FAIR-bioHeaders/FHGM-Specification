@@ -21,6 +21,9 @@ reads the exact recorded revision with `git show`, not the checkout's current
 files, and compares source bytes. A digest-only result is not upstream parity;
 a parity result is not pin freshness. Exit 1 means a mismatch or invalid record.
 Neither command edits the header tree or fetches a newer contract automatically.
+Malformed/escaping provenance, duplicate copy paths and symlink copies are refused;
+whole-tree classification includes unlisted header subdirectories. Upstream Git
+reads ignore replacement objects.
 The upstream checkout needs the recorded commit and blob objects available;
 missing objects or content mismatches fail the explicit comparison with a
 nonzero exit. This older baseline checker does not verify a release-tag binding
