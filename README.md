@@ -58,7 +58,9 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md) and the
 [CI guide](ci/README.md). Current CI checks documentation, the pinned FHGFF3 baseline, and the owned
 model conformance suite in `model-conformance.yml`. The model-level checker
 under [development/model/](development/model/README.md) reports separate earned
-layers; baseline checks alone do not establish FHGM validity.
+layers; unavailable history/prerequisites remain NOT_RUN with named reasons.
+Baseline checks alone do not establish FHGM validity, and model checks do not
+establish feature-graph or biological validity.
 Feature checks belong in
 [gff3-validator](https://github.com/FAIR-bioHeaders/gff3-validator); family header
 processing belongs in

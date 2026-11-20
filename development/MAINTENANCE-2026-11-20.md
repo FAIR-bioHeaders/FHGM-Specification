@@ -46,7 +46,8 @@ Whole-file reads and decompression assume bounded, supplied research/test inputs
 no hostile-input resource-isolation guarantee is made. Reusing these scripts as a
 network service requires a separate limits and trust-boundary review.
 
-Inherited `jsonschema/gff3-validator-webapp.py` has development/debug settings
+The scan included inherited `jsonschema/gff3-validator-webapp.py` alongside
+owned scripts and the owned `development/` Python checker/runner/generators. The inherited webapp has development/debug settings
 (Bandit B201/B105 where present). It is inherited biodatamodels material excluded
 from downstream reuse, not an endorsed FAIR application or deployment. The existing
 [licensing/no-reuse record](https://github.com/FAIR-bioHeaders/FHGFF3/issues/3)

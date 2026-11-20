@@ -21,7 +21,10 @@ reads the exact recorded revision with `git show`, not the checkout's current
 files, and compares source bytes. A digest-only result is not upstream parity;
 a parity result is not pin freshness. Exit 1 means a mismatch or invalid record.
 Neither command edits the header tree or fetches a newer contract automatically.
-The upstream checkout needs the recorded commit and tag objects available.
+The upstream checkout needs the recorded commit and blob objects available;
+missing objects or content mismatches fail the explicit comparison with a
+nonzero exit. This older baseline checker does not verify a release-tag binding
+or pin currency; its historical `source.ref` is not silently promoted to a tag.
 
 ## Native model checks
 
@@ -29,6 +32,10 @@ The owning `development/` source and 92-case suite were accepted for native
 FHGM model contract 0.1, published in shared v0.8.0. The native contract is
 selected independently of its FHGFF3 carrier: no FHGM header `schemaVersion`
 or header-registry row exists. Historical draft receipts remain pinned.
+
+The following environment deliberately reproduces the owning checker and its
+historical 0.11.0 toolkit baseline. It does not install the native 0.1 package
+implementation; the owning checker is invoked directly.
 
 ```sh
 python3.13 -m venv .venv
@@ -54,6 +61,21 @@ outcomes. Parent paths are explicit; no remote biological source is inferred.
 A full model pass requires earned prerequisite layers. Feature/biology checks
 remain separate, and skipped/unavailable layers are not passes.
 
+For the separately published implementation, use a different environment:
+
+```sh
+python3.13 -m venv .venv-native
+.venv-native/bin/python -m pip install 'fair-bioheaders==0.13.1'
+BIOHEADERS_EXPERIMENTAL_FHGM=1 .venv-native/bin/bioheaders verify development/examples/contract/minimal.fhgff3.gff3
+```
+
+The CLI prints separate carrier/checksum and FHGM model evidence. It does not
+establish GFF3 feature/biological validity. Native schema identity is
+`https://w3id.org/fair-bioheaders/model-contracts/fhgm/0.1`, published as
+`model-contracts/fhgm/0.1/fhgm-model.schema.json` in shared v0.8.0; alias resolution
+is a separate external service observation. There is no in-record `schema` field
+or header-registry row for native models.
+
 Python toolkit 0.13.1 contains native 0.1 implementation behind
 `BIOHEADERS_EXPERIMENTAL_FHGM=1`; that implementation switch is distinct from
 historical draft selection. Do not claim newer carrier-base support or modify
@@ -65,7 +87,8 @@ pins as documentation cleanup.
 biodatamodels/gff-schema generator. `make gen` writes `target/`; `make stage`
 changes tracked generated output; `make test` invokes generation/staging rather
 than an independent validator. `make clean` removes `docs/` as well as `target/`.
-Do not run these as harmless checks or redistribute inherited material under
+Never run destructive inherited build/clean commands in a checkout containing
+uncommitted work. Do not run these as harmless checks or redistribute inherited material under
 the FAIR contribution license. Its unresolved upstream permissions and the
 maintainer no-reuse boundary remain in force. These commands do not generate
 or publish the independently authored FAIR header/native contract.
