@@ -68,7 +68,8 @@ def validate_provenance(data):
     for section in ("copied", "imports"):
         entries = data.get(section, [])
         if not isinstance(entries, list) or (section == "copied" and not entries):
-            raise ValueError(f"{section} must be a nonempty copied array or imports array")
+            requirement = "a nonempty array" if section == "copied" else "an array when present (empty is allowed)"
+            raise ValueError(f"{section} must be {requirement}")
         for entry in entries:
             if not isinstance(entry, dict):
                 raise ValueError(f"{section} entries must be objects")
