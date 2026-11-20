@@ -16,9 +16,9 @@ permissions:
 # runs the model-level vectors and the v0.1 self-test from this repository's
 # development tree, across both released FHGFF3 bases (the sealed 1.1 lane and
 # the 1.2 matrix lane added by the dual-base decision of 2026-11-15). It
-# publishes nothing: FHGM has no released contract, no schemaVersion, no schema
-# URL and no versions.json row, and selection rule V7 keeps the draft out of
-# every release form. The header-parity and shared conformance lanes keep
+# publishes nothing. Native model 0.1 is now published separately in shared
+# v0.8.0; this owning draft replay keeps its recorded identity and adds no header
+# schemaVersion or versions.json row. The header-parity and shared conformance lanes keep
 # checking the pinned FHGFF3 baseline unchanged.
 
 jobs:
