@@ -198,26 +198,59 @@ def verify_provenance(provenance, supplied_bases):
     return problems
 
 
-def check_downstream_pins(provenance):
-    """Advisory lane: are the draft pins consumers hold on our bytes still fresh?"""
-    from urllib.request import Request, urlopen
+def checked_pin_url(value):
+    """Only query public GitHub JSON authorities; never local or arbitrary URLs."""
+    from urllib.parse import urlsplit
+    if not isinstance(value, str):
+        raise ValueError("pin URL must be text")
+    parts = urlsplit(value)
+    if (parts.scheme != "https" or parts.hostname not in
+            {"raw.githubusercontent.com", "api.github.com"}
+            or parts.username is not None or parts.password is not None
+            or parts.port not in (None, 443)):
+        raise ValueError("pin URL requires HTTPS on an approved GitHub host without credentials")
+    return value
 
+
+def open_pin_url(url):
+    from urllib.request import Request, HTTPRedirectHandler, build_opener
+
+    class PinRedirects(HTTPRedirectHandler):
+        def redirect_request(self, request, response, code, message, headers, newurl):
+            checked_pin_url(newurl)  # refuse before sending a redirected request
+            return super().redirect_request(request, response, code, message, headers, newurl)
+
+    request = Request(checked_pin_url(url), headers={"Accept": "application/json",
+                            "User-Agent": "fhgm-conformance-pin-freshness"})
+    return build_opener(PinRedirects()).open(request, timeout=60)
+
+
+def check_downstream_pins(provenance):
+    """Advisory lane: query failures never become evidence of fresh or moved bytes."""
     problems = []
-    for pin in provenance.get("downstreamPins", []):
-        tracked = REPO / pin["tracks"]
-        local = sha256(tracked.read_bytes())
-        request = Request(pin["url"], headers={"Accept": "application/json",
-                                               "User-Agent": "fhgm-conformance-pin-freshness"})
+    pins = provenance.get("downstreamPins", [])
+    if not isinstance(pins, list):
+        return ["downstreamPins is not an array; no query was performed"]
+    for pin in pins:
+        name = pin.get("name", "unnamed pin") if isinstance(pin, dict) else "unnamed pin"
         try:
-            with urlopen(request, timeout=60) as response:
+            url = checked_pin_url(pin["url"])
+            tracked = (REPO / pin["tracks"]).resolve()
+            if not tracked.is_relative_to(REPO.resolve()):
+                raise ValueError("tracked pin path escapes this repository")
+            local = sha256(tracked.read_bytes())
+            with open_pin_url(url) as response:
+                checked_pin_url(response.geturl())
                 document = json.loads(response.read())
-        except Exception as error:  # noqa: BLE001 - network lane, report whatever happened
-            problems.append(f"{pin['name']}: could not read {pin['url']}: {error}")
+            node = document
+            for part in pin["pointer"].strip("/").split("/"):
+                node = node[part]
+            remote = node.get(pin["field"])
+            if not isinstance(remote, str) or not re.fullmatch(r"[0-9a-f]{64}", remote):
+                raise ValueError("remote pin has no usable SHA-256 measurement")
+        except Exception as error:  # network/declaration lane: preserve a failed query
+            problems.append(f"{name}: could not read pin authority: {error}")
             continue
-        node = document
-        for part in pin["pointer"].strip("/").split("/"):
-            node = node[part]
-        remote = node.get(pin["field"])
         state = "fresh" if remote == local else "STALE"
         print(f"{state}: {pin['name']} records {pin['field']} {remote} for {pin['tracks']}; "
               f"this tree holds {local}")
@@ -303,6 +336,7 @@ def regenerate(vectors):
     """Rebuild every generated vector in a temporary tree and compare bytes."""
     wanted = {vector["id"]: vector for vector in vectors if vector["generator"] != "committed"}
     produced = {}
+    artifacts = {}
     if not wanted:
         return produced
     with tempfile.TemporaryDirectory() as directory:
@@ -328,12 +362,16 @@ def regenerate(vectors):
             if result.returncode:
                 raise Failure(f"embed_models failed: {result.stderr.strip()[:400]}")
         for path in root.rglob("*.fhgff3.gff3"):
-            produced.setdefault(path.name, path.read_bytes())
+            key = (path.relative_to(root).parts[0], path.name)
+            if key in artifacts:
+                raise Failure(f"ambiguous generated filename: {key[0]}/{key[1]}")
+            artifacts[key] = path.read_bytes()
     for vector_id, vector in wanted.items():
         name = path_of(vector).name
-        if name not in produced:
+        key = (vector["generator"], name)
+        if key not in artifacts:
             raise Failure(f"{vector_id}: {vector['generator']} produced no {name}")
-        produced[vector_id] = produced[name] == path_of(vector).read_bytes()
+        produced[vector_id] = artifacts[key] == path_of(vector).read_bytes()
     return produced
 
 

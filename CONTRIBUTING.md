@@ -43,3 +43,12 @@ New FHGM guidance under `development/` and the FHGM setup portions identified in
 [LICENSE](LICENSE) use MPL-2.0. Preserve inherited notices and attribution. This
 license does not resolve permissions for the inherited gff-schema tree or for
 article-associated deposits; inspect those sources individually.
+
+## Review and merge handoff
+
+Every PR receives independent review from another actual model, preferably from
+a different family. Record author and reviewer identities. Agents fix failing CI
+and actionable overall/inline reviews and hand the validated current head to a
+human. Only humans merge; agents never merge, enable auto-merge, queue a merge,
+use a merge proxy or push a default branch as a substitute. See
+[AGENTS.md](AGENTS.md) for the current policy and review dispositions.

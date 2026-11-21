@@ -1,5 +1,11 @@
 # Draft FHGM native model contract v0.1 (proposal)
 
+> Current status (November 20, 2026): native model contract 0.1 was published
+> in shared v0.8.0. This owning tree retains accepted development/draft identities
+> and dated review evidence. Prospective publication statements below describe
+> that earlier stage; they do not revoke the shared release. See the
+> [working guide](../WORKING-GUIDE.md) for present setup and layered checks.
+
 Status: reviewed native draft contract v0.1 (proposal) under shared
 [#204](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/204)
 review. The 2026-11-14 joint review took its positions in the

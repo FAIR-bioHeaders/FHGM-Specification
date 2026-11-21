@@ -1,11 +1,17 @@
 # FHGM — FAIR Header Gene Model
 
-FHGM is the development repository for file-bound metadata describing gene-model
-contributions, serialized in GFF3. **Native draft contract v0.1 (proposal)
-under shared
-[#204](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/issues/204)
-review; no publication, no support claims.** Requirements gathering continues;
-no FHGM contract, schema version, release or toolkit support is claimed.
+Start with the [reader and maintainer guide](development/WORKING-GUIDE.md) for
+setup, local checks and their limitations.
+
+FHGM develops file-bound metadata for contributed gene models, carried in
+GFF3. **Native model contract 0.1 is published by the shared specification in
+[v0.8.0](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Specification/releases/tag/v0.8.0)
+([version DOI](https://doi.org/10.5281/zenodo.24385999)).** This owning repository
+preserves accepted development source and historical draft receipts. Native
+model identity is separate from the FHGFF3 carrier; there is no FHGM header
+`schemaVersion` or header-registry row. Python toolkit 0.13.1 implements native
+0.1 behind `BIOHEADERS_EXPERIMENTAL_FHGM=1`; older packages and pins are not
+upgraded by that publication.
 
 Start with [the development plan](development/README.md), the
 [FHGFF3 comparison](development/FHGFF3-COMPARISON.md), and the
@@ -49,10 +55,12 @@ as FHGM examples. Finished adopted contracts publish through
 ## Contributing and checks
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md) and the
-[CI guide](ci/README.md). Current CI verifies documentation and the inherited
-FHGFF3 baseline, **not FHGM validity**. The proposal-stage model-level checker
-under [development/model/](development/model/README.md) is review tooling for
-shared #204, is not wired into CI, and makes no support claim.
+[CI guide](ci/README.md). Current CI checks documentation, the pinned FHGFF3 baseline, and the owned
+model conformance suite in `model-conformance.yml`. The model-level checker
+under [development/model/](development/model/README.md) reports separate earned
+layers; unavailable history/prerequisites remain NOT_RUN with named reasons.
+Baseline checks alone do not establish FHGM validity, and model checks do not
+establish feature-graph or biological validity.
 Feature checks belong in
 [gff3-validator](https://github.com/FAIR-bioHeaders/gff3-validator); family header
 processing belongs in
